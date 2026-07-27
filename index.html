@@ -141,7 +141,9 @@
                 
                 const { error } = await supabaseClient.auth.signInWithOtp({ 
                     email: email,
-                    options: { emailRedirectTo: window.location.origin }
+                    options: { 
+                        emailRedirectTo: window.location.href 
+                    }
                 });
 
                 if (error) {
