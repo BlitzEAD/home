@@ -57,7 +57,7 @@
         </div>
     </header>
 
-    <!-- ALERTA DE E-MAIL NÃO CONFIRMADO (FIXO LOGO ABAIXO DO MENU) -->
+    <!-- ALERTA DE E-MAIL NÃO CONFIRMADO -->
     <div id="alerta-email-nao-confirmado" class="hidden fixed top-[105px] left-0 w-full bg-amber-500 text-white text-xs md:text-sm py-2 px-4 text-center z-40 shadow-md flex items-center justify-center space-x-3">
         <span>⚠️ Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.</span>
         <button id="btn-reenviar-confirmacao" class="underline font-semibold hover:text-amber-100 transition">Reenviar e-mail de confirmação</button>
@@ -175,7 +175,6 @@
         async function init() {
             gerarOpcoesSemestresCadastro();
             
-            // Obtém a sessão atual de forma síncrona/persistida do localStorage do Supabase
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 usuarioAtual = session.user;
@@ -184,10 +183,13 @@
             renderizarTopoUsuario();
             await carregarDadosBanco();
 
-            // Ouve alterações de autenticação em tempo real para manter a persistência
-            supabaseClient.auth.onAuthStateChange((event, session) => {
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 usuarioAtual = session ? session.user : null;
+                if (usuarioAtual) {
+                    await migrarDadosLocaisParaBanco(usuarioAtual.id);
+                }
                 renderizarTopoUsuario();
+                await carregarDadosBanco();
             });
         }
 
@@ -336,6 +338,7 @@
                 msg.className = "mt-3 text-xs text-center text-red-600";
             } else {
                 usuarioAtual = data.user;
+                await migrarDadosLocaisParaBanco(usuarioAtual.id);
                 fecharModalAuth();
                 renderizarTopoUsuario();
                 await carregarDadosBanco();
@@ -384,11 +387,33 @@
                 usuarioAtual = data.session.user;
             }
 
+            if (usuarioAtual) {
+                await migrarDadosLocaisParaBanco(usuarioAtual.id);
+            }
+
             fecharModalAuth();
             renderizarTopoUsuario();
             await carregarDadosBanco();
-            alert("✅ Cadastro realizado com sucesso! Você já está logado.");
+            alert("✅ Cadastro realizado com sucesso! Você já está logado e seus dados foram salvos.");
         });
+
+        async function migrarDadosLocaisParaBanco(userId) {
+            const dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+            if (dadosLocais.length === 0) return;
+
+            const registrosParaSalvar = dadosLocais.map(item => ({
+                user_id: userId,
+                disciplina_id: item.disciplina_id,
+                semestre: item.semestre,
+                status: item.status || 'Inscrita'
+            }));
+
+            const { error } = await supabaseClient.from('planejamento_usuarios').insert(registrosParaSalvar);
+
+            if (!error) {
+                localStorage.removeItem('planejamento_visitante');
+            }
+        }
 
         function rolarParaGrade(e) {
             e.preventDefault();
@@ -415,7 +440,13 @@
 
             const resultados = await Promise.all(promessas);
             listaDisciplinasGlobal = resultados[0].data || [];
-            planejamentoGlobal = resultados[1] ? (resultados[1].data || []) : [];
+            
+            if (usuarioAtual) {
+                planejamentoGlobal = resultados[1] ? (resultados[1].data || []) : [];
+            } else {
+                // Se não estiver logado, lê as disciplinas salvas no navegador (visitante)
+                planejamentoGlobal = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+            }
 
             renderizarEstruturaPrincipal();
         }
@@ -618,18 +649,45 @@
                 return;
             }
 
-            // Exceção permitida: se for para o 1º Semestre, permite sem estar logado temporariamente (ou solicita login para outros semestres)
+            // REGRA DE GRATUIDADE: Se não estiver logado, mas for para o 1º Semestre, permite salvar no localStorage localmente
             if (!usuarioAtual) {
-                if (semestreDestino !== '1º Semestre') {
-                    abrirModalAuth('login');
+                if (semestreDestino === '1º Semestre') {
+                    let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                    
+                    checkboxesMarcados.forEach(discId => {
+                        // Evita duplicar se já estiver lá
+                        if (!dadosLocais.some(item => item.disciplina_id === discId)) {
+                            dadosLocais.push({
+                                disciplina_id: discId,
+                                semestre: semestreDestino,
+                                status: 'Inscrita'
+                            });
+                        }
+                    });
+
+                    localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
+                    
+                    document.getElementById('select-semestre-destino').value = "";
+                    document.querySelectorAll('.check-disciplina').forEach(cb => cb.checked = false);
+
+                    const alvo = document.getElementById('secao-grade-disciplinar');
+                    if (alvo) {
+                        const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
+                        window.scrollTo({ top: topoAlvo - 120, behavior: 'smooth' });
+                    }
+
+                    mostrarMensagemSucesso();
+                    await carregarDadosBanco();
                     return;
                 } else {
-                    alert("Para salvar disciplinas no 1º Semestre, é necessário estar logado. Faça login ou cadastre-se.");
+                    // Para qualquer outro semestre além do 1º, exige login
+                    alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta.");
                     abrirModalAuth('login');
                     return;
                 }
             }
 
+            // Fluxo normal para usuário logado (Supabase)
             const novosRegistros = checkboxesMarcados.map(discId => ({
                 user_id: usuarioAtual.id,
                 disciplina_id: discId,
@@ -650,10 +708,7 @@
             const alvo = document.getElementById('secao-grade-disciplinar');
             if (alvo) {
                 const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({
-                    top: topoAlvo - 120,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: topoAlvo - 120, behavior: 'smooth' });
             }
 
             mostrarMensagemSucesso();
@@ -779,7 +834,17 @@
         }
 
         async function atualizarStatusIndividual(discId, novoStatus) {
-            if (!usuarioAtual) { abrirModalAuth('login'); return; }
+            if (!usuarioAtual) {
+                let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                const item = dadosLocais.find(i => i.disciplina_id === discId);
+                if (item) {
+                    item.status = novoStatus;
+                    localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
+                    await carregarDadosBanco();
+                }
+                return;
+            }
+
             await supabaseClient.from('planejamento_usuarios')
                 .update({ status: novoStatus })
                 .eq('user_id', usuarioAtual.id)
@@ -789,8 +854,15 @@
         }
 
         async function removerDoSemestre(discId) {
-            if (!usuarioAtual) { abrirModalAuth('login'); return; }
             if (!confirm("Deseja remover esta disciplina do seu planejamento?")) return;
+
+            if (!usuarioAtual) {
+                let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                dadosLocais = dadosLocais.filter(i => i.disciplina_id !== discId);
+                localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
+                await carregarDadosBanco();
+                return;
+            }
 
             await supabaseClient.from('planejamento_usuarios')
                 .delete()
@@ -801,8 +873,15 @@
         }
 
         async function limparSemestre(semestreNome) {
-            if (!usuarioAtual) { abrirModalAuth('login'); return; }
             if (!confirm(`Deseja remover todas as disciplinas "Inscritas" do ${semestreNome}?`)) return;
+
+            if (!usuarioAtual) {
+                let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                dadosLocais = dadosLocais.filter(i => !(i.semestre === semestreNome && i.status === 'Inscrita'));
+                localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
+                await carregarDadosBanco();
+                return;
+            }
 
             await supabaseClient.from('planejamento_usuarios')
                 .delete()
