@@ -13,14 +13,12 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
-    <!-- MENU SUPERIOR FIXO DIVIDIDO EM DUAS LINHAS FIXAS -->
+    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <!-- LINHA SUPERIOR -->
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
-            <!-- 1. Logotipo (fonte ligeiramente menor) -->
-            <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight">Planejamento Acadêmico</h1>
+            <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">Planejamento Acadêmico</h1>
 
-            <!-- Bloco direito da linha superior: Escolha o Semestre, Botão Cadastrar, Nome e Círculo -->
             <div class="flex items-center space-x-2 md:space-x-3">
                 <select id="select-semestre-destino" class="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
                     <option value="">Escolha o Semestre</option>
@@ -40,19 +38,9 @@
                     Cadastrar Disciplinas
                 </button>
 
-                <!-- Nome do usuário e Círculo do Perfil -->
-                <div class="flex items-center space-x-2 pl-2 border-l border-gray-200 relative">
-                    <span id="nome-usuario-topo" class="hidden sm:inline text-xs font-medium text-gray-700">Usuário</span>
-                    <div class="relative">
-                        <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            U
-                        </button>
-                        <!-- Dropdown do Avatar -->
-                        <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
-                            <a href="#" onclick="alert('Página de perfil em construção.'); return false;" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
-                            <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
-                        </div>
-                    </div>
+                <!-- Área do Usuário / Login no Topo -->
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l border-gray-200 relative">
+                    <!-- Preenchido dinamicamente via JS (Entrar ou Avatar) -->
                 </div>
             </div>
         </div>
@@ -62,16 +50,110 @@
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="#" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Disciplinas</a>
                 <a href="#container-semestres" onclick="rolarParaGrade(event)" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="#" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
-                <a href="#" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
-                <a href="#" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
+                <a href="#" onclick="acaoRequerAuth(event, 'Jornal Blitz')" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="#" onclick="acaoRequerAuth(event, 'Biblioteca')" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" onclick="acaoRequerAuth(event, 'LOJA')" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
         </div>
     </header>
 
+    <!-- ALERTA DE E-MAIL NÃO CONFIRMADO (FIXO LOGO ABAIXO DO MENU) -->
+    <div id="alerta-email-nao-confirmado" class="hidden fixed top-[105px] left-0 w-full bg-amber-500 text-white text-xs md:text-sm py-2 px-4 text-center z-40 shadow-md flex items-center justify-center space-x-3">
+        <span>⚠️ Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.</span>
+        <button id="btn-reenviar-confirmacao" class="underline font-semibold hover:text-amber-100 transition">Reenviar e-mail de confirmação</button>
+    </div>
+
     <!-- MENSAGEM FLUTUANTE DE SUCESSO -->
-    <div id="mensagem-sucesso-global" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] hidden bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all duration-300 flex items-center space-x-2">
+    <div id="mensagem-sucesso-global" class="fixed top-28 left-1/2 transform -translate-x-1/2 z-[100] hidden bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all duration-300 flex items-center space-x-2">
         <span>✅ Disciplinas cadastradas com sucesso!</span>
+    </div>
+
+    <!-- MODAL CENTRALIZADO DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
+    <div id="modal-auth" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative overflow-hidden">
+            <button onclick="fecharModalAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+            
+            <!-- TELA DE LOGIN -->
+            <div id="form-login-container">
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-1 text-center">Entrar no Sistema</h2>
+                <p class="text-gray-500 text-xs text-center mb-6">Acesse sua conta para gerenciar seu planejamento.</p>
+                
+                <form id="form-login" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label>
+                        <input type="email" id="login-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Senha</label>
+                        <input type="password" id="login-senha" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition text-sm">Entrar</button>
+                </form>
+                <div id="msg-login" class="mt-3 text-xs text-center"></div>
+
+                <div class="mt-6 text-center border-t pt-4">
+                    <p class="text-xs text-gray-600">Ainda não tem uma conta?</p>
+                    <button onclick="alternarParaCadastro()" class="mt-1 text-blue-600 hover:underline font-semibold text-xs">Criar Cadastro</button>
+                </div>
+            </div>
+
+            <!-- TELA DE CADASTRO -->
+            <div id="form-cadastro-container" class="hidden">
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-1 text-center">Criar Nova Conta</h2>
+                <p class="text-gray-500 text-xs text-center mb-4">Preencha os dados abaixo para se cadastrar.</p>
+                
+                <form id="form-cadastro" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Nome Completo</label>
+                        <input type="text" id="cad-nome" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">E-mail</label>
+                        <input type="email" id="cad-email" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Senha (mínimo 6 caracteres)</label>
+                        <input type="password" id="cad-senha" required minlength="6" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Curso</label>
+                        <select id="cad-curso" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="Administração" selected>Administração</option>
+                            <option value="Administração Pública">Administração Pública</option>
+                            <option value="Biblioteconomia">Biblioteconomia</option>
+                            <option value="Ciências Contábeis">Ciências Contábeis</option>
+                            <option value="Engenharia de Produção">Engenharia de Produção</option>
+                            <option value="Engenharia Meteorológica">Engenharia Meteorológica</option>
+                            <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
+                            <option value="Licenciatura em Física">Licenciatura em Física</option>
+                            <option value="Licenciatura em Geografia">Licenciatura em Geografia</option>
+                            <option value="Licenciatura em História">Licenciatura em História</option>
+                            <option value="Licenciatura em Letras">Licenciatura em Letras</option>
+                            <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
+                            <option value="Licenciatura em Química">Licenciatura em Química</option>
+                            <option value="Licenciatura em Turismo">Licenciatura em Turismo</option>
+                            <option value="Tecnologia em Segurança Pública">Tecnologia em Segurança Pública</option>
+                            <option value="Tecnologia em Sistemas de Computação">Tecnologia em Sistemas de Computação</option>
+                            <option value="Tecnologia em Turismo">Tecnologia em Turismo</option>
+                            <option value="Tecnologia em Design Gráfico">Tecnologia em Design Gráfico</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Semestre de Ingresso (Opcional)</label>
+                        <select id="cad-semestre" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="">Nenhum / Não informar</option>
+                            <!-- Preenchido dinamicamente via JS (últimos 7 anos) -->
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition text-sm mt-2">Cadastrar e Entrar</button>
+                </form>
+                <div id="msg-cadastro" class="mt-2 text-xs text-center"></div>
+
+                <div class="mt-4 text-center border-t pt-3">
+                    <button onclick="alternarParaLogin()" class="text-blue-600 hover:underline font-semibold text-xs">← Voltar para o Login</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- CONTEÚDO PRINCIPAL -->
@@ -92,70 +174,218 @@
         let usuarioAtual = null;
 
         async function init() {
+            gerarOpcoesSemestresCadastro();
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                renderizarTelaLogin();
-            } else {
+            if (session) {
                 usuarioAtual = session.user;
-                atualizarDadosUsuarioUI();
-                renderizarEstruturaPrincipal();
             }
+            renderizarTopoUsuario();
+            await carregarDadosBanco();
         }
 
-        function atualizarDadosUsuarioUI() {
-            if (!usuarioAtual) return;
+        // Gera as opções de semestre de 7 anos para trás (ex: 2026-2 até 2019-1)
+        function gerarOpcoesSemestresCadastro() {
+            const select = document.getElementById('cad-semestre');
+            if (!select) return;
+            
+            const anoAtual = 2026; // Ano fixo atual informado nas diretrizes
+            const semestreAtualConst = 2; // Considerando 2026-2 como atual
+            
+            let opcoesHtml = '<option value="">Nenhum / Não informar</option>';
+            for (let ano = anoAtual; ano >= 2019; ano--) {
+                for (let sem = 2; sem >= 1; sem--) {
+                    if (ano === anoAtual && sem > semestreAtualConst) continue;
+                    const valor = `${ano}-${sem}`;
+                    opcoesHtml += `<option value="${valor}">${valor}</option>`;
+                }
+            }
+            select.innerHTML = opcoesHtml;
+        }
+
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            const alertaEmail = document.getElementById('alerta-email-nao-confirmado');
+
+            if (!usuarioAtual) {
+                if (alertaEmail) alertaEmail.classList.add('hidden');
+                bloco.innerHTML = `
+                    <button onclick="abrirModalAuth('login')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">
+                        Entrar / Cadastrar
+                    </button>
+                `;
+                return;
+            }
+
+            // Verifica confirmação de e-mail (Supabase armazena em email_confirmed_at ou app_metadata / user_metadata)
+            const emailConfirmado = usuarioAtual.email_confirmed_at || (usuarioAtual.user_metadata && usuarioAtual.user_metadata.email_verified);
+            if (!emailConfirmado) {
+                if (alertaEmail) alertaEmail.classList.remove('hidden');
+            } else {
+                if (alertaEmail) alertaEmail.classList.add('hidden');
+            }
+
             const email = usuarioAtual.email || "Usuário";
             const primeiraLetra = email.charAt(0).toUpperCase();
+            const nomeExibicao = (usuarioAtual.user_metadata && usuarioAtual.user_metadata.nome) ? usuarioAtual.user_metadata.nome.split(' ')[0] : email.split('@')[0];
 
-            const nomeEl = document.getElementById('nome-usuario-topo');
-            if (nomeEl) nomeEl.textContent = email.split('@')[0];
-
-            const avatarBtn = document.getElementById('btn-avatar-menu');
-            if (avatarBtn) avatarBtn.textContent = primeiraLetra;
-        }
-
-        function renderizarTelaLogin() {
-            document.querySelector('header').style.display = 'none';
-            document.body.classList.remove('pt-32');
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg mt-12 text-center">
-                    <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Planejamento Acadêmico</h1>
-                    <p class="text-gray-600 mb-6">Digite seu e-mail para entrar.</p>
-                    <form id="login-form" class="space-y-4">
-                        <input type="email" id="email" placeholder="seu.email@exemplo.com" required 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
-                            Entrar com E-mail
-                        </button>
-                    </form>
-                    <div id="mensagem" class="mt-4 text-sm"></div>
+            bloco.innerHTML = `
+                <span id="nome-usuario-topo" class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
+                <div class="relative">
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        ${primeiraLetra}
+                    </button>
+                    <!-- Dropdown do Avatar -->
+                    <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                        <a href="#" onclick="alert('Página de perfil em construção.'); return false;" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                    </div>
                 </div>
             `;
 
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const msg = document.getElementById('mensagem');
-                msg.textContent = "Enviando link...";
-                
-                // Força explicitamente a URL atual completa (incluindo o /home/)
-                const { error } = await supabaseClient.auth.signInWithOtp({ 
-                    email: email,
-                    options: { 
-                        emailRedirectTo: window.location.href 
-                    }
-                });
-
-                if (error) {
-                    msg.textContent = "Erro: " + error.message;
-                    msg.className = "mt-4 text-sm text-red-600";
-                } else {
-                    msg.textContent = "✉️ Link mágico enviado! Verifique seu e-mail.";
-                    msg.className = "mt-4 text-sm text-green-600";
+            const btnAvatar = document.getElementById('btn-avatar-menu');
+            const dropdownPerfil = document.getElementById('dropdown-perfil');
+            btnAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownPerfil.classList.toggle('hidden');
+            });
+            window.addEventListener('click', () => {
+                if (dropdownPerfil && !dropdownPerfil.classList.contains('hidden')) {
+                    dropdownPerfil.classList.add('hidden');
                 }
             });
+
+            document.getElementById('btn-sair').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                usuarioAtual = null;
+                window.location.reload();
+            });
         }
+
+        // Botão de Reenviar Confirmação de E-mail
+        document.addEventListener('click', async (e) => {
+            if (e.target && e.target.id === 'btn-reenviar-confirmacao') {
+                if (!usuarioAtual || !usuarioAtual.email) return;
+                const { error } = await supabaseClient.auth.resend({
+                    type: 'signup',
+                    email: usuarioAtual.email,
+                    options: { emailRedirectTo: window.location.href }
+                });
+                if (error) {
+                    alert("Erro ao reenviar e-mail: " + error.message);
+                } else {
+                    alert("✉️ E-mail de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
+                }
+            }
+        });
+
+        function abrirModalAuth(tipo = 'login') {
+            const modal = document.getElementById('modal-auth');
+            modal.classList.remove('hidden');
+            if (tipo === 'cadastro') {
+                alternarParaCadastro();
+            } else {
+                alternarParaLogin();
+            }
+        }
+
+        function fecharModalAuth() {
+            document.getElementById('modal-auth').classList.add('hidden');
+        }
+
+        function alternarParaCadastro() {
+            document.getElementById('form-login-container').classList.add('hidden');
+            document.getElementById('form-cadastro-container').classList.remove('hidden');
+        }
+
+        function alternarParaLogin() {
+            document.getElementById('form-cadastro-container').classList.add('hidden');
+            document.getElementById('form-login-container').classList.remove('hidden');
+        }
+
+        // Ações que exigem autenticação (se não logado, abre modal)
+        function acaoRequerAuth(e, nomeAcao) {
+            e.preventDefault();
+            if (!usuarioAtual) {
+                abrirModalAuth('login');
+            } else {
+                alert(`Acessando ${nomeAcao}... (Funcionalidade em desenvolvimento)`);
+            }
+        }
+
+        // Submissão do Login
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            const msg = document.getElementById('msg-login');
+            msg.textContent = "Entrando...";
+            msg.className = "mt-3 text-xs text-center text-gray-600";
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+            if (error) {
+                msg.textContent = "Erro: " + error.message;
+                msg.className = "mt-3 text-xs text-center text-red-600";
+            } else {
+                usuarioAtual = data.user;
+                fecharModalAuth();
+                renderizarTopoUsuario();
+                await carregarDadosBanco();
+            }
+        });
+
+        // Submissão do Cadastro (Faz login automático imediato)
+        document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('cad-nome').value;
+            const email = document.getElementById('cad-email').value;
+            const senha = document.getElementById('cad-senha').value;
+            const curso = document.getElementById('cad-curso').value;
+            const semestreIngresso = document.getElementById('cad-semestre').value;
+            const msg = document.getElementById('msg-cadastro');
+
+            msg.textContent = "Criando conta...";
+            msg.className = "mt-2 text-xs text-center text-gray-600";
+
+            // Cadastro no Supabase com metadados adicionais
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: senha,
+                options: {
+                    data: {
+                        nome: nome,
+                        curso: curso,
+                        semestre_ingresso: semestreIngresso
+                    },
+                    emailRedirectTo: window.location.href
+                }
+            });
+
+            if (error) {
+                msg.textContent = "Erro: " + error.message;
+                msg.className = "mt-2 text-xs text-center text-red-600";
+                return;
+            }
+
+            // O Supabase pode logar automaticamente se a confirmação por email estiver desativada, 
+            // mas caso esteja ativada, fazemos login programático imediato com as credenciais informadas para logar o usuário automaticamente.
+            if (!data.session) {
+                const loginAuto = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+                if (loginAuto.data && loginAuto.data.session) {
+                    usuarioAtual = loginAuto.data.session.user;
+                } else if (data.user) {
+                    usuarioAtual = data.user;
+                }
+            } else {
+                usuarioAtual = data.session.user;
+            }
+
+            fecharModalAuth();
+            renderizarTopoUsuario();
+            await carregarDadosBanco();
+            alert("✅ Cadastro realizado com sucesso! Você já está logado. Um e-mail de confirmação foi enviado para sua caixa de entrada.");
+        });
 
         function rolarParaGrade(e) {
             e.preventDefault();
@@ -169,7 +399,38 @@
             }
         }
 
-        async function renderizarEstruturaPrincipal() {
+        async function carregarDadosBanco() {
+            // A página principal exibe o catálogo e estrutura para todos (sem exigir login prévio)
+            const promessas = [
+                supabaseClient.from('disciplinas').select('*')
+            ];
+
+            if (usuarioAtual) {
+                promessas.push(
+                    supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id)
+                );
+            }
+
+            const resultados = await Promise.all(promessas);
+            listaDisciplinasGlobal = resultados[0].data || [];
+            planejamentoGlobal = resultados[1] ? (resultados[1].data || []) : [];
+
+            renderizarEstruturaPrincipal();
+        }
+
+        function formatarDataHoraCell(textoDataHora) {
+            if (!textoDataHora || textoDataHora.trim() === '-' || textoDataHora.trim() === '') {
+                return '<div class="text-center">-</div>';
+            }
+            let limpo = textoDataHora.trim().replace(/\s*-\s*/g, ' ');
+            let partes = limpo.split(/\s+/);
+            if (partes.length >= 2) {
+                return `<div class="text-center leading-tight"><div>${partes[0]}</div><div class="text-xs text-gray-500">${partes.slice(1).join(' ')}</div></div>`;
+            }
+            return `<div class="text-center">${textoDataHora}</div>`;
+        }
+
+        function renderizarEstruturaPrincipal() {
             const app = document.getElementById('app');
             app.innerHTML = `
                 <div class="mb-10">
@@ -216,26 +477,6 @@
                 </div>
             `;
 
-            // Controle do menu dropdown do avatar
-            const btnAvatar = document.getElementById('btn-avatar-menu');
-            const dropdownPerfil = document.getElementById('dropdown-perfil');
-            btnAvatar.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdownPerfil.classList.toggle('hidden');
-            });
-            window.addEventListener('click', () => {
-                if (!dropdownPerfil.classList.contains('hidden')) {
-                    dropdownPerfil.classList.add('hidden');
-                }
-            });
-
-            document.getElementById('btn-sair').addEventListener('click', async (e) => {
-                e.preventDefault();
-                await supabaseClient.auth.signOut();
-                window.location.reload();
-            });
-
-            // Evento de cadastro
             document.getElementById('btn-cadastrar-semestre').addEventListener('click', cadastrarSelecionadasNoSemestre);
 
             const btnToggle = document.getElementById('btn-toggle-catalogo');
@@ -253,37 +494,14 @@
                 }
             });
 
-            await carregarDadosBanco();
-            atualizarDadosUsuarioUI();
-        }
-
-        async function carregarDadosBanco() {
-            const [discRes, planRes] = await Promise.all([
-                supabaseClient.from('disciplinas').select('*'),
-                supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id)
-            ]);
-
-            listaDisciplinasGlobal = discRes.data || [];
-            planejamentoGlobal = planRes.data || [];
-
             renderizarTabelaCatalogo();
             renderizarSemestresAlocados();
         }
 
-        function formatarDataHoraCell(textoDataHora) {
-            if (!textoDataHora || textoDataHora.trim() === '-' || textoDataHora.trim() === '') {
-                return '<div class="text-center">-</div>';
-            }
-            let limpo = textoDataHora.trim().replace(/\s*-\s*/g, ' ');
-            let partes = limpo.split(/\s+/);
-            if (partes.length >= 2) {
-                return `<div class="text-center leading-tight"><div>${partes[0]}</div><div class="text-xs text-gray-500">${partes.slice(1).join(' ')}</div></div>`;
-            }
-            return `<div class="text-center">${textoDataHora}</div>`;
-        }
-
         function renderizarTabelaCatalogo() {
             const tbody = document.getElementById('tabela-disciplinas');
+            if (!tbody) return;
+
             if (listaDisciplinasGlobal.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma disciplina encontrada.</td></tr>`;
                 return;
@@ -381,6 +599,7 @@
 
         function mostrarMensagemSucesso() {
             const msgEl = document.getElementById('mensagem-sucesso-global');
+            if (!msgEl) return;
             msgEl.classList.remove('hidden');
             setTimeout(() => {
                 msgEl.classList.add('hidden');
@@ -399,6 +618,20 @@
 
             if (checkboxesMarcados.length === 0) {
                 alert("Marque ao menos uma disciplina na tabela para cadastrar.");
+                return;
+            }
+
+            // Regra especial: se o usuário NÃO estiver logado, ele só pode adicionar ao "1º Semestre"
+            if (!usuarioAtual) {
+                if (semestreDestino !== '1º Semestre') {
+                    abrirModalAuth('login');
+                    return;
+                }
+            }
+
+            // Se for logado ou se for para o 1º Semestre sem estar logado (embora para salvar no banco precise de user_id, se não logado podemos tratar ou exigir login. A instrução diz: "apenas quando alguma de suas funções ou links forem acionados(exceto a marcação de disciplinas e a adição de disciplinas marcadas ao 1(!) Semestre)")
+            if (!usuarioAtual) {
+                abrirModalAuth('login');
                 return;
             }
 
@@ -434,6 +667,7 @@
 
         function renderizarSemestresAlocados() {
             const container = document.getElementById('container-semestres');
+            if (!container) return;
             container.innerHTML = '';
 
             const semestresPossiveis = [
@@ -550,6 +784,7 @@
         }
 
         async function atualizarStatusIndividual(discId, novoStatus) {
+            if (!usuarioAtual) { abrirModalAuth('login'); return; }
             await supabaseClient.from('planejamento_usuarios')
                 .update({ status: novoStatus })
                 .eq('user_id', usuarioAtual.id)
@@ -559,6 +794,7 @@
         }
 
         async function removerDoSemestre(discId) {
+            if (!usuarioAtual) { abrirModalAuth('login'); return; }
             if (!confirm("Deseja remover esta disciplina do seu planejamento?")) return;
 
             await supabaseClient.from('planejamento_usuarios')
@@ -570,21 +806,16 @@
         }
 
         async function limparSemestre(semestreNome) {
+            if (!usuarioAtual) { abrirModalAuth('login'); return; }
             if (!confirm(`Deseja remover todas as disciplinas "Inscritas" do ${semestreNome}? (As disciplinas cursadas serão mantidas)`)) return;
 
-            const idsParaRemover = planejamentoGlobal
-                .filter(p => p.semestre === semestreNome && p.status === 'Inscrita')
-                .map(p => p.disciplina_id);
+            await supabaseClient.from('planejamento_usuarios')
+                .delete()
+                .eq('user_id', usuarioAtual.id)
+                .eq('semestre', semestreNome)
+                .eq('status', 'Inscrita');
 
-            if (idsParaRemover.length > 0) {
-                await supabaseClient.from('planejamento_usuarios')
-                    .delete()
-                    .eq('user_id', usuarioAtual.id)
-                    .eq('semestre', semestreNome)
-                    .eq('status', 'Inscrita');
-
-                await carregarDadosBanco();
-            }
+            await carregarDadosBanco();
         }
 
         function exportarSemestrePDF(semestreNome) {
@@ -711,11 +942,11 @@
                 doc.text("Status", 170, y);
 
                 y += 6;
-                doc.setFont("helvetica", "normal");
+                doc.setFont("helvetica", "bold");
 
                 grupo.registros.forEach(reg => {
                     const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-    if (!d) return;
+                    if (!d) return;
 
                     if (y > 275) {
                         doc.addPage();
