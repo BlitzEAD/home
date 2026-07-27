@@ -57,12 +57,6 @@
         </div>
     </header>
 
-    <!-- ALERTA DE E-MAIL NÃO CONFIRMADO -->
-    <div id="alerta-email-nao-confirmado" class="hidden fixed top-[105px] left-0 w-full bg-amber-500 text-white text-xs md:text-sm py-2 px-4 text-center z-40 shadow-md flex items-center justify-center space-x-3">
-        <span>⚠️ Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.</span>
-        <button id="btn-reenviar-confirmacao" class="underline font-semibold hover:text-amber-100 transition">Reenviar e-mail de confirmação</button>
-    </div>
-
     <!-- MENSAGEM FLUTUANTE DE SUCESSO -->
     <div id="mensagem-sucesso-global" class="fixed top-28 left-1/2 transform -translate-x-1/2 z-[100] hidden bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all duration-300 flex items-center space-x-2">
         <span>✅ Disciplinas cadastradas com sucesso!</span>
@@ -213,23 +207,14 @@
 
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
-            const alertaEmail = document.getElementById('alerta-email-nao-confirmado');
 
             if (!usuarioAtual) {
-                if (alertaEmail) alertaEmail.classList.add('hidden');
                 bloco.innerHTML = `
                     <button onclick="abrirModalAuth('login')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">
                         Entrar / Cadastrar
                     </button>
                 `;
                 return;
-            }
-
-            const emailConfirmado = usuarioAtual.email_confirmed_at || (usuarioAtual.user_metadata && usuarioAtual.user_metadata.email_verified);
-            if (!emailConfirmado) {
-                if (alertaEmail) alertaEmail.classList.remove('hidden');
-            } else {
-                if (alertaEmail) alertaEmail.classList.add('hidden');
             }
 
             const email = usuarioAtual.email || "Usuário";
@@ -273,22 +258,6 @@
                 });
             }
         }
-
-        document.addEventListener('click', async (e) => {
-            if (e.target && e.target.id === 'btn-reenviar-confirmacao') {
-                if (!usuarioAtual || !usuarioAtual.email) return;
-                const { error } = await supabaseClient.auth.resend({
-                    type: 'signup',
-                    email: usuarioAtual.email,
-                    options: { emailRedirectTo: window.location.href }
-                });
-                if (error) {
-                    alert("Erro ao reenviar e-mail: " + error.message);
-                } else {
-                    alert("✉️ E-mail de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
-                }
-            }
-        });
 
         function abrirModalAuth(tipo = 'login') {
             const modal = document.getElementById('modal-auth');
@@ -365,8 +334,7 @@
                         nome: nome,
                         curso: curso,
                         semestre_ingresso: semestreIngresso
-                    },
-                    emailRedirectTo: window.location.href
+                    }
                 }
             });
 
@@ -444,7 +412,6 @@
             if (usuarioAtual) {
                 planejamentoGlobal = resultados[1] ? (resultados[1].data || []) : [];
             } else {
-                // Se não estiver logado, lê as disciplinas salvas no navegador (visitante)
                 planejamentoGlobal = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
             }
 
@@ -649,13 +616,11 @@
                 return;
             }
 
-            // REGRA DE GRATUIDADE: Se não estiver logado, mas for para o 1º Semestre, permite salvar no localStorage localmente
             if (!usuarioAtual) {
                 if (semestreDestino === '1º Semestre') {
                     let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
                     
                     checkboxesMarcados.forEach(discId => {
-                        // Evita duplicar se já estiver lá
                         if (!dadosLocais.some(item => item.disciplina_id === discId)) {
                             dadosLocais.push({
                                 disciplina_id: discId,
@@ -680,14 +645,12 @@
                     await carregarDadosBanco();
                     return;
                 } else {
-                    // Para qualquer outro semestre além do 1º, exige login
                     alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta.");
                     abrirModalAuth('login');
                     return;
                 }
             }
 
-            // Fluxo normal para usuário logado (Supabase)
             const novosRegistros = checkboxesMarcados.map(discId => ({
                 user_id: usuarioAtual.id,
                 disciplina_id: discId,
@@ -892,7 +855,14 @@
             await carregarDadosBanco();
         }
 
+        // FUNÇÃO PROTEGIDA: Exige login para exportar PDF do semestre
         function exportarSemestrePDF(semestreNome) {
+            if (!usuarioAtual) {
+                alert("Para exportar o planejamento em PDF, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                abrirModalAuth('login');
+                return;
+            }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape' });
 
@@ -960,7 +930,14 @@
             doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
         }
 
+        // FUNÇÃO PROTEGIDA: Exige login para exportar Grade Completa
         function exportarGradeCompletaPDF() {
+            if (!usuarioAtual) {
+                alert("Para exportar a grade completa em PDF, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                abrirModalAuth('login');
+                return;
+            }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
