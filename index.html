@@ -311,6 +311,7 @@
                 fecharModalAuth();
                 renderizarTopoUsuario();
                 await carregarDadosBanco();
+                await processarPendenciaCadastro();
             }
         });
 
@@ -362,7 +363,8 @@
             fecharModalAuth();
             renderizarTopoUsuario();
             await carregarDadosBanco();
-            alert("✅ Cadastro realizado com sucesso! Você já está logado e seus dados foram salvos.");
+            await processarPendenciaCadastro();
+            alert("✅ Cadastro realizado com sucesso! Você já está logado e suas disciplinas foram salvas.");
         });
 
         async function migrarDadosLocaisParaBanco(userId) {
@@ -645,14 +647,23 @@
                     await carregarDadosBanco();
                     return;
                 } else {
-                    alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta.");
+                    sessionStorage.setItem('pendencia_cadastro', JSON.stringify({
+                        semestre: semestreDestino,
+                        disciplinas: checkboxesMarcados
+                    }));
+
+                    alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta. Após o login, suas disciplinas serão cadastradas automaticamente.");
                     abrirModalAuth('login');
                     return;
                 }
             }
 
+            await executarCadastroNoBanco(usuarioAtual.id, semestreDestino, checkboxesMarcados);
+        }
+
+        async function executarCadastroNoBanco(userId, semestreDestino, checkboxesMarcados) {
             const novosRegistros = checkboxesMarcados.map(discId => ({
-                user_id: usuarioAtual.id,
+                user_id: userId,
                 disciplina_id: discId,
                 semestre: semestreDestino,
                 status: 'Inscrita'
@@ -676,6 +687,22 @@
 
             mostrarMensagemSucesso();
             await carregarDadosBanco();
+        }
+
+        async function processarPendenciaCadastro() {
+            const pendenciaStr = sessionStorage.getItem('pendencia_cadastro');
+            if (!pendenciaStr || !usuarioAtual) return;
+
+            try {
+                const pendencia = JSON.parse(pendenciaStr);
+                if (pendencia && pendencia.semestre && pendencia.disciplinas && pendencia.disciplinas.length > 0) {
+                    await executarCadastroNoBanco(usuarioAtual.id, pendencia.semestre, pendencia.disciplinas);
+                }
+            } catch (e) {
+                console.error("Erro ao processar pendência de cadastro", e);
+            } finally {
+                sessionStorage.removeItem('pendencia_cadastro');
+            }
         }
 
         function renderizarSemestresAlocados() {
@@ -855,7 +882,6 @@
             await carregarDadosBanco();
         }
 
-        // FUNÇÃO PROTEGIDA: Exige login para exportar PDF do semestre
         function exportarSemestrePDF(semestreNome) {
             if (!usuarioAtual) {
                 alert("Para exportar o planejamento em PDF, é necessário estar logado. Por favor, entre ou crie sua conta.");
@@ -930,7 +956,6 @@
             doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
         }
 
-        // FUNÇÃO PROTEGIDA: Exige login para exportar Grade Completa
         function exportarGradeCompletaPDF() {
             if (!usuarioAtual) {
                 alert("Para exportar a grade completa em PDF, é necessário estar logado. Por favor, entre ou crie sua conta.");
