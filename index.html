@@ -139,6 +139,7 @@
                 const msg = document.getElementById('mensagem');
                 msg.textContent = "Enviando link...";
                 
+                // Força explicitamente a URL atual completa (incluindo o /home/)
                 const { error } = await supabaseClient.auth.signInWithOtp({ 
                     email: email,
                     options: { 
@@ -714,7 +715,7 @@
 
                 grupo.registros.forEach(reg => {
                     const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                    if (!d) return;
+    if (!d) return;
 
                     if (y > 275) {
                         doc.addPage();
