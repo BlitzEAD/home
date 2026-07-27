@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planejamento Acadêmico</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF para exportação de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pt-32">
+
+    <!-- MENU SUPERIOR FIXO DIVIDIDO EM DUAS LINHAS FIXAS -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <!-- LINHA SUPERIOR -->
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <!-- 1. Logotipo (fonte ligeiramente menor) -->
+            <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight">Planejamento Acadêmico</h1>
+
+            <!-- Bloco direito da linha superior: Escolha o Semestre, Botão Cadastrar, Nome e Círculo -->
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <select id="select-semestre-destino" class="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                    <option value="">Escolha o Semestre</option>
+                    <option value="1º Semestre">1º Semestre</option>
+                    <option value="2º Semestre">2º Semestre</option>
+                    <option value="3º Semestre">3º Semestre</option>
+                    <option value="4º Semestre">4º Semestre</option>
+                    <option value="5º Semestre">5º Semestre</option>
+                    <option value="6º Semestre">6º Semestre</option>
+                    <option value="7º Semestre">7º Semestre</option>
+                    <option value="8º Semestre">8º Semestre</option>
+                    <option value="9º Semestre">9º Semestre</option>
+                    <option value="10º Semestre">10º Semestre</option>
+                </select>
+
+                <button id="btn-cadastrar-semestre" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">
+                    Cadastrar Disciplinas
+                </button>
+
+                <!-- Nome do usuário e Círculo do Perfil -->
+                <div class="flex items-center space-x-2 pl-2 border-l border-gray-200 relative">
+                    <span id="nome-usuario-topo" class="hidden sm:inline text-xs font-medium text-gray-700">Usuário</span>
+                    <div class="relative">
+                        <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            U
+                        </button>
+                        <!-- Dropdown do Avatar -->
+                        <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                            <a href="#" onclick="alert('Página de perfil em construção.'); return false;" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
+                            <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINHA INFERIOR -->
+        <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
+            <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
+                <a href="#" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Disciplinas</a>
+                <a href="#container-semestres" onclick="rolarParaGrade(event)" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
+                <a href="#" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="#" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MENSAGEM FLUTUANTE DE SUCESSO -->
+    <div id="mensagem-sucesso-global" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] hidden bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all duration-300 flex items-center space-x-2">
+        <span>✅ Disciplinas cadastradas com sucesso!</span>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
+        <div id="app">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Carregando painel...</h2>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let listaDisciplinasGlobal = [];
+        let planejamentoGlobal = [];
+        let usuarioAtual = null;
+
+        async function init() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                renderizarTelaLogin();
+            } else {
+                usuarioAtual = session.user;
+                atualizarDadosUsuarioUI();
+                renderizarEstruturaPrincipal();
+            }
+        }
+
+        function atualizarDadosUsuarioUI() {
+            if (!usuarioAtual) return;
+            const email = usuarioAtual.email || "Usuário";
+            const primeiraLetra = email.charAt(0).toUpperCase();
+
+            const nomeEl = document.getElementById('nome-usuario-topo');
+            if (nomeEl) nomeEl.textContent = email.split('@')[0];
+
+            const avatarBtn = document.getElementById('btn-avatar-menu');
+            if (avatarBtn) avatarBtn.textContent = primeiraLetra;
+        }
+
+        function renderizarTelaLogin() {
+            document.querySelector('header').style.display = 'none';
+            document.body.classList.remove('pt-32');
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg mt-12 text-center">
+                    <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Planejamento Acadêmico</h1>
+                    <p class="text-gray-600 mb-6">Digite seu e-mail para entrar.</p>
+                    <form id="login-form" class="space-y-4">
+                        <input type="email" id="email" placeholder="seu.email@exemplo.com" required 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
+                            Entrar com E-mail
+                        </button>
+                    </form>
+                    <div id="mensagem" class="mt-4 text-sm"></div>
+                </div>
+            `;
+
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const msg = document.getElementById('mensagem');
+                msg.textContent = "Enviando link...";
+                
+                const { error } = await supabaseClient.auth.signInWithOtp({ 
+                    email: email,
+                    options: { emailRedirectTo: window.location.origin }
+                });
+
+                if (error) {
+                    msg.textContent = "Erro: " + error.message;
+                    msg.className = "mt-4 text-sm text-red-600";
+                } else {
+                    msg.textContent = "✉️ Link mágico enviado! Verifique seu e-mail.";
+                    msg.className = "mt-4 text-sm text-green-600";
+                }
+            });
+        }
+
+        function rolarParaGrade(e) {
+            e.preventDefault();
+            const alvo = document.getElementById('secao-grade-disciplinar');
+            if (alvo) {
+                const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                    top: topoAlvo - 120,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        async function renderizarEstruturaPrincipal() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="mb-10">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-2xl font-bold text-gray-800">Catálogo de Disciplinas e Conflitos</h2>
+                        <button id="btn-toggle-catalogo" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg transition">
+                            ▲ Recolher Lista
+                        </button>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Marque as disciplinas desejadas. As que possuírem choque de horário nas APs ficarão destacadas em amarelo.</p>
+                    
+                    <div id="wrapper-catalogo" class="bg-white shadow-md rounded-xl overflow-x-auto border border-gray-100 transition-all duration-300">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                                    <th class="p-3 border-b text-center w-12">Selec.</th>
+                                    <th class="p-3 border-b">Código</th>
+                                    <th class="p-3 border-b">Disciplina</th>
+                                    <th class="p-3 border-b text-center">Data AP1</th>
+                                    <th class="p-3 border-b text-center">Data AP2</th>
+                                    <th class="p-3 border-b text-center">Data AP3</th>
+                                    <th class="p-3 border-b text-center">Período</th>
+                                    <th class="p-3 border-b text-center">Status Salvo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-disciplinas">
+                                <tr><td colspan="8" class="p-6 text-center text-gray-500">Carregando dados...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO DE SEMESTRES CADASTRADOS -->
+                <div id="secao-grade-disciplinar">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
+                        <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5">
+                            <span>📥 Exportar (PDF)</span>
+                        </button>
+                    </div>
+                    <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+            `;
+
+            // Controle do menu dropdown do avatar
+            const btnAvatar = document.getElementById('btn-avatar-menu');
+            const dropdownPerfil = document.getElementById('dropdown-perfil');
+            btnAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownPerfil.classList.toggle('hidden');
+            });
+            window.addEventListener('click', () => {
+                if (!dropdownPerfil.classList.contains('hidden')) {
+                    dropdownPerfil.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('btn-sair').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                window.location.reload();
+            });
+
+            // Evento de cadastro
+            document.getElementById('btn-cadastrar-semestre').addEventListener('click', cadastrarSelecionadasNoSemestre);
+
+            const btnToggle = document.getElementById('btn-toggle-catalogo');
+            const wrapperCatalogo = document.getElementById('wrapper-catalogo');
+            let catalogoVisivel = true;
+
+            btnToggle.addEventListener('click', () => {
+                catalogoVisivel = !catalogoVisivel;
+                if (catalogoVisivel) {
+                    wrapperCatalogo.style.display = 'block';
+                    btnToggle.textContent = '▲ Recolher Lista';
+                } else {
+                    wrapperCatalogo.style.display = 'none';
+                    btnToggle.textContent = '▼ Expandir Lista';
+                }
+            });
+
+            await carregarDadosBanco();
+            atualizarDadosUsuarioUI();
+        }
+
+        async function carregarDadosBanco() {
+            const [discRes, planRes] = await Promise.all([
+                supabaseClient.from('disciplinas').select('*'),
+                supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id)
+            ]);
+
+            listaDisciplinasGlobal = discRes.data || [];
+            planejamentoGlobal = planRes.data || [];
+
+            renderizarTabelaCatalogo();
+            renderizarSemestresAlocados();
+        }
+
+        function formatarDataHoraCell(textoDataHora) {
+            if (!textoDataHora || textoDataHora.trim() === '-' || textoDataHora.trim() === '') {
+                return '<div class="text-center">-</div>';
+            }
+            let limpo = textoDataHora.trim().replace(/\s*-\s*/g, ' ');
+            let partes = limpo.split(/\s+/);
+            if (partes.length >= 2) {
+                return `<div class="text-center leading-tight"><div>${partes[0]}</div><div class="text-xs text-gray-500">${partes.slice(1).join(' ')}</div></div>`;
+            }
+            return `<div class="text-center">${textoDataHora}</div>`;
+        }
+
+        function renderizarTabelaCatalogo() {
+            const tbody = document.getElementById('tabela-disciplinas');
+            if (listaDisciplinasGlobal.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma disciplina encontrada.</td></tr>`;
+                return;
+            }
+
+            const checkboxesMarcados = Array.from(document.querySelectorAll('.check-disciplina:checked'))
+                .map(cb => parseInt(cb.value));
+
+            const horariosOcupados = new Set();
+            if (checkboxesMarcados.length > 0) {
+                listaDisciplinasGlobal.forEach(d => {
+                    if (checkboxesMarcados.includes(d.id)) {
+                        if (d.data_ap1 && d.data_ap1.trim() !== '-' && d.data_ap1.trim() !== '') horariosOcupados.add(d.data_ap1.trim());
+                        if (d.data_ap2 && d.data_ap2.trim() !== '-' && d.data_ap2.trim() !== '') horariosOcupados.add(d.data_ap2.trim());
+                        if (d.data_ap3 && d.data_ap3.trim() !== '-' && d.data_ap3.trim() !== '') horariosOcupados.add(d.data_ap3.trim());
+                    }
+                });
+            }
+
+            const statusMap = {};
+            planejamentoGlobal.forEach(p => { statusMap[p.disciplina_id] = p; });
+
+            const fragment = document.createDocumentFragment();
+
+            listaDisciplinasGlobal.forEach(disc => {
+                const jaSalvo = statusMap[disc.id];
+                const estaMarcada = checkboxesMarcados.includes(disc.id);
+                const indisponivel = (disc.controle === 0 || disc.controle === '0');
+
+                let temConflito = false;
+                if (!estaMarcada && horariosOcupados.size > 0) {
+                    if ((disc.data_ap1 && horariosOcupados.has(disc.data_ap1.trim())) ||
+                        (disc.data_ap2 && horariosOcupados.has(disc.data_ap2.trim())) ||
+                        (disc.data_ap3 && horariosOcupados.has(disc.data_ap3.trim()))) {
+                        temConflito = true;
+                    }
+                }
+
+                let classeLinha = "border-b hover:bg-gray-50 transition text-sm";
+                if (temConflito) {
+                    classeLinha = "border-b bg-amber-50 hover:bg-amber-100 transition text-sm border-l-4 border-l-amber-500";
+                }
+
+                let badgeStatusHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Não alocada</span>';
+                if (jaSalvo) {
+                    const corStatus = jaSalvo.status === 'Cursada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                    badgeStatusHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${corStatus}">${jaSalvo.status} (${jaSalvo.semestre})</span>`;
+                }
+
+                const desabilitado = jaSalvo ? 'disabled' : '';
+                const estiloCheckbox = jaSalvo ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer';
+
+                let celulasHorarios = '';
+                if (indisponivel) {
+                    celulasHorarios = `<td colspan="3" class="py-4 px-3 text-center text-xs font-semibold text-gray-500 italic align-middle">Não disponível no semestre atual</td>`;
+                } else {
+                    celulasHorarios = `
+                        <td class="py-4 px-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap1)}</td>
+                        <td class="py-4 px-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap2)}</td>
+                        <td class="py-4 px-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap3)}</td>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = classeLinha;
+                tr.innerHTML = `
+                    <td class="py-4 px-3 text-center align-middle">
+                        <input type="checkbox" value="${disc.id}" class="check-disciplina w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 ${estiloCheckbox}" ${estaMarcada ? 'checked' : ''} ${desabilitado}>
+                    </td>
+                    <td class="py-4 px-3 font-mono align-middle">${disc.codigo || '-'}</td>
+                    <td class="py-4 px-3 font-medium align-middle">
+                        <div>${disc.nome || '-'}</div>
+                        <div class="h-5 mt-1 flex items-center">
+                            ${temConflito ? '<span class="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-semibold inline-block">⚠️ Conflito de Horário</span>' : ''}
+                        </div>
+                    </td>
+                    ${celulasHorarios}
+                    <td class="py-4 px-3 text-center align-middle">${disc.periodo || '-'}</td>
+                    <td class="py-4 px-3 text-center align-middle">
+                        ${badgeStatusHtml}
+                    </td>
+                `;
+                fragment.appendChild(tr);
+            });
+
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+
+            tbody.querySelectorAll('.check-disciplina:not(:disabled)').forEach(chk => {
+                chk.addEventListener('change', () => {
+                    renderizarTabelaCatalogo();
+                });
+            });
+        }
+
+        function mostrarMensagemSucesso() {
+            const msgEl = document.getElementById('mensagem-sucesso-global');
+            msgEl.classList.remove('hidden');
+            setTimeout(() => {
+                msgEl.classList.add('hidden');
+            }, 4000);
+        }
+
+        async function cadastrarSelecionadasNoSemestre() {
+            const semestreDestino = document.getElementById('select-semestre-destino').value;
+            const checkboxesMarcados = Array.from(document.querySelectorAll('.check-disciplina:checked'))
+                .map(cb => parseInt(cb.value));
+
+            if (!semestreDestino) {
+                alert("Por favor, selecione um semestre de destino.");
+                return;
+            }
+
+            if (checkboxesMarcados.length === 0) {
+                alert("Marque ao menos uma disciplina na tabela para cadastrar.");
+                return;
+            }
+
+            const novosRegistros = checkboxesMarcados.map(discId => ({
+                user_id: usuarioAtual.id,
+                disciplina_id: discId,
+                semestre: semestreDestino,
+                status: 'Inscrita'
+            }));
+
+            const { error } = await supabaseClient.from('planejamento_usuarios').insert(novosRegistros);
+
+            if (error) {
+                alert("Erro ao salvar: " + error.message);
+                return;
+            }
+
+            document.getElementById('select-semestre-destino').value = "";
+            document.querySelectorAll('.check-disciplina').forEach(cb => cb.checked = false);
+
+            const alvo = document.getElementById('secao-grade-disciplinar');
+            if (alvo) {
+                const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                    top: topoAlvo - 120,
+                    behavior: 'smooth'
+                });
+            }
+
+            mostrarMensagemSucesso();
+            await carregarDadosBanco();
+        }
+
+        function renderizarSemestresAlocados() {
+            const container = document.getElementById('container-semestres');
+            container.innerHTML = '';
+
+            const semestresPossiveis = [
+                '1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre',
+                '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'
+            ];
+
+            semestresPossiveis.forEach(sem => {
+                const registrosNesseSemestre = planejamentoGlobal
+                    .filter(p => p.semestre === sem)
+                    .sort((a, b) => {
+                        const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
+                        const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
+                        return indexA - indexB;
+                    });
+
+                const card = document.createElement('div');
+                card.className = "bg-white border border-gray-200 rounded-xl p-5 shadow-sm";
+                
+                let htmlItens = '';
+                if (registrosNesseSemestre.length === 0) {
+                    htmlItens = `<p class="text-xs text-gray-400 italic">Nenhuma disciplina alocada neste semestre.</p>`;
+                } else {
+                    const horariosInscritosNoSemestre = new Map();
+                    registrosNesseSemestre.forEach(reg => {
+                        if (reg.status === 'Inscrita') {
+                            const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
+                            if (d && !(d.controle === 0 || d.controle === '0')) {
+                                [d.data_ap1, d.data_ap2, d.data_ap3].forEach(data => {
+                                    if (data && data.trim() !== '-' && data.trim() !== '') {
+                                        const horario = data.trim();
+                                        if (!horariosInscritosNoSemestre.has(horario)) {
+                                            horariosInscritosNoSemestre.set(horario, []);
+                                        }
+                                        horariosInscritosNoSemestre.get(horario).push(d.id);
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+                    htmlItens = `<ul class="space-y-2">`;
+                    registrosNesseSemestre.forEach(reg => {
+                        const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
+                        if (!d) return;
+
+                        const status = reg.status || 'Inscrita';
+
+                        let temConflitoItem = false;
+                        if (status === 'Inscrita' && !(d.controle === 0 || d.controle === '0')) {
+                            const datasDisc = [d.data_ap1, d.data_ap2, d.data_ap3];
+                            for (let data of datasDisc) {
+                                if (data && data.trim() !== '-' && data.trim() !== '') {
+                                    const listaComMesmoHorario = horariosInscritosNoSemestre.get(data.trim());
+                                    if (listaComMesmoHorario && listaComMesmoHorario.filter(id => id !== d.id).length > 0) {
+                                        temConflitoItem = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        let classeItemLi = "flex justify-between items-center text-sm border-b pb-2 transition rounded px-2 py-1";
+                        if (temConflitoItem) {
+                            classeItemLi += " bg-amber-50 border-l-4 border-l-amber-500";
+                        }
+
+                        const botaoApagarHtml = status !== 'Cursada' 
+                            ? `<button onclick="removerDoSemestre(${d.id})" class="text-red-500 hover:text-red-700 text-xs font-bold px-1" title="Remover">✕</button>` 
+                            : '';
+
+                        htmlItens += `
+                            <li class="${classeItemLi}">
+                                <div>
+                                    <span class="font-mono text-xs text-gray-500 mr-2">${d.codigo}</span>
+                                    <span class="font-medium text-gray-800">${d.nome}</span>
+                                    ${temConflitoItem ? '<span class="ml-2 text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-semibold">⚠️ Conflito</span>' : ''}
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <select onchange="atualizarStatusIndividual(${d.id}, this.value)" class="text-xs border rounded px-2 py-1 bg-gray-50 font-medium ${status === 'Cursada' ? 'text-green-600 bg-green-50' : 'text-blue-600 bg-blue-50'}">
+                                        <option value="Inscrita" ${status === 'Inscrita' ? 'selected' : ''}>Inscrita</option>
+                                        <option value="Cursada" ${status === 'Cursada' ? 'selected' : ''}>Cursada</option>
+                                    </select>
+                                    ${botaoApagarHtml}
+                                </div>
+                            </li>
+                        `;
+                    });
+                    htmlItens += `</ul>`;
+                }
+
+                const temInscritasParaLimpar = registrosNesseSemestre.some(r => r.status === 'Inscrita');
+                const botaoLimparHtml = temInscritasParaLimpar 
+                    ? `<button onclick="limparSemestre('${sem}')" class="text-xs text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded font-semibold transition">Limpar Inscritas</button>`
+                    : '';
+
+                const botaoImpressoraHtml = registrosNesseSemestre.length > 0 
+                    ? `<button onclick="exportarSemestrePDF('${sem}')" title="Exportar Grade do Semestre" class="text-gray-500 hover:text-blue-600 transition p-1">🖨️</button>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3 border-b pb-2">
+                        <div class="flex items-center space-x-2">
+                            ${botaoImpressoraHtml}
+                            <h3 class="font-bold text-gray-800">${sem}</h3>
+                            <span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full">${registrosNesseSemestre.length} matérias</span>
+                        </div>
+                        ${botaoLimparHtml}
+                    </div>
+                    ${htmlItens}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function atualizarStatusIndividual(discId, novoStatus) {
+            await supabaseClient.from('planejamento_usuarios')
+                .update({ status: novoStatus })
+                .eq('user_id', usuarioAtual.id)
+                .eq('disciplina_id', discId);
+            
+            await carregarDadosBanco();
+        }
+
+        async function removerDoSemestre(discId) {
+            if (!confirm("Deseja remover esta disciplina do seu planejamento?")) return;
+
+            await supabaseClient.from('planejamento_usuarios')
+                .delete()
+                .eq('user_id', usuarioAtual.id)
+                .eq('disciplina_id', discId);
+
+            await carregarDadosBanco();
+        }
+
+        async function limparSemestre(semestreNome) {
+            if (!confirm(`Deseja remover todas as disciplinas "Inscritas" do ${semestreNome}? (As disciplinas cursadas serão mantidas)`)) return;
+
+            const idsParaRemover = planejamentoGlobal
+                .filter(p => p.semestre === semestreNome && p.status === 'Inscrita')
+                .map(p => p.disciplina_id);
+
+            if (idsParaRemover.length > 0) {
+                await supabaseClient.from('planejamento_usuarios')
+                    .delete()
+                    .eq('user_id', usuarioAtual.id)
+                    .eq('semestre', semestreNome)
+                    .eq('status', 'Inscrita');
+
+                await carregarDadosBanco();
+            }
+        }
+
+        function exportarSemestrePDF(semestreNome) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+
+            const registros = planejamentoGlobal
+                .filter(p => p.semestre === semestreNome)
+                .sort((a, b) => {
+                    const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
+                    const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
+                    return indexA - indexB;
+                });
+
+            if (registros.length === 0) return;
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("Grade de Disciplinas - " + semestreNome, 14, 15);
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 21);
+
+            let y = 30;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.setFillColor(235, 240, 245);
+            doc.rect(14, y - 4, 269, 7, "F");
+
+            doc.text("Código", 16, y);
+            doc.text("Nome da Disciplina", 42, y);
+            doc.text("Data AP1", 130, y);
+            doc.text("Data AP2", 175, y);
+            doc.text("Data AP3", 220, y);
+            doc.text("Status", 283, y, { align: "right" });
+
+            y += 7;
+            doc.setFont("helvetica", "normal");
+
+            registros.forEach(reg => {
+                const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
+                if (!d) return;
+
+                if (y > 185) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.text(d.codigo || '-', 16, y);
+                
+                const nomeDisc = (d.nome || '-').length > 41 ? (d.nome || '-').substring(0, 38) + '...' : (d.nome || '-');
+                doc.text(nomeDisc, 42, y);
+                
+                if (d.controle === 0 || d.controle === '0') {
+                    doc.text("Não disponível", 130, y);
+                    doc.text("-", 175, y);
+                    doc.text("-", 220, y);
+                } else {
+                    doc.text(d.data_ap1 || '-', 130, y);
+                    doc.text(d.data_ap2 || '-', 175, y);
+                    doc.text(d.data_ap3 || '-', 220, y);
+                }
+                doc.text(reg.status || 'Inscrita', 283, y, { align: "right" });
+
+                y += 8;
+            });
+
+            doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
+        }
+
+        function exportarGradeCompletaPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const semestresPossiveis = [
+                '1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre',
+                '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'
+            ];
+
+            const semestresComDados = semestresPossiveis.map(sem => {
+                const registros = planejamentoGlobal
+                    .filter(p => p.semestre === sem)
+                    .sort((a, b) => {
+                        const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
+                        const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
+                        return indexA - indexB;
+                    });
+                return { semestre: sem, registros };
+            }).filter(s => s.registros.length > 0);
+
+            if (semestresComDados.length === 0) {
+                alert("Não há disciplinas alocadas em nenhum semestre para exportar.");
+                return;
+            }
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("Planejamento Acadêmico - Lista de Disciplinas", 14, 20);
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 26);
+
+            let y = 36;
+
+            semestresComDados.forEach(grupo => {
+                if (y > 250) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.text(grupo.semestre, 14, y);
+                y += 5;
+
+                doc.setFontSize(8);
+                doc.setFillColor(245, 247, 250);
+                doc.rect(14, y - 4, 182, 6, "F");
+                doc.text("Código", 16, y);
+                doc.text("Nome da Disciplina", 42, y);
+                doc.text("Período", 145, y);
+                doc.text("Status", 170, y);
+
+                y += 6;
+                doc.setFont("helvetica", "normal");
+
+                grupo.registros.forEach(reg => {
+                    const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
+                    if (!d) return;
+
+                    if (y > 275) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    doc.text(d.codigo || '-', 16, y);
+                    const nomeDisc = (d.nome || '-').length > 45 ? (d.nome || '-').substring(0, 42) + '...' : (d.nome || '-');
+                    doc.text(nomeDisc, 42, y);
+                    doc.text(d.periodo || '-', 145, y);
+                    doc.text(reg.status || 'Inscrita', 170, y);
+
+                    y += 6;
+                });
+
+                y += 8;
+            });
+
+            doc.save("grade_completa_disciplinas.pdf");
+        }
+
+        init();
+    </script>
+</body>
+</html>
