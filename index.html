@@ -157,6 +157,7 @@
     </main>
 
     <script>
+        // MANTENHA SUAS CREDENCIAIS AQUI
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
 
@@ -475,7 +476,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
                         <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5">
-                            <span>📥 Exportar Planejamento Acadêmico (PDF)</span>
+                            <span>📥 Exportar Planejamento (PDF)</span>
                         </button>
                     </div>
                     <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"></div>
@@ -658,7 +659,7 @@
                         disciplinas: checkboxesMarcados
                     }));
 
-                    alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta. Após o login, suas disciplinas serão cadastradas automaticamente.");
+                    alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta.");
                     abrirModalAuth('login');
                     return;
                 }
@@ -815,10 +816,10 @@
                     ? `
                         <div class="flex justify-center items-center mt-auto pt-3 space-x-2">
                             <button onclick="exportarSemestrePDF('${sem}')" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                                <span>🖨️ Exportar Grade do Semestre</span>
+                                <span>🖨️ PDF Grade</span>
                             </button>
                             <button onclick="exportarSemestreICS('${sem}')" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                                <span>📅 Exportar Calendário (.ics)</span>
+                                <span>📅 Alertas .ics</span>
                             </button>
                         </div>
                     ` 
@@ -911,7 +912,7 @@
 
         function exportarSemestrePDF(semestreNome) {
             if (!usuarioAtual) {
-                alert("Para exportar o planejamento em PDF, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                alert("Para exportar o planejamento em PDF, é necessário estar logado.");
                 abrirModalAuth('login');
                 return;
             }
@@ -985,43 +986,33 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // Nova Extração de Datas Blindada para identificar DD/MM/AAAA e HH:MM 
-        function parseDataHoraStr(str) {
+        // NOVA FUNÇÃO BLINDADA: Extrai exatamente o formato "05/09/2026 - 13:30 às 16:00"
+        function parseDataHoraStrICS(str) {
             if (!str) return null;
             
-            // Busca data no formato DD/MM/YYYY
-            let regexData = /(\d{2})\/(\d{2})\/(\d{4})/;
-            let dataMatch = regexData.exec(str);
-            if (!dataMatch) return null;
+            // Regex rigorosa focada no formato exato da sua tabela
+            const regex = /^(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}):(\d{2})\s*às\s*(\d{2}):(\d{2})$/;
+            const match = str.trim().match(regex);
             
-            let dia = parseInt(dataMatch[1], 10);
-            let mes = parseInt(dataMatch[2], 10) - 1;
-            let ano = parseInt(dataMatch[3], 10);
-
-            // Busca os horários na célula
-            let regexHora = /\b(\d{2}):(\d{2})\b/g;
-            let horarios = [];
-            let match;
-            while ((match = regexHora.exec(str)) !== null) {
-                horarios.push({ h: parseInt(match[1], 10), m: parseInt(match[2], 10) });
+            if (match) {
+                const dia = match[1];
+                const mes = match[2];
+                const ano = match[3];
+                const horaInicio = match[4];
+                const minInicio = match[5];
+                const horaFim = match[6];
+                const minFim = match[7];
+                
+                return {
+                    dtstart: `${ano}${mes}${dia}T${horaInicio}${minInicio}00`,
+                    dtend: `${ano}${mes}${dia}T${horaFim}${minFim}00`
+                };
             }
-
-            if (horarios.length === 0) return null;
-
-            let dtInicio = new Date(ano, mes, dia, horarios[0].h, horarios[0].m, 0);
-            let dtFim;
-
-            if (horarios.length > 1) {
-                dtFim = new Date(ano, mes, dia, horarios[1].h, horarios[1].m, 0);
-            } else {
-                dtFim = new Date(dtInicio.getTime() + 2 * 60 * 60 * 1000);
-            }
-
-            return { inicio: dtInicio, fim: dtFim };
+            return null;
         }
 
-        // Formatação direta em UTC (Z) para evitar BUGs de horário de verão e fuso horário do cliente
-        function formatarDataICalUTC(dateObj) {
+        function formatarDataHoraAtualZ() {
+            const dateObj = new Date();
             const ano = dateObj.getUTCFullYear();
             const mes = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
             const dia = String(dateObj.getUTCDate()).padStart(2, '0');
@@ -1033,7 +1024,7 @@
 
         async function exportarSemestreICS(semestreNome) {
             if (!usuarioAtual) {
-                alert("Para exportar o calendário em .ics, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                alert("Para exportar o calendário em .ics, é necessário estar logado.");
                 abrirModalAuth('login');
                 return;
             }
@@ -1058,12 +1049,13 @@
             registros.forEach(reg => {
                 const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
                 if (!disc) return;
+                
+                // IGNORAR DISCIPLINAS INDISPONÍVEIS (Controle = 0)
                 if (disc.controle === 0 || disc.controle === '0') return;
 
                 const codigoDisc = disc.codigo || 'GERAL';
                 const nomeDisc = disc.nome || 'Disciplina';
-                const uidUnico = `${codigoDisc}${codigoSemestreFormatado}@eadblitz.com.br`;
-
+                
                 const novaSequence = (reg.sequence || 0) + 1;
                 atualizacoesSequenciais.push({
                     disciplina_id: reg.disciplina_id,
@@ -1071,21 +1063,24 @@
                     sequence: novaSequence
                 });
 
-                const dtstampStr = formatarDataICalUTC(new Date());
+                const dtstampStr = formatarDataHoraAtualZ();
 
-                // Processar AP1
-                const parseAp1 = parseDataHoraStr(disc.data_ap1);
-                if (parseAp1) {
-                    let summaryAp1 = `Prova AP1 ${nomeDisc} ${semestreTextoFormatado}`;
+                // FUNÇÃO AUXILIAR PARA GERAR O BLOCO VEVENT
+                const gerarBlocoEvento = (tipoAP, dataString) => {
+                    const parsed = parseDataHoraStrICS(dataString);
+                    if (!parsed) return "";
                     
-                    eventosIcs.push(`BEGIN:VEVENT
-UID:${uidUnico}-AP1
+                    const uidUnico = `${codigoDisc}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
+                    const summary = `Prova ${tipoAP} ${nomeDisc} ${semestreTextoFormatado}`;
+                    
+                    return `BEGIN:VEVENT
+UID:${uidUnico}
 DTSTAMP:${dtstampStr}
 SEQUENCE:${novaSequence}
-DTSTART:${formatarDataICalUTC(parseAp1.inicio)}
-DTEND:${formatarDataICalUTC(parseAp1.fim)}
-SUMMARY:${summaryAp1}
-DESCRIPTION:Avaliação Presencial 1 da disciplina ${nomeDisc}
+DTSTART;TZID=America/Sao_Paulo:${parsed.dtstart}
+DTEND;TZID=America/Sao_Paulo:${parsed.dtend}
+SUMMARY:${summary}
+DESCRIPTION:Avaliação Presencial da disciplina ${nomeDisc}
 URL:https://www.eadblitz.com.br
 CATEGORIES:Provas
 ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
@@ -1093,82 +1088,37 @@ STATUS:CONFIRMED
 TRANSP:OPAQUE
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP1
-TRIGGER:-PT168H
+DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:EMAIL
+DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
+SUMMARY:Aviso Prévio: Prova ${tipoAP} ${nomeDisc}
+TRIGGER:-P7D
 END:VALARM
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP1
-TRIGGER:-PT48H
+DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
+TRIGGER:-P2D
 END:VALARM
-END:VEVENT`);
-                }
+END:VEVENT`;
+                };
 
-                // Processar AP2
-                const parseAp2 = parseDataHoraStr(disc.data_ap2);
-                if (parseAp2) {
-                    let summaryAp2 = `Prova AP2 ${nomeDisc} ${semestreTextoFormatado}`;
-                    
-                    eventosIcs.push(`BEGIN:VEVENT
-UID:${uidUnico}-AP2
-DTSTAMP:${dtstampStr}
-SEQUENCE:${novaSequence}
-DTSTART:${formatarDataICalUTC(parseAp2.inicio)}
-DTEND:${formatarDataICalUTC(parseAp2.fim)}
-SUMMARY:${summaryAp2}
-DESCRIPTION:Avaliação Presencial 2 da disciplina ${nomeDisc}
-URL:https://www.eadblitz.com.br
-CATEGORIES:Provas
-ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP2
-TRIGGER:-PT168H
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP2
-TRIGGER:-PT48H
-END:VALARM
-END:VEVENT`);
-                }
+                // Adiciona AP1 e AP2 (e opcionalmente AP3 se quiser estender no futuro)
+                const blocoAP1 = gerarBlocoEvento('AP1', disc.data_ap1);
+                if (blocoAP1) eventosIcs.push(blocoAP1);
 
-                // Processar AP3
-                const parseAp3 = parseDataHoraStr(disc.data_ap3);
-                if (parseAp3) {
-                    let summaryAp3 = `Prova AP3 ${nomeDisc} ${semestreTextoFormatado}`;
-                    
-                    eventosIcs.push(`BEGIN:VEVENT
-UID:${uidUnico}-AP3
-DTSTAMP:${dtstampStr}
-SEQUENCE:${novaSequence}
-DTSTART:${formatarDataICalUTC(parseAp3.inicio)}
-DTEND:${formatarDataICalUTC(parseAp3.fim)}
-SUMMARY:${summaryAp3}
-DESCRIPTION:Avaliação Presencial 3 da disciplina ${nomeDisc}
-URL:https://www.eadblitz.com.br
-CATEGORIES:Provas
-ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP3
-TRIGGER:-PT168H
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP3
-TRIGGER:-PT48H
-END:VALARM
-END:VEVENT`);
-                }
+                const blocoAP2 = gerarBlocoEvento('AP2', disc.data_ap2);
+                if (blocoAP2) eventosIcs.push(blocoAP2);
+                
+                // Incluindo AP3 para ficar completo caso a disciplina tenha
+                const blocoAP3 = gerarBlocoEvento('AP3', disc.data_ap3);
+                if (blocoAP3) eventosIcs.push(blocoAP3);
             });
 
             if (eventosIcs.length === 0) {
-                alert("Nenhuma data de AP válida encontrada nas disciplinas deste semestre (disciplinas indisponíveis foram ignoradas).");
+                alert("Nenhuma data válida encontrada para exportação. (Disciplinas com controle indisponível são ignoradas).");
                 return;
             }
 
@@ -1180,7 +1130,6 @@ END:VEVENT`);
                     .eq('semestre', att.semestre);
             }
 
-            // Removido o bloco VTIMEZONE: agora tudo é exportado em UTC universal (Z)
             const conteudoIcs = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
@@ -1209,7 +1158,7 @@ END:VEVENT`);
 
         function exportarGradeCompletaPDF() {
             if (!usuarioAtual) {
-                alert("Para exportar a grade completa em PDF, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                alert("Para exportar a grade completa em PDF, é necessário estar logado.");
                 abrirModalAuth('login');
                 return;
             }
