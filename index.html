@@ -377,7 +377,8 @@
                 user_id: userId,
                 disciplina_id: item.disciplina_id,
                 semestre: item.semestre,
-                status: item.status || 'Inscrita'
+                status: item.status || 'Inscrita',
+                sequence: 0
             }));
 
             const { error } = await supabaseClient.from('planejamento_usuarios').insert(registrosParaSalvar);
@@ -634,7 +635,8 @@
                             dadosLocais.push({
                                 disciplina_id: discId,
                                 semestre: semestreDestino,
-                                status: 'Inscrita'
+                                status: 'Inscrita',
+                                sequence: 0
                             });
                         }
                     });
@@ -673,7 +675,8 @@
                 user_id: userId,
                 disciplina_id: discId,
                 semestre: semestreDestino,
-                status: 'Inscrita'
+                status: 'Inscrita',
+                sequence: 0
             }));
 
             const { error } = await supabaseClient.from('planejamento_usuarios').insert(novosRegistros);
@@ -811,8 +814,17 @@
                     ? `<button onclick="limparSemestre('${sem}')" class="text-xs text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded font-semibold transition">Limpar Inscritas</button>`
                     : '';
 
-                const botaoImpressoraHtml = registrosNesseSemestre.length > 0 
-                    ? `<div class="flex justify-center mt-auto pt-3"><button onclick="exportarSemestrePDF('${sem}')" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5"><span>🖨️ Exportar Grade do Semestre</span></button></div>`
+                const botoesAcoesRodapeHtml = registrosNesseSemestre.length > 0 
+                    ? `
+                        <div class="flex justify-center items-center mt-auto pt-3 space-x-2">
+                            <button onclick="exportarSemestrePDF('${sem}')" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
+                                <span>🖨️ Exportar Grade do Semestre</span>
+                            </button>
+                            <button onclick="exportarSemestreICS('${sem}')" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
+                                <span>📅 Exportar Calendário (.ics)</span>
+                            </button>
+                        </div>
+                    ` 
                     : '';
 
                 card.innerHTML = `
@@ -824,7 +836,7 @@
                         ${botaoLimparHtml}
                     </div>
                     ${htmlItens}
-                    ${botaoImpressoraHtml}
+                    ${botoesAcoesRodapeHtml}
                 `;
                 container.appendChild(card);
             });
@@ -973,6 +985,222 @@
             });
 
             doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
+            window.scrollTo({ top: scrollSalvo });
+        }
+
+        // Função auxiliar para converter string de data/hora (ex: "25/04/2026 14:00" ou "25/04/2026 das 14:00 às 16:00") para objeto Date
+        function parseDataHoraStr(str) {
+            if (!str) return null;
+            let limpo = str.trim().replace(/\s*-\s*/g, ' ');
+            let partes = limpo.split(/\s+/);
+            if (partes.length < 2) return null;
+
+            let dataPart = partes[0]; // DD/MM/YYYY
+            let dPartes = dataPart.split('/');
+            if (dPartes.length !== 3) return null;
+            let dia = parseInt(dPartes[0], 10);
+            let mes = parseInt(dPartes[1], 10) - 1;
+            let ano = parseInt(dPartes[2], 10);
+
+            // Procurar por horário (formato HH:MM)
+            let horaStr = partes.find(p => /^\d{2}:\d{2}$/.test(p)) || '00:00';
+            let hPartes = horaStr.split(':');
+            let hora = parseInt(hPartes[0], 10);
+            let minuto = parseInt(hPartes[1], 10);
+
+            return new Date(ano, mes, dia, hora, minuto, 0);
+        }
+
+        function formatarDataICal(dateObj) {
+            const ano = dateObj.getFullYear();
+            const mes = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const dia = String(dateObj.getDate()).padStart(2, '0');
+            const hora = String(dateObj.getHours()).padStart(2, '0');
+            const min = String(dateObj.getMinutes()).padStart(2, '0');
+            const seg = String(dateObj.getSeconds()).padStart(2, '0');
+            return `${ano}${mes}${dia}T${hora}${min}${seg}`;
+        }
+
+        async function exportarSemestreICS(semestreNome) {
+            if (!usuarioAtual) {
+                alert("Para exportar o calendário em .ics, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                abrirModalAuth('login');
+                return;
+            }
+
+            const scrollSalvo = window.scrollY;
+            const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
+
+            if (registros.length === 0) {
+                alert("Não há disciplinas neste semestre para gerar o calendário.");
+                return;
+            }
+
+            // Determinar o ano e semestre vigente atual (ex: se mês >= 6, semestre 2, senão 1)
+            const now = new Date();
+            const anoVigente = now.getFullYear();
+            const semestreVigenteNum = (now.getMonth() + 1) >= 6 ? 2 : 1;
+            const codigoSemestreFormatado = `${anoVigente}${semestreVigenteNum}`;
+            const semestreTextoFormatado = `${anoVigente}-${semestreVigenteNum}`;
+
+            let eventosIcs = [];
+            let atualizacoesSequenciais = [];
+
+            registros.forEach(reg => {
+                const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
+                if (!disc) return;
+
+                // Ignorar completamente disciplinas com controle 0 ou '0'
+                if (disc.controle === 0 || disc.controle === '0') return;
+
+                const codigoDisc = disc.codigo || 'GERAL';
+                const nomeDisc = disc.nome || 'Disciplina';
+                const uidUnico = `${codigoDisc}${codigoSemestreFormatado}@eadblitz.com.br`;
+
+                const novaSequence = (reg.sequence || 0) + 1;
+                atualizacoesSequenciais.push({
+                    disciplina_id: reg.disciplina_id,
+                    semestre: reg.semestre,
+                    sequence: novaSequence
+                });
+
+                const dtstampStr = formatarDataICal(new Date()) + 'Z';
+
+                // Processar AP1
+                const dtInicioAp1 = parseDataHoraStr(disc.data_ap1);
+                if (dtInicioAp1) {
+                    let dtFimAp1 = new Date(dtInicioAp1.getTime() + 2 * 60 * 60 * 1000); // duração padrão de 2h se não especificado
+                    let summaryAp1 = `Prova AP1 ${nomeDisc} ${semestreTextoFormatado}`;
+                    
+                    eventosIcs.push(`BEGIN:VEVENT
+UID:${uidUnico}-AP1
+DTSTAMP:${dtstampStr}
+SEQUENCE:${novaSequence}
+DTSTART;TZID=America/Sao_Paulo:${formatarDataICal(dtInicioAp1)}
+DTEND;TZID=America/Sao_Paulo:${formatarDataICal(dtFimAp1)}
+SUMMARY:${summaryAp1}
+DESCRIPTION:Avaliação Presencial 1 da disciplina ${nomeDisc}
+URL:https://www.eadblitz.com.br
+CATEGORIES:Provas
+ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+BEGIN:VALARM
+TRIGGER:-P7D
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Prova AP1 em 7 dias (${nomeDisc})
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P7D
+ACTION:EMAIL
+SUMMARY:Lembrete de Prova AP1 em 7 dias
+DESCRIPTION:A prova AP1 da disciplina ${nomeDisc} ocorrerá em 7 dias.
+ATTENDEE:mailto:${usuarioAtual.email}
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P2D
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Prova AP1 em 2 dias (${nomeDisc})
+END:VALARM
+END:VEVENT`);
+                }
+
+                // Processar AP2
+                const dtInicioAp2 = parseDataHoraStr(disc.data_ap2);
+                if (dtInicioAp2) {
+                    let dtFimAp2 = new Date(dtInicioAp2.getTime() + 2 * 60 * 60 * 1000);
+                    let summaryAp2 = `Prova AP2 ${nomeDisc} ${semestreTextoFormatado}`;
+                    
+                    eventosIcs.push(`BEGIN:VEVENT
+UID:${uidUnico}-AP2
+DTSTAMP:${dtstampStr}
+SEQUENCE:${novaSequence}
+DTSTART;TZID=America/Sao_Paulo:${formatarDataICal(dtInicioAp2)}
+DTEND;TZID=America/Sao_Paulo:${formatarDataICal(dtFimAp2)}
+SUMMARY:${summaryAp2}
+DESCRIPTION:Avaliação Presencial 2 da disciplina ${nomeDisc}
+URL:https://www.eadblitz.com.br
+CATEGORIES:Provas
+ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+BEGIN:VALARM
+TRIGGER:-P7D
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Prova AP2 em 7 dias (${nomeDisc})
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P7D
+ACTION:EMAIL
+SUMMARY:Lembrete de Prova AP2 em 7 dias
+DESCRIPTION:A prova AP2 da disciplina ${nomeDisc} ocorrerá em 7 dias.
+ATTENDEE:mailto:${usuarioAtual.email}
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P2D
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Prova AP2 em 2 dias (${nomeDisc})
+END:VALARM
+END:VEVENT`);
+                }
+            });
+
+            if (eventosIcs.length === 0) {
+                alert("Nenhuma data de AP válida encontrada nas disciplinas deste semestre (disciplinas indisponíveis foram ignoradas).");
+                return;
+            }
+
+            // Atualizar os valores de sequence no banco para persistência e atualizações futuras
+            for (let att of atualizacoesSequenciais) {
+                await supabaseClient.from('planejamento_usuarios')
+                    .update({ sequence: att.sequence })
+                    .eq('user_id', usuarioAtual.id)
+                    .eq('disciplina_id', att.disciplina_id)
+                    .eq('semestre', att.semestre);
+            }
+
+            // Montar o conteúdo completo do arquivo .ics
+            const conteudoIcs = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//BlitzEAD//Planejamento Academico//PT',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'X-WR-CALNAME:Provas - ' + semestreNome,
+                'X-WR-TIMEZONE:America/Sao_Paulo',
+                'BEGIN:VTIMEZONE',
+                'TZID:America/Sao_Paulo',
+                'BEGIN:DAYLIGHT',
+                'TZOFFSETFROM:-0300',
+                'TZOFFSETTO:-0200',
+                'TZNAME:BRST',
+                'DTSTART:20071009T000000',
+                'RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=10',
+                'END:DAYLIGHT',
+                'BEGIN:STANDARD',
+                'TZOFFSETFROM:-0200',
+                'TZOFFSETTO:-0300',
+                'TZNAME:BRT',
+                'DTSTART:20080215T000000',
+                'RRULE:FREQ=YEARLY;BYDAY=3SU;BYMONTH=2',
+                'END:STANDARD',
+                'END:VTIMEZONE',
+                ...eventosIcs,
+                'END:VCALENDAR'
+            ].join('\r\n');
+
+            // Gerar download do arquivo .ics
+            const blob = new Blob([conteudoIcs], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `provas_${semestreNome.toLowerCase().replace(' ', '_')}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            await carregarDadosBanco();
             window.scrollTo({ top: scrollSalvo });
         }
 
