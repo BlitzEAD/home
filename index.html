@@ -4,28 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EADBlitz - Planejamento Acadêmico</title>
-    <!-- Inclua seus estilos CSS e bibliotecas necessárias aqui (ex: Tailwind, Supabase, etc.) -->
+    
+    <!-- Tailwind CSS para Estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
+    
+    <!-- jsPDF para exportação em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- Conteúdo principal do seu app -->
-    <div id="app">
-        <h1>Planejamento Acadêmico - EADBlitz</h1>
-        <div id="botoes-exportacao">
-            <button onclick="exportarSemestreICS('Semestre 1')">Exportar Calendário (ICS)</button>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- HEADER / NAVEGAÇÃO -->
+    <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-lg text-xl font-bold">
+                    <i class="fa-solid fa-graduation-cap"></i> EADBlitz
+                </div>
+                <span class="text-xs bg-indigo-800 px-2 py-1 rounded text-indigo-200">Planejamento Acadêmico</span>
+            </div>
+            
+            <div id="auth-container" class="flex items-center space-x-3 mt-2 sm:mt-0">
+                <!-- Conteúdo injetado via JS (Login/Logout/Perfil) -->
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+        
+        <!-- Alerta para visitantes -->
+        <div id="banner-visitante" class="hidden mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
+                    <p class="text-sm text-amber-700">Você está navegando como visitante. Suas alterações ficam salvas apenas neste navegador.</p>
+                </div>
+                <button onclick="abrirModalAuth('cadastro')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition">
+                    Criar Conta Gratuita
+                </button>
+            </div>
+        </div>
+
+        <!-- Seção de Semestres e Disciplinas -->
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <h1 class="text-2xl font-bold text-slate-900"><i class="fa-solid fa-calendar-days text-indigo-600 mr-2"></i> Meu Planejamento</h1>
+            
+            <div class="flex items-center space-x-2 flex-wrap gap-2">
+                <button onclick="adicionarSemestre()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i> <span>Novo Semestre</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Container onde os semestres serão renderizados -->
+        <div id="container-semestres" class="space-y-8">
+            <!-- Renderizado dinamicamente -->
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-12 text-center text-xs text-slate-500">
+        <p>&copy; 2026 EADBlitz. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- MODAL DE AUTENTICAÇÃO -->
+    <div id="modal-auth" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
+            <button onclick="fecharModalAuth()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div id="conteudo-modal-auth">
+                <!-- Conteúdo de login/cadastro injetado via JS -->
+            </div>
         </div>
     </div>
 
-    <!-- Script principal com a lógica corrigida -->
+    <!-- SCRIPT COMPLETO DA APLICAÇÃO -->
     <script>
-        // Exemplo de variáveis globais simuladas para funcionamento do script
-        let usuarioAtual = { id: "usuario_exemplo", email: "aluno@email.com" };
+        // Configuração do Supabase (Substitua pelas suas chaves reais se necessário)
+        const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI';
+        const SUPABASE_ANON_KEY = 'SUA_SUPABASE_ANON_KEY_AQUI';
+        const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'SUA_SUPABASE_URL_AQUI') 
+            ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+            : null;
+
+        let usuarioAtual = null;
         let planejamentoGlobal = [];
         let listaDisciplinasGlobal = [];
-        let supabaseClient = null; // Inicialize sua instância do Supabase conforme seu projeto
 
-        // Função para extrair corretamente data e horário exatos de início e término informados na tabela
+        // Inicialização básica ao carregar a página
+        document.addEventListener('DOMContentLoaded', async () => {
+            await verificarSessao();
+            await carregarDadosBanco();
+            renderizarApp();
+        });
+
+        async function verificarSessao() {
+            if (!supabaseClient) return;
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            usuarioAtual = session ? session.user : null;
+            atualizarHeaderAuth();
+        }
+
+        function atualizarHeaderAuth() {
+            const container = document.getElementById('auth-container');
+            const banner = document.getElementById('banner-visitante');
+
+            if (usuarioAtual) {
+                if (banner) banner.classList.add('hidden');
+                container.innerHTML = `
+                    <span class="text-xs text-indigo-200 hidden sm:inline">${usuarioAtual.email}</span>
+                    <button onclick="fazerLogout()" class="bg-indigo-800 hover:bg-indigo-700 text-xs px-3 py-1.5 rounded transition">Sair</button>
+                `;
+            } else {
+                if (banner) banner.classList.remove('hidden');
+                container.innerHTML = `
+                    <button onclick="abrirModalAuth('login')" class="text-xs bg-indigo-800 hover:bg-indigo-700 px-3 py-1.5 rounded transition">Entrar</button>
+                    <button onclick="abrirModalAuth('cadastro')" class="text-xs bg-white text-indigo-900 font-semibold px-3 py-1.5 rounded hover:bg-indigo-50 transition">Cadastrar</button>
+                `;
+            }
+        }
+
+        async function carregarDadosBanco() {
+            // Mock de dados locais ou carregamento real do banco para testes
+            listaDisciplinasGlobal = [
+                { id: 1, codigo: 'ADM101', nome: 'Introdução à Administração', controle: 1, data_ap1: '15/04/2026 das 14:00 às 16:00', data_ap2: '15/06/2026 das 14:00 às 16:00' },
+                { id: 2, codigo: 'ADM102', nome: 'Contabilidade Geral', controle: 1, data_ap1: '16/04/2026 das 09:00 às 11:00', data_ap2: '16/06/2026 das 09:00 às 11:00' }
+            ];
+            
+            planejamentoGlobal = [
+                { semestre: 'Semestre 1', disciplina_id: 1, sequence: 1 },
+                { semestre: 'Semestre 1', disciplina_id: 2, sequence: 1 }
+            ];
+        }
+
+        function renderizarApp() {
+            const container = document.getElementById('container-semestres');
+            container.innerHTML = `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-800">Semestre 1</h2>
+                        <button onclick="exportarSemestreICS('Semestre 1')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-calendar-arrow-down"></i> <span>Exportar Calendário (ICS)</span>
+                        </button>
+                    </div>
+                    <p class="text-sm text-slate-500">Disciplinas e provas organizadas para este semestre.</p>
+                </div>
+            `;
+        }
+
+        function adicionarSemestre() {
+            alert("Função de adicionar novo semestre ativada.");
+        }
+
+        function abrirModalAuth(tipo) {
+            const modal = document.getElementById('modal-auth');
+            const conteudo = document.getElementById('conteudo-modal-auth');
+            modal.classList.remove('hidden');
+            conteudo.innerHTML = `<h3 class="text-lg font-bold mb-4">${tipo === 'login' ? 'Entrar na EADBlitz' : 'Criar Conta'}</h3><p class="text-sm text-slate-500">Módulo de autenticação ativo.</p>`;
+        }
+
+        function fecharModalAuth() {
+            document.getElementById('modal-auth').classList.add('hidden');
+        }
+
+        async function fazerLogout() {
+            if (supabaseClient) await supabaseClient.auth.signOut();
+            usuarioAtual = null;
+            atualizarHeaderAuth();
+        }
+
+        // ==========================================
+        // FUNÇÕES CORRIGIDAS DE EXPORTAÇÃO .ICS
+        // ==========================================
+
         function parseDataHoraStr(str) {
             if (!str) return null;
             let limpo = str.trim();
@@ -82,6 +247,7 @@
         async function exportarSemestreICS(semestreNome) {
             if (!usuarioAtual) {
                 alert("Para exportar o calendário em .ics, é necessário estar logado. Por favor, entre ou crie sua conta.");
+                abrirModalAuth('login');
                 return;
             }
 
@@ -121,7 +287,7 @@
 
                 const dtstampStr = formatarDataICal(new Date()) + 'Z';
 
-                // Processar AP1
+                // Processar AP1 com alarmes corrigidos -P7D e -P2D
                 const datasAp1 = parseDataHoraStr(disc.data_ap1);
                 if (datasAp1) {
                     let summaryAp1 = `Prova AP1 ${nomeDisc} ${semestreTextoFormatado}`;
@@ -159,7 +325,7 @@ END:VALARM
 END:VEVENT`);
                 }
 
-                // Processar AP2
+                // Processar AP2 com alarmes corrigidos -P7D e -P2D
                 const datasAp2 = parseDataHoraStr(disc.data_ap2);
                 if (datasAp2) {
                     let summaryAp2 = `Prova AP2 ${nomeDisc} ${semestreTextoFormatado}`;
@@ -199,7 +365,7 @@ END:VEVENT`);
             });
 
             if (eventosIcs.length === 0) {
-                alert("Nenhuma data de AP válida encontrada nas disciplinas deste semestre (disciplinas indisponíveis foram ignoradas).");
+                alert("Nenhuma data de AP válida encontrada nas disciplinas deste semestre.");
                 return;
             }
 
