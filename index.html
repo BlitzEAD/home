@@ -824,6 +824,7 @@
         }
 
         async function atualizarStatusIndividual(discId, novoStatus) {
+            const scrollAtual = window.scrollY;
             if (!usuarioAtual) {
                 let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
                 const item = dadosLocais.find(i => i.disciplina_id === discId);
@@ -831,6 +832,7 @@
                     item.status = novoStatus;
                     localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
                     await carregarDadosBanco();
+                    window.scrollTo(0, scrollAtual);
                 }
                 return;
             }
@@ -841,16 +843,20 @@
                 .eq('disciplina_id', discId);
             
             await carregarDadosBanco();
+            window.scrollTo(0, scrollAtual);
         }
 
         async function removerDoSemestre(discId) {
             if (!confirm("Deseja remover esta disciplina do seu planejamento?")) return;
+
+            const scrollAtual = window.scrollY;
 
             if (!usuarioAtual) {
                 let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
                 dadosLocais = dadosLocais.filter(i => i.disciplina_id !== discId);
                 localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
                 await carregarDadosBanco();
+                window.scrollTo(0, scrollAtual);
                 return;
             }
 
@@ -860,16 +866,20 @@
                 .eq('disciplina_id', discId);
 
             await carregarDadosBanco();
+            window.scrollTo(0, scrollAtual);
         }
 
         async function limparSemestre(semestreNome) {
             if (!confirm(`Deseja remover todas as disciplinas "Inscritas" do ${semestreNome}?`)) return;
+
+            const scrollAtual = window.scrollY;
 
             if (!usuarioAtual) {
                 let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
                 dadosLocais = dadosLocais.filter(i => !(i.semestre === semestreNome && i.status === 'Inscrita'));
                 localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
                 await carregarDadosBanco();
+                window.scrollTo(0, scrollAtual);
                 return;
             }
 
@@ -880,6 +890,7 @@
                 .eq('status', 'Inscrita');
 
             await carregarDadosBanco();
+            window.scrollTo(0, scrollAtual);
         }
 
         function exportarSemestrePDF(semestreNome) {
