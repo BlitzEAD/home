@@ -469,7 +469,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
                         <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5">
-                            <span>📥 Exportar (PDF)</span>
+                            <span>📥 Exportar Planejamento Acadêmico (PDF)</span>
                         </button>
                     </div>
                     <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -805,19 +805,19 @@
                     : '';
 
                 const botaoImpressoraHtml = registrosNesseSemestre.length > 0 
-                    ? `<button onclick="exportarSemestrePDF('${sem}')" title="Exportar Grade do Semestre" class="text-gray-500 hover:text-blue-600 transition p-1">🖨️</button>`
+                    ? `<button onclick="exportarSemestrePDF('${sem}')" class="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm flex items-center justify-center space-x-1.5"><span>🖨️ Exportar Grade do Semestre</span></button>`
                     : '';
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-3 border-b pb-2">
                         <div class="flex items-center space-x-2">
-                            ${botaoImpressoraHtml}
                             <h3 class="font-bold text-gray-800">${sem}</h3>
                             <span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full">${registrosNesseSemestre.length} matérias</span>
                         </div>
                         ${botaoLimparHtml}
                     </div>
                     ${htmlItens}
+                    ${botaoImpressoraHtml}
                 `;
                 container.appendChild(card);
             });
