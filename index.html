@@ -472,7 +472,7 @@
                             <span>📥 Exportar Planejamento Acadêmico (PDF)</span>
                         </button>
                     </div>
-                    <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                    <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"></div>
                 </div>
             `;
 
@@ -725,7 +725,7 @@
                     });
 
                 const card = document.createElement('div');
-                card.className = "bg-white border border-gray-200 rounded-xl p-5 shadow-sm";
+                card.className = "bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col";
                 
                 let htmlItens = '';
                 if (registrosNesseSemestre.length === 0) {
@@ -749,7 +749,7 @@
                         }
                     });
 
-                    htmlItens = `<ul class="space-y-2">`;
+                    htmlItens = `<ul class="space-y-2 mb-3">`;
                     registrosNesseSemestre.forEach(reg => {
                         const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
                         if (!d) return;
@@ -805,7 +805,7 @@
                     : '';
 
                 const botaoImpressoraHtml = registrosNesseSemestre.length > 0 
-                    ? `<button onclick="exportarSemestrePDF('${sem}')" class="mt-3 inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5"><span>🖨️ Exportar Grade do Semestre</span></button>`
+                    ? `<div class="flex justify-center mt-auto pt-3"><button onclick="exportarSemestrePDF('${sem}')" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5"><span>🖨️ Exportar Grade do Semestre</span></button></div>`
                     : '';
 
                 card.innerHTML = `
@@ -998,10 +998,8 @@
             let y = 36;
 
             semestresComDados.forEach(grupo => {
-                // Cada linha de matéria ocupa 6 unidades de altura, mais cabeçalho do semestre (~16 unidades)
                 const alturaBlocoSemestre = 16 + (grupo.registros.length * 6);
 
-                // Se o bloco inteiro não couber na página atual, salta para a próxima página antecipadamente
                 if (y + alturaBlocoSemestre > 280) {
                     doc.addPage();
                     y = 20;
