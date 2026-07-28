@@ -805,7 +805,7 @@
                     : '';
 
                 const botaoImpressoraHtml = registrosNesseSemestre.length > 0 
-                    ? `<button onclick="exportarSemestrePDF('${sem}')" class="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm flex items-center justify-center space-x-1.5"><span>🖨️ Exportar Grade do Semestre</span></button>`
+                    ? `<button onclick="exportarSemestrePDF('${sem}')" class="mt-3 inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5"><span>🖨️ Exportar Grade do Semestre</span></button>`
                     : '';
 
                 card.innerHTML = `
@@ -998,7 +998,11 @@
             let y = 36;
 
             semestresComDados.forEach(grupo => {
-                if (y > 250) {
+                // Cada linha de matéria ocupa 6 unidades de altura, mais cabeçalho do semestre (~16 unidades)
+                const alturaBlocoSemestre = 16 + (grupo.registros.length * 6);
+
+                // Se o bloco inteiro não couber na página atual, salta para a próxima página antecipadamente
+                if (y + alturaBlocoSemestre > 280) {
                     doc.addPage();
                     y = 20;
                 }
@@ -1022,11 +1026,6 @@
                 grupo.registros.forEach(reg => {
                     const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
                     if (!d) return;
-
-                    if (y > 275) {
-                        doc.addPage();
-                        y = 20;
-                    }
 
                     doc.text(d.codigo || '-', 16, y);
                     const nomeDisc = (d.nome || '-').length > 45 ? (d.nome || '-').substring(0, 42) + '...' : (d.nome || '-');
