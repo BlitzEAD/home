@@ -1018,7 +1018,8 @@
                 const horaFim = parseInt(match[6], 10);
                 const minFim = parseInt(match[7], 10);
                 
-                // Força o horário a virar UTC somando 3 horas fixas
+                const dataObjDate = new Date(Date.UTC(ano, mes, dia, horaInicio + 3, minInicio, 0));
+
                 function formatarUTC(h, m) {
                     let d = new Date(Date.UTC(ano, mes, dia, h + 3, m, 0));
                     const yyyy = d.getUTCFullYear();
@@ -1030,6 +1031,14 @@
                 }
 
                 return {
+                    dateObj: dataObjDate,
+                    diaStr: String(dia).padStart(2, '0'),
+                    mesStr: String(mes + 1).padStart(2, '0'),
+                    anoStr: String(ano),
+                    horaInicioStr: String(horaInicio).padStart(2, '0'),
+                    minInicioStr: String(minInicio).padStart(2, '0'),
+                    horaFimStr: String(horaFim).padStart(2, '0'),
+                    minFimStr: String(minFim).padStart(2, '0'),
                     dtstart: formatarUTC(horaInicio, minInicio),
                     dtend: formatarUTC(horaFim, minFim)
                 };
@@ -1143,68 +1152,144 @@
             let eventosIcs = [];
             let atualizacoesSequenciais = [];
 
-            registros.forEach(reg => {
-                const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                if (!disc) return;
-                
-                // IGNORAR DISCIPLINAS INDISPONÍVEIS (Controle = 0)
-                if (disc.controle === 0 || disc.controle === '0') return;
+            // Apenas AP1 e AP2 (AP3 excluída conforme diretriz)
+            const tiposAvaliacao = ['AP1', 'AP2'];
 
-                const codigoDisc = disc.codigo || 'GERAL';
-                const nomeDisc = disc.nome || 'Disciplina';
-                
-                const novaSequence = (reg.sequence || 0) + 1;
-                atualizacoesSequenciais.push({
-                    disciplina_id: reg.disciplina_id,
-                    semestre: reg.semestre,
-                    sequence: novaSequence
+            tiposAvaliacao.forEach(tipoAP => {
+                let provasDoTipo = [];
+
+                registros.forEach(reg => {
+                    const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
+                    if (!disc) return;
+                    if (disc.controle === 0 || disc.controle === '0') return;
+
+                    const campoData = tipoAP === 'AP1' ? disc.data_ap1 : disc.data_ap2;
+                    const parsed = parseDataHoraStrICS(campoData);
+                    if (parsed) {
+                        provasDoTipo.push({
+                            reg,
+                            disc,
+                            parsed,
+                            timestamp: parsed.dateObj.getTime()
+                        });
+                    }
                 });
 
-                const dtstampStr = formatarDataHoraAtualZ();
+                if (provasDoTipo.length === 0) return;
 
-                const gerarBlocoEvento = (tipoAP, dataString) => {
-                    const parsed = parseDataHoraStrICS(dataString);
-                    if (!parsed) return [];
-                    
-                    const uidUnico = `${codigoDisc}-${disc.id}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
-                    const summary = `Prova ${tipoAP} ${nomeDisc} ${semestreTextoFormatado}`;
-                    
-                    return [
+                // Ordenar por data cronológica
+                provasDoTipo.sort((a, b) => a.timestamp - b.timestamp);
+
+                // Agrupar em fins de semana (provas que ocorrem em dias próximos, ex: intervalo <= 7 dias)
+                let finsDeSemana = [];
+                let currentFds = [provasDoTipo[0]];
+
+                for (let i = 1; i < provasDoTipo.length; i++) {
+                    const diffDias = (provasDoTipo[i].timestamp - provasDoTipo[i-1].timestamp) / (1000 * 60 * 60 * 24);
+                    if (diffDias <= 7) {
+                        currentFds.push(provasDoTipo[i]);
+                    } else {
+                        finsDeSemana.push(currentFds);
+                        currentFds = [provasDoTipo[i]];
+                    }
+                }
+                finsDeSemana.push(currentFds);
+
+                // Criar eventos para cada FDS e cada prova individual
+                finsDeSemana.forEach((fdsProvas, fdsIndex) => {
+                    const primeiraProvaTimestamp = fdsProvas[0].timestamp;
+                    const primeiraProvaDate = new Date(primeiraProvaTimestamp);
+
+                    // 1. Alerta Prévio: 4 dias antes do primeiro fim de semana de provas
+                    const dataAlerta = new Date(primeiraProvaDate);
+                    dataAlerta.setUTCDate(dataAlerta.getUTCDate() - 4);
+
+                    const yyyyA = dataAlerta.getUTCFullYear();
+                    const mmA = String(dataAlerta.getUTCMonth() + 1).padStart(2, '0');
+                    const ddA = String(dataAlerta.getUTCDate()).padStart(2, '0');
+                    const dtAlertaStr = `${yyyyA}${mmA}${ddA}`;
+
+                    const nomeFdsOrdem = fdsIndex === 0 ? 'Primeiro' : (fdsIndex === 1 ? 'Segundo' : `${fdsIndex + 1}º`);
+                    const summaryAlerta = `Provas ${tipoAP} chegando! ${nomeFdsOrdem} fim de semana!`;
+
+                    let descAlertaLinhas = [];
+                    fdsProvas.forEach(p => {
+                        const diaSemanaStr = p.parsed.dateObj.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
+                        descAlertaLinhas.push(`${diaSemanaStr.charAt(0).toUpperCase() + diaSemanaStr.slice(1)}, ${p.parsed.diaStr}/${p.parsed.mesStr} - ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h: ${p.disc.nome}`);
+                    });
+                    const descriptionAlerta = `Cronograma de provas deste fim de semana:\\n` + descAlertaLinhas.join('\\n');
+
+                    const uidAlerta = `ALERTA-${tipoAP}-FDS${fdsIndex+1}-${codigoSemestreFormatado}@eadblitz.com.br`;
+                    const dtstampStr = formatarDataHoraAtualZ();
+
+                    eventosIcs.push(
                         'BEGIN:VEVENT',
-                        `UID:${uidUnico}`,
+                        `UID:${uidAlerta}`,
                         `DTSTAMP:${dtstampStr}`,
-                        `SEQUENCE:${novaSequence}`,
-                        `DTSTART:${parsed.dtstart}`,
-                        `DTEND:${parsed.dtend}`,
-                        `SUMMARY:${summary}`,
-                        `DESCRIPTION:Avaliação Presencial da disciplina ${nomeDisc}`,
+                        `DTSTART;VALUE=DATE:${dtAlertaStr}`,
+                        `DTEND;VALUE=DATE:${dtAlertaStr}`,
+                        `SUMMARY:${summaryAlerta}`,
+                        `DESCRIPTION:${descriptionAlerta}`,
                         'URL:https://www.eadblitz.com.br',
                         'CATEGORIES:Provas',
-                        'ORGANIZER;CN=BlitzEAD:mailto:blitzead@gmail.com',
                         'STATUS:CONFIRMED',
-                        'TRANSP:OPAQUE',
-                        'BEGIN:VALARM',
-                        'ACTION:DISPLAY',
-                        `DESCRIPTION:${summary}`,
-                        'TRIGGER:-P7D',
-                        'END:VALARM',
-                        'BEGIN:VALARM',
-                        'ACTION:DISPLAY',
-                        `DESCRIPTION:${summary}`,
-                        'TRIGGER:-P2D',
-                        'END:VALARM',
+                        'TRANSP:TRANSPARENT',
                         'END:VEVENT'
-                    ];
-                };
+                    );
 
-                const blocoAP1 = gerarBlocoEvento('AP1', disc.data_ap1);
-                if (blocoAP1.length > 0) eventosIcs.push(...blocoAP1);
+                    // 2. Lembrete na véspera (Sexta-feira anterior) para cada prova
+                    fdsProvas.forEach(p => {
+                        const provaDate = p.parsed.dateObj;
+                        // Descobrir a sexta-feira anterior à prova
+                        const diaSemanaProva = provaDate.getUTCDay(); // 0=Dom, 6=Sáb, 5=Sex, etc.
+                        let diasASubtrair = 0;
+                        if (diaSemanaProva === 6) { // Sábado -> Sexta anterior (1 dia antes)
+                            diasASubtrair = 1;
+                        } else if (diaSemanaProva === 0) { // Domingo -> Sexta anterior (2 dias antes)
+                            diasASubtrair = 2;
+                        } else {
+                            diasASubtrair = (diaSemanaProva + 2) % 7; 
+                        }
 
-                const blocoAP2 = gerarBlocoEvento('AP2', disc.data_ap2);
-                if (blocoAP2.length > 0) eventosIcs.push(...blocoAP2);
-                
-                const blocoAP3 = gerarBlocoEvento('AP3', disc.data_ap3);
-                if (blocoAP3.length > 0) eventosIcs.push(...blocoAP3);
+                        const sextaVespers = new Date(provaDate);
+                        sextaVespers.setUTCDate(sextaVespers.getUTCDate() - diasASubtrair);
+
+                        const yyyyS = sextaVespers.getUTCFullYear();
+                        const mmS = String(sextaVespers.getUTCMonth() + 1).padStart(2, '0');
+                        const ddS = String(sextaVespers.getUTCDate()).padStart(2, '0');
+                        const dtSextaStr = `${yyyyS}${mmS}${ddS}`;
+
+                        const diaSemanaProvaNome = provaDate.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
+                        const summaryVespers = `Prova de ${p.disc.nome} no ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, dia ${p.parsed.diaStr}/${p.parsed.mesStr}, de ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h`;
+                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome}\\nHorário: ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h\\nData: ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}`;
+
+                        const codigoDisc = p.disc.codigo || 'GERAL';
+                        const uidVespers = `${codigoDisc}-${p.disc.id}-${tipoAP}-VESP-${codigoSemestreFormatado}@eadblitz.com.br`;
+
+                        const novaSequence = (p.reg.sequence || 0) + 1;
+                        atualizacoesSequenciais.push({
+                            disciplina_id: p.reg.disciplina_id,
+                            semestre: p.reg.semestre,
+                            sequence: novaSequence
+                        });
+
+                        eventosIcs.push(
+                            'BEGIN:VEVENT',
+                            `UID:${uidVespers}`,
+                            `DTSTAMP:${dtstampStr}`,
+                            `SEQUENCE:${novaSequence}`,
+                            `DTSTART;VALUE=DATE:${dtSextaStr}`,
+                            `DTEND;VALUE=DATE:${dtSextaStr}`,
+                            `SUMMARY:${summaryVespers}`,
+                            `DESCRIPTION:${descriptionVespers}`,
+                            'URL:https://www.eadblitz.com.br',
+                            'CATEGORIES:Provas',
+                            'STATUS:CONFIRMED',
+                            'TRANSP:TRANSPARENT',
+                            'END:VEVENT'
+                        );
+                    });
+                });
             });
 
             if (eventosIcs.length === 0) {
