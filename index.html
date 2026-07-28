@@ -988,7 +988,7 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // Função auxiliar para converter string de data/hora (ex: "25/04/2026 14:00" ou "25/04/2026 das 14:00 às 16:00") para objeto Date
+        // Função auxiliar ajustada para extrair tanto o horário de início quanto o de término
         function parseDataHoraStr(str) {
             if (!str) return null;
             let limpo = str.trim().replace(/\s*-\s*/g, ' ');
@@ -1002,13 +1002,30 @@
             let mes = parseInt(dPartes[1], 10) - 1;
             let ano = parseInt(dPartes[2], 10);
 
-            // Procurar por horário (formato HH:MM)
-            let horaStr = partes.find(p => /^\d{2}:\d{2}$/.test(p)) || '00:00';
-            let hPartes = horaStr.split(':');
-            let hora = parseInt(hPartes[0], 10);
-            let minuto = parseInt(hPartes[1], 10);
+            // Extrair todos os horários HH:MM da string da tabela
+            let regexHora = /\b(\d{2}:\d{2})\b/g;
+            let match;
+            let horarios = [];
+            while ((match = regexHora.exec(limpo)) !== null) {
+                horarios.push(match[1]);
+            }
 
-            return new Date(ano, mes, dia, hora, minuto, 0);
+            if (horarios.length === 0) return null;
+
+            // Define Início
+            let hInicioPartes = horarios[0].split(':');
+            let dtInicio = new Date(ano, mes, dia, parseInt(hInicioPartes[0], 10), parseInt(hInicioPartes[1], 10), 0);
+
+            let dtFim;
+            // Se houver um segundo horário na mesma célula, será o término. Se não, assume duração padrão de 2 horas.
+            if (horarios.length > 1) {
+                let hFimPartes = horarios[1].split(':');
+                dtFim = new Date(ano, mes, dia, parseInt(hFimPartes[0], 10), parseInt(hFimPartes[1], 10), 0);
+            } else {
+                dtFim = new Date(dtInicio.getTime() + 2 * 60 * 60 * 1000);
+            }
+
+            return { inicio: dtInicio, fim: dtFim };
         }
 
         function formatarDataICal(dateObj) {
@@ -1036,7 +1053,6 @@
                 return;
             }
 
-            // Determinar o ano e semestre vigente atual (ex: se mês >= 6, semestre 2, senão 1)
             const now = new Date();
             const anoVigente = now.getFullYear();
             const semestreVigenteNum = (now.getMonth() + 1) >= 6 ? 2 : 1;
@@ -1049,8 +1065,6 @@
             registros.forEach(reg => {
                 const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
                 if (!disc) return;
-
-                // Ignorar completamente disciplinas com controle 0 ou '0'
                 if (disc.controle === 0 || disc.controle === '0') return;
 
                 const codigoDisc = disc.codigo || 'GERAL';
@@ -1067,9 +1081,10 @@
                 const dtstampStr = formatarDataICal(new Date()) + 'Z';
 
                 // Processar AP1
-                const dtInicioAp1 = parseDataHoraStr(disc.data_ap1);
-                if (dtInicioAp1) {
-                    let dtFimAp1 = new Date(dtInicioAp1.getTime() + 2 * 60 * 60 * 1000); // duração padrão de 2h se não especificado
+                const parseAp1 = parseDataHoraStr(disc.data_ap1);
+                if (parseAp1) {
+                    let dtInicioAp1 = parseAp1.inicio;
+                    let dtFimAp1 = parseAp1.fim; 
                     let summaryAp1 = `Prova AP1 ${nomeDisc} ${semestreTextoFormatado}`;
                     
                     eventosIcs.push(`BEGIN:VEVENT
@@ -1091,13 +1106,6 @@ ACTION:DISPLAY
 DESCRIPTION:Lembrete: Prova AP1 em 7 dias (${nomeDisc})
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-P7D
-ACTION:EMAIL
-SUMMARY:Lembrete de Prova AP1 em 7 dias
-DESCRIPTION:A prova AP1 da disciplina ${nomeDisc} ocorrerá em 7 dias.
-ATTENDEE:mailto:${usuarioAtual.email}
-END:VALARM
-BEGIN:VALARM
 TRIGGER:-P2D
 ACTION:DISPLAY
 DESCRIPTION:Lembrete: Prova AP1 em 2 dias (${nomeDisc})
@@ -1106,9 +1114,10 @@ END:VEVENT`);
                 }
 
                 // Processar AP2
-                const dtInicioAp2 = parseDataHoraStr(disc.data_ap2);
-                if (dtInicioAp2) {
-                    let dtFimAp2 = new Date(dtInicioAp2.getTime() + 2 * 60 * 60 * 1000);
+                const parseAp2 = parseDataHoraStr(disc.data_ap2);
+                if (parseAp2) {
+                    let dtInicioAp2 = parseAp2.inicio;
+                    let dtFimAp2 = parseAp2.fim;
                     let summaryAp2 = `Prova AP2 ${nomeDisc} ${semestreTextoFormatado}`;
                     
                     eventosIcs.push(`BEGIN:VEVENT
@@ -1130,16 +1139,42 @@ ACTION:DISPLAY
 DESCRIPTION:Lembrete: Prova AP2 em 7 dias (${nomeDisc})
 END:VALARM
 BEGIN:VALARM
+TRIGGER:-P2D
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Prova AP2 em 2 dias (${nomeDisc})
+END:VALARM
+END:VEVENT`);
+                }
+
+                // Processar AP3 (Adicionado)
+                const parseAp3 = parseDataHoraStr(disc.data_ap3);
+                if (parseAp3) {
+                    let dtInicioAp3 = parseAp3.inicio;
+                    let dtFimAp3 = parseAp3.fim;
+                    let summaryAp3 = `Prova AP3 ${nomeDisc} ${semestreTextoFormatado}`;
+                    
+                    eventosIcs.push(`BEGIN:VEVENT
+UID:${uidUnico}-AP3
+DTSTAMP:${dtstampStr}
+SEQUENCE:${novaSequence}
+DTSTART;TZID=America/Sao_Paulo:${formatarDataICal(dtInicioAp3)}
+DTEND;TZID=America/Sao_Paulo:${formatarDataICal(dtFimAp3)}
+SUMMARY:${summaryAp3}
+DESCRIPTION:Avaliação Presencial 3 da disciplina ${nomeDisc}
+URL:https://www.eadblitz.com.br
+CATEGORIES:Provas
+ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+BEGIN:VALARM
 TRIGGER:-P7D
-ACTION:EMAIL
-SUMMARY:Lembrete de Prova AP2 em 7 dias
-DESCRIPTION:A prova AP2 da disciplina ${nomeDisc} ocorrerá em 7 dias.
-ATTENDEE:mailto:${usuarioAtual.email}
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Prova AP3 em 7 dias (${nomeDisc})
 END:VALARM
 BEGIN:VALARM
 TRIGGER:-P2D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP2 em 2 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP3 em 2 dias (${nomeDisc})
 END:VALARM
 END:VEVENT`);
                 }
@@ -1150,7 +1185,6 @@ END:VEVENT`);
                 return;
             }
 
-            // Atualizar os valores de sequence no banco para persistência e atualizações futuras
             for (let att of atualizacoesSequenciais) {
                 await supabaseClient.from('planejamento_usuarios')
                     .update({ sequence: att.sequence })
@@ -1159,7 +1193,6 @@ END:VEVENT`);
                     .eq('semestre', att.semestre);
             }
 
-            // Montar o conteúdo completo do arquivo .ics
             const conteudoIcs = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
@@ -1189,7 +1222,6 @@ END:VEVENT`);
                 'END:VCALENDAR'
             ].join('\r\n');
 
-            // Gerar download do arquivo .ics
             const blob = new Blob([conteudoIcs], { type: 'text/calendar;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
