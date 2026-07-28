@@ -149,6 +149,21 @@
         </div>
     </div>
 
+    <!-- MODAL DE GUIA E DOWNLOAD DO .ICS -->
+    <div id="modal-ics-guia" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative overflow-hidden">
+            <button onclick="fecharModalIcsGuia()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+            <h3 id="ics-guia-titulo" class="text-xl font-extrabold text-gray-900 mb-2">Adicionar Provas à Agenda</h3>
+            <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6">
+                <!-- Preenchido dinamicamente via JS de acordo com o device -->
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition">Cancelar</button>
+                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Baixar Arquivo .ics</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
         <div id="app">
@@ -157,7 +172,6 @@
     </main>
 
     <script>
-        // MANTENHA SUAS CREDENCIAIS AQUI
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
 
@@ -168,6 +182,7 @@
         let usuarioAtual = null;
         let estruturaInicializada = false;
         let catalogoRecolhido = false;
+        let semestreIcsPendente = null;
 
         async function init() {
             gerarOpcoesSemestresCadastro();
@@ -816,10 +831,10 @@
                     ? `
                         <div class="flex justify-center items-center mt-auto pt-3 space-x-2">
                             <button onclick="exportarSemestrePDF('${sem}')" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                                <span>🖨️ PDF Grade</span>
+                                <span>🖨️ Exportar Grade do Semestre</span>
                             </button>
-                            <button onclick="exportarSemestreICS('${sem}')" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                                <span>📅 Alertas .ics</span>
+                            <button onclick="iniciarExportacaoICS('${sem}')" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
+                                <span>📅 Exportar Agenda</span>
                             </button>
                         </div>
                     ` 
@@ -986,11 +1001,10 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // NOVA FUNÇÃO BLINDADA: Extrai exatamente o formato "05/09/2026 - 13:30 às 16:00"
+        // FUNÇÃO BLINDADA: Extrai a data/hora e usa TZID fixo America/Sao_Paulo (sem horário de verão)
         function parseDataHoraStrICS(str) {
             if (!str) return null;
             
-            // Regex rigorosa focada no formato exato da sua tabela
             const regex = /^(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}):(\d{2})\s*às\s*(\d{2}):(\d{2})$/;
             const match = str.trim().match(regex);
             
@@ -1022,20 +1036,90 @@
             return `${ano}${mes}${dia}T${hora}${min}${seg}Z`;
         }
 
-        async function exportarSemestreICS(semestreNome) {
+        function detectarDevice() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) return 'android';
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'ios';
+            if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(ua)) return 'mac';
+            return 'pc';
+        }
+
+        function iniciarExportacaoICS(semestreNome) {
             if (!usuarioAtual) {
                 alert("Para exportar o calendário em .ics, é necessário estar logado.");
                 abrirModalAuth('login');
                 return;
             }
 
-            const scrollSalvo = window.scrollY;
             const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
-
             if (registros.length === 0) {
                 alert("Não há disciplinas neste semestre para gerar o calendário.");
                 return;
             }
+
+            semestreIcsPendente = semestreNome;
+            const device = detectarDevice();
+            
+            const tituloEl = document.getElementById('ics-guia-titulo');
+            const conteudoEl = document.getElementById('ics-guia-conteudo');
+            
+            tituloEl.textContent = `Como adicionar à Agenda (${semestreNome})`;
+
+            let instrucoesHtml = '';
+            if (device === 'android') {
+                instrucoesHtml = `
+                    <p class="font-semibold text-gray-800">📱 Instruções para Android (Google Agenda):</p>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
+                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
+                        <li>Abra o aplicativo <strong>Google Agenda</strong> ou acesse pelo navegador em <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>.</li>
+                        <li>Se estiver no computador/web, vá em <em>Configurações > Importar e Exportar</em> e selecione o arquivo baixado. No celular, clique no arquivo baixado para abri-lo diretamente no app do calendário.</li>
+                    </ol>
+                `;
+            } else if (device === 'ios') {
+                instrucoesHtml = `
+                    <p class="font-semibold text-gray-800">📱 Instruções para iPhone / iPad (iOS):</p>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
+                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
+                        <li>Toque no arquivo baixado no seu aplicativo <strong>Arquivos</strong> ou na notificação de download.</li>
+                        <li>O sistema iOS perguntará se deseja adicionar os eventos ao seu aplicativo <strong>Calendário</strong> padrão. Confirme a importação.</li>
+                    </ol>
+                `;
+            } else if (device === 'mac') {
+                instrucoesHtml = `
+                    <p class="font-semibold text-gray-800">💻 Instruções para macOS (Apple Calendar):</p>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
+                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
+                        <li>Dê um duplo clique no arquivo baixado na sua pasta de Downloads.</li>
+                        <li>O aplicativo <strong>Calendário</strong> da Apple será aberto automaticamente. Selecione para qual calendário deseja importar os eventos.</li>
+                    </ol>
+                `;
+            } else {
+                instrucoesHtml = `
+                    <p class="font-semibold text-gray-800">💻 Instruções para Computador (Google Agenda / Outlook):</p>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
+                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
+                        <li>Abra o <strong>Google Agenda</strong> (<a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>).</li>
+                        <li>Clique na engrenagem de <em>Configurações > Importar e exportar</em>, escolha o arquivo baixado e clique em <strong>Importar</strong>.</li>
+                    </ol>
+                `;
+            }
+
+            conteudoEl.innerHTML = instrucoesHtml;
+            document.getElementById('modal-ics-guia').classList.remove('hidden');
+        }
+
+        function fecharModalIcsGuia() {
+            document.getElementById('modal-ics-guia').classList.add('hidden');
+            semestreIcsPendente = null;
+        }
+
+        document.getElementById('btn-confirmar-download-ics').addEventListener('click', async () => {
+            if (!semestreIcsPendente) return;
+            const semestreNome = semestreIcsPendente;
+            fecharModalIcsGuia();
+
+            const scrollSalvo = window.scrollY;
+            const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
 
             const now = new Date();
             const anoVigente = now.getFullYear();
@@ -1050,7 +1134,6 @@
                 const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
                 if (!disc) return;
                 
-                // IGNORAR DISCIPLINAS INDISPONÍVEIS (Controle = 0)
                 if (disc.controle === 0 || disc.controle === '0') return;
 
                 const codigoDisc = disc.codigo || 'GERAL';
@@ -1065,7 +1148,6 @@
 
                 const dtstampStr = formatarDataHoraAtualZ();
 
-                // FUNÇÃO AUXILIAR PARA GERAR O BLOCO VEVENT
                 const gerarBlocoEvento = (tipoAP, dataString) => {
                     const parsed = parseDataHoraStrICS(dataString);
                     if (!parsed) return "";
@@ -1105,20 +1187,18 @@ END:VALARM
 END:VEVENT`;
                 };
 
-                // Adiciona AP1 e AP2 (e opcionalmente AP3 se quiser estender no futuro)
                 const blocoAP1 = gerarBlocoEvento('AP1', disc.data_ap1);
                 if (blocoAP1) eventosIcs.push(blocoAP1);
 
                 const blocoAP2 = gerarBlocoEvento('AP2', disc.data_ap2);
                 if (blocoAP2) eventosIcs.push(blocoAP2);
                 
-                // Incluindo AP3 para ficar completo caso a disciplina tenha
                 const blocoAP3 = gerarBlocoEvento('AP3', disc.data_ap3);
                 if (blocoAP3) eventosIcs.push(blocoAP3);
             });
 
             if (eventosIcs.length === 0) {
-                alert("Nenhuma data válida encontrada para exportação. (Disciplinas com controle indisponível são ignoradas).");
+                alert("Nenhuma data válida encontrada para exportação.");
                 return;
             }
 
