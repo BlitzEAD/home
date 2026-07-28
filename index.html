@@ -62,7 +62,7 @@
         <span>✅ Disciplinas cadastradas com sucesso!</span>
     </div>
 
-    <!-- MODAL CENTRALIZADO DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
+    <!-- MODAL CENTRALIZADO DE AUTENTICAÇÃO -->
     <div id="modal-auth" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative overflow-hidden">
             <button onclick="fecharModalAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
@@ -393,10 +393,7 @@
             const alvo = document.getElementById('secao-grade-disciplinar');
             if (alvo) {
                 const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({
-                    top: topoAlvo - 120,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: topoAlvo - 120, behavior: 'smooth' });
             }
         }
 
@@ -988,39 +985,34 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // Função auxiliar ajustada para extrair tanto o horário de início quanto o de término
+        // Nova Extração de Datas Blindada para identificar DD/MM/AAAA e HH:MM 
         function parseDataHoraStr(str) {
             if (!str) return null;
-            let limpo = str.trim().replace(/\s*-\s*/g, ' ');
-            let partes = limpo.split(/\s+/);
-            if (partes.length < 2) return null;
+            
+            // Busca data no formato DD/MM/YYYY
+            let regexData = /(\d{2})\/(\d{2})\/(\d{4})/;
+            let dataMatch = regexData.exec(str);
+            if (!dataMatch) return null;
+            
+            let dia = parseInt(dataMatch[1], 10);
+            let mes = parseInt(dataMatch[2], 10) - 1;
+            let ano = parseInt(dataMatch[3], 10);
 
-            let dataPart = partes[0]; // DD/MM/YYYY
-            let dPartes = dataPart.split('/');
-            if (dPartes.length !== 3) return null;
-            let dia = parseInt(dPartes[0], 10);
-            let mes = parseInt(dPartes[1], 10) - 1;
-            let ano = parseInt(dPartes[2], 10);
-
-            // Extrair todos os horários HH:MM da string da tabela
-            let regexHora = /\b(\d{2}:\d{2})\b/g;
-            let match;
+            // Busca os horários na célula
+            let regexHora = /\b(\d{2}):(\d{2})\b/g;
             let horarios = [];
-            while ((match = regexHora.exec(limpo)) !== null) {
-                horarios.push(match[1]);
+            let match;
+            while ((match = regexHora.exec(str)) !== null) {
+                horarios.push({ h: parseInt(match[1], 10), m: parseInt(match[2], 10) });
             }
 
             if (horarios.length === 0) return null;
 
-            // Define Início
-            let hInicioPartes = horarios[0].split(':');
-            let dtInicio = new Date(ano, mes, dia, parseInt(hInicioPartes[0], 10), parseInt(hInicioPartes[1], 10), 0);
-
+            let dtInicio = new Date(ano, mes, dia, horarios[0].h, horarios[0].m, 0);
             let dtFim;
-            // Se houver um segundo horário na mesma célula, será o término. Se não, assume duração padrão de 2 horas.
+
             if (horarios.length > 1) {
-                let hFimPartes = horarios[1].split(':');
-                dtFim = new Date(ano, mes, dia, parseInt(hFimPartes[0], 10), parseInt(hFimPartes[1], 10), 0);
+                dtFim = new Date(ano, mes, dia, horarios[1].h, horarios[1].m, 0);
             } else {
                 dtFim = new Date(dtInicio.getTime() + 2 * 60 * 60 * 1000);
             }
@@ -1028,14 +1020,15 @@
             return { inicio: dtInicio, fim: dtFim };
         }
 
-        function formatarDataICal(dateObj) {
-            const ano = dateObj.getFullYear();
-            const mes = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const dia = String(dateObj.getDate()).padStart(2, '0');
-            const hora = String(dateObj.getHours()).padStart(2, '0');
-            const min = String(dateObj.getMinutes()).padStart(2, '0');
-            const seg = String(dateObj.getSeconds()).padStart(2, '0');
-            return `${ano}${mes}${dia}T${hora}${min}${seg}`;
+        // Formatação direta em UTC (Z) para evitar BUGs de horário de verão e fuso horário do cliente
+        function formatarDataICalUTC(dateObj) {
+            const ano = dateObj.getUTCFullYear();
+            const mes = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+            const dia = String(dateObj.getUTCDate()).padStart(2, '0');
+            const hora = String(dateObj.getUTCHours()).padStart(2, '0');
+            const min = String(dateObj.getUTCMinutes()).padStart(2, '0');
+            const seg = String(dateObj.getUTCSeconds()).padStart(2, '0');
+            return `${ano}${mes}${dia}T${hora}${min}${seg}Z`;
         }
 
         async function exportarSemestreICS(semestreNome) {
@@ -1078,21 +1071,19 @@
                     sequence: novaSequence
                 });
 
-                const dtstampStr = formatarDataICal(new Date()) + 'Z';
+                const dtstampStr = formatarDataICalUTC(new Date());
 
                 // Processar AP1
                 const parseAp1 = parseDataHoraStr(disc.data_ap1);
                 if (parseAp1) {
-                    let dtInicioAp1 = parseAp1.inicio;
-                    let dtFimAp1 = parseAp1.fim; 
                     let summaryAp1 = `Prova AP1 ${nomeDisc} ${semestreTextoFormatado}`;
                     
                     eventosIcs.push(`BEGIN:VEVENT
 UID:${uidUnico}-AP1
 DTSTAMP:${dtstampStr}
 SEQUENCE:${novaSequence}
-DTSTART;TZID=America/Sao_Paulo:${formatarDataICal(dtInicioAp1)}
-DTEND;TZID=America/Sao_Paulo:${formatarDataICal(dtFimAp1)}
+DTSTART:${formatarDataICalUTC(parseAp1.inicio)}
+DTEND:${formatarDataICalUTC(parseAp1.fim)}
 SUMMARY:${summaryAp1}
 DESCRIPTION:Avaliação Presencial 1 da disciplina ${nomeDisc}
 URL:https://www.eadblitz.com.br
@@ -1101,14 +1092,14 @@ ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
 STATUS:CONFIRMED
 TRANSP:OPAQUE
 BEGIN:VALARM
-TRIGGER:-P7D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP1 em 7 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP1
+TRIGGER:-PT168H
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-P2D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP1 em 2 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP1
+TRIGGER:-PT48H
 END:VALARM
 END:VEVENT`);
                 }
@@ -1116,16 +1107,14 @@ END:VEVENT`);
                 // Processar AP2
                 const parseAp2 = parseDataHoraStr(disc.data_ap2);
                 if (parseAp2) {
-                    let dtInicioAp2 = parseAp2.inicio;
-                    let dtFimAp2 = parseAp2.fim;
                     let summaryAp2 = `Prova AP2 ${nomeDisc} ${semestreTextoFormatado}`;
                     
                     eventosIcs.push(`BEGIN:VEVENT
 UID:${uidUnico}-AP2
 DTSTAMP:${dtstampStr}
 SEQUENCE:${novaSequence}
-DTSTART;TZID=America/Sao_Paulo:${formatarDataICal(dtInicioAp2)}
-DTEND;TZID=America/Sao_Paulo:${formatarDataICal(dtFimAp2)}
+DTSTART:${formatarDataICalUTC(parseAp2.inicio)}
+DTEND:${formatarDataICalUTC(parseAp2.fim)}
 SUMMARY:${summaryAp2}
 DESCRIPTION:Avaliação Presencial 2 da disciplina ${nomeDisc}
 URL:https://www.eadblitz.com.br
@@ -1134,31 +1123,29 @@ ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
 STATUS:CONFIRMED
 TRANSP:OPAQUE
 BEGIN:VALARM
-TRIGGER:-P7D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP2 em 7 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP2
+TRIGGER:-PT168H
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-P2D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP2 em 2 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP2
+TRIGGER:-PT48H
 END:VALARM
 END:VEVENT`);
                 }
 
-                // Processar AP3 (Adicionado)
+                // Processar AP3
                 const parseAp3 = parseDataHoraStr(disc.data_ap3);
                 if (parseAp3) {
-                    let dtInicioAp3 = parseAp3.inicio;
-                    let dtFimAp3 = parseAp3.fim;
                     let summaryAp3 = `Prova AP3 ${nomeDisc} ${semestreTextoFormatado}`;
                     
                     eventosIcs.push(`BEGIN:VEVENT
 UID:${uidUnico}-AP3
 DTSTAMP:${dtstampStr}
 SEQUENCE:${novaSequence}
-DTSTART;TZID=America/Sao_Paulo:${formatarDataICal(dtInicioAp3)}
-DTEND;TZID=America/Sao_Paulo:${formatarDataICal(dtFimAp3)}
+DTSTART:${formatarDataICalUTC(parseAp3.inicio)}
+DTEND:${formatarDataICalUTC(parseAp3.fim)}
 SUMMARY:${summaryAp3}
 DESCRIPTION:Avaliação Presencial 3 da disciplina ${nomeDisc}
 URL:https://www.eadblitz.com.br
@@ -1167,14 +1154,14 @@ ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
 STATUS:CONFIRMED
 TRANSP:OPAQUE
 BEGIN:VALARM
-TRIGGER:-P7D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP3 em 7 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP3
+TRIGGER:-PT168H
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-P2D
 ACTION:DISPLAY
-DESCRIPTION:Lembrete: Prova AP3 em 2 dias (${nomeDisc})
+DESCRIPTION:Lembrete: Prova AP3
+TRIGGER:-PT48H
 END:VALARM
 END:VEVENT`);
                 }
@@ -1193,6 +1180,7 @@ END:VEVENT`);
                     .eq('semestre', att.semestre);
             }
 
+            // Removido o bloco VTIMEZONE: agora tudo é exportado em UTC universal (Z)
             const conteudoIcs = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
@@ -1201,23 +1189,6 @@ END:VEVENT`);
                 'METHOD:PUBLISH',
                 'X-WR-CALNAME:Provas - ' + semestreNome,
                 'X-WR-TIMEZONE:America/Sao_Paulo',
-                'BEGIN:VTIMEZONE',
-                'TZID:America/Sao_Paulo',
-                'BEGIN:DAYLIGHT',
-                'TZOFFSETFROM:-0300',
-                'TZOFFSETTO:-0200',
-                'TZNAME:BRST',
-                'DTSTART:20071009T000000',
-                'RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=10',
-                'END:DAYLIGHT',
-                'BEGIN:STANDARD',
-                'TZOFFSETFROM:-0200',
-                'TZOFFSETTO:-0300',
-                'TZNAME:BRT',
-                'DTSTART:20080215T000000',
-                'RRULE:FREQ=YEARLY;BYDAY=3SU;BYMONTH=2',
-                'END:STANDARD',
-                'END:VTIMEZONE',
                 ...eventosIcs,
                 'END:VCALENDAR'
             ].join('\r\n');
