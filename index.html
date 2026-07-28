@@ -1,4 +1,31 @@
-// Função atualizada para extrair corretamente data e horário exatos de início e término informados na tabela
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EADBlitz - Planejamento Acadêmico</title>
+    <!-- Inclua seus estilos CSS e bibliotecas necessárias aqui (ex: Tailwind, Supabase, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Conteúdo principal do seu app -->
+    <div id="app">
+        <h1>Planejamento Acadêmico - EADBlitz</h1>
+        <div id="botoes-exportacao">
+            <button onclick="exportarSemestreICS('Semestre 1')">Exportar Calendário (ICS)</button>
+        </div>
+    </div>
+
+    <!-- Script principal com a lógica corrigida -->
+    <script>
+        // Exemplo de variáveis globais simuladas para funcionamento do script
+        let usuarioAtual = { id: "usuario_exemplo", email: "aluno@email.com" };
+        let planejamentoGlobal = [];
+        let listaDisciplinasGlobal = [];
+        let supabaseClient = null; // Inicialize sua instância do Supabase conforme seu projeto
+
+        // Função para extrair corretamente data e horário exatos de início e término informados na tabela
         function parseDataHoraStr(str) {
             if (!str) return null;
             let limpo = str.trim();
@@ -55,7 +82,6 @@
         async function exportarSemestreICS(semestreNome) {
             if (!usuarioAtual) {
                 alert("Para exportar o calendário em .ics, é necessário estar logado. Por favor, entre ou crie sua conta.");
-                abrirModalAuth('login');
                 return;
             }
 
@@ -177,12 +203,14 @@ END:VEVENT`);
                 return;
             }
 
-            for (let att of atualizacoesSequenciais) {
-                await supabaseClient.from('planejamento_usuarios')
-                    .update({ sequence: att.sequence })
-                    .eq('user_id', usuarioAtual.id)
-                    .eq('disciplina_id', att.disciplina_id)
-                    .eq('semestre', att.semestre);
+            if (supabaseClient) {
+                for (let att of atualizacoesSequenciais) {
+                    await supabaseClient.from('planejamento_usuarios')
+                        .update({ sequence: att.sequence })
+                        .eq('user_id', usuarioAtual.id)
+                        .eq('disciplina_id', att.disciplina_id)
+                        .eq('semestre', att.semestre);
+                }
             }
 
             const conteudoIcs = [
@@ -224,6 +252,8 @@ END:VEVENT`);
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            await carregarDadosBanco();
             window.scrollTo({ top: scrollSalvo });
         }
+    </script>
+</body>
+</html>
