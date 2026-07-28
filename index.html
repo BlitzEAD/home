@@ -157,9 +157,9 @@
             <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6">
                 <!-- Preenchido dinamicamente via JS de acordo com o device -->
             </div>
-            <div class="flex justify-end space-x-3">
+            <div class="flex justify-end space-x-3 mt-4 border-t pt-4">
                 <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition">Cancelar</button>
-                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Baixar Arquivo .ics</button>
+                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Fazer Download (.ics)</button>
             </div>
         </div>
     </div>
@@ -490,9 +490,6 @@
                 <div id="secao-grade-disciplinar">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
-                        <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5">
-                            <span>📥 Exportar Planejamento (PDF)</span>
-                        </button>
                     </div>
                     <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"></div>
                 </div>
@@ -1001,7 +998,8 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // FUNÇÃO BLINDADA: Extrai a data/hora e usa TZID fixo America/Sao_Paulo (sem horário de verão)
+        // FUNÇÃO BLINDADA: Converte explicitamente para UTC (Tempo Universal) calculando +3h.
+        // Assim evitamos o bug de Horário de Verão local na geração do ICS.
         function parseDataHoraStrICS(str) {
             if (!str) return null;
             
@@ -1009,17 +1007,28 @@
             const match = str.trim().match(regex);
             
             if (match) {
-                const dia = match[1];
-                const mes = match[2];
-                const ano = match[3];
-                const horaInicio = match[4];
-                const minInicio = match[5];
-                const horaFim = match[6];
-                const minFim = match[7];
+                const dia = parseInt(match[1], 10);
+                const mes = parseInt(match[2], 10) - 1; // JS date indexa mês a partir de 0
+                const ano = parseInt(match[3], 10);
+                const horaInicio = parseInt(match[4], 10);
+                const minInicio = parseInt(match[5], 10);
+                const horaFim = parseInt(match[6], 10);
+                const minFim = parseInt(match[7], 10);
                 
+                // Converte somando 3 horas ao horário de Brasília para gerar a string UTC absoluta
+                function formatarUTC(h, m) {
+                    let d = new Date(Date.UTC(ano, mes, dia, h + 3, m, 0));
+                    const yyyy = d.getUTCFullYear();
+                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getUTCDate()).padStart(2, '0');
+                    const hh = String(d.getUTCHours()).padStart(2, '0');
+                    const mmm = String(d.getUTCMinutes()).padStart(2, '0');
+                    return `${yyyy}${mm}${dd}T${hh}${mmm}00Z`;
+                }
+
                 return {
-                    dtstart: `${ano}${mes}${dia}T${horaInicio}${minInicio}00`,
-                    dtend: `${ano}${mes}${dia}T${horaFim}${minFim}00`
+                    dtstart: formatarUTC(horaInicio, minInicio),
+                    dtend: formatarUTC(horaFim, minFim)
                 };
             }
             return null;
@@ -1069,37 +1078,38 @@
             if (device === 'android') {
                 instrucoesHtml = `
                     <p class="font-semibold text-gray-800">📱 Instruções para Android (Google Agenda):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
-                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
-                        <li>Abra o aplicativo <strong>Google Agenda</strong> ou acesse pelo navegador em <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>.</li>
-                        <li>Se estiver no computador/web, vá em <em>Configurações > Importar e Exportar</em> e selecione o arquivo baixado. No celular, clique no arquivo baixado para abri-lo diretamente no app do calendário.</li>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
+                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
+                        <li>Abra o arquivo baixado. O sistema Android sugerirá adicionar os eventos ao seu Google Agenda automaticamente.</li>
+                        <li>Caso o arquivo não abra, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a> no navegador, vá em <em>Configurações > Importar e exportar</em> e selecione o arquivo.</li>
                     </ol>
                 `;
             } else if (device === 'ios') {
                 instrucoesHtml = `
                     <p class="font-semibold text-gray-800">📱 Instruções para iPhone / iPad (iOS):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
-                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
-                        <li>Toque no arquivo baixado no seu aplicativo <strong>Arquivos</strong> ou na notificação de download.</li>
-                        <li>O sistema iOS perguntará se deseja adicionar os eventos ao seu aplicativo <strong>Calendário</strong> padrão. Confirme a importação.</li>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
+                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
+                        <li>Toque no arquivo baixado no seu aplicativo de <strong>Arquivos</strong> (ou diretamente no pop-up de download).</li>
+                        <li>O sistema perguntará se você deseja adicionar os eventos ao seu aplicativo de <strong>Calendário</strong>. Confirme tocando em <em>Adicionar Todos</em>.</li>
                     </ol>
                 `;
             } else if (device === 'mac') {
                 instrucoesHtml = `
                     <p class="font-semibold text-gray-800">💻 Instruções para macOS (Apple Calendar):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
-                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
-                        <li>Dê um duplo clique no arquivo baixado na sua pasta de Downloads.</li>
-                        <li>O aplicativo <strong>Calendário</strong> da Apple será aberto automaticamente. Selecione para qual calendário deseja importar os eventos.</li>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
+                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
+                        <li>Abra a sua pasta de <em>Downloads</em> e dê um duplo clique no arquivo baixado.</li>
+                        <li>O aplicativo <strong>Calendário</strong> abrirá automaticamente. Escolha o seu calendário principal e clique em <em>OK</em> para importar as provas.</li>
                     </ol>
                 `;
             } else {
                 instrucoesHtml = `
                     <p class="font-semibold text-gray-800">💻 Instruções para Computador (Google Agenda / Outlook):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600">
-                        <li>Clique em <strong>Baixar Arquivo .ics</strong> abaixo.</li>
-                        <li>Abra o <strong>Google Agenda</strong> (<a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>).</li>
-                        <li>Clique na engrenagem de <em>Configurações > Importar e exportar</em>, escolha o arquivo baixado e clique em <strong>Importar</strong>.</li>
+                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
+                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
+                        <li>Se você usa o <strong>Google Agenda</strong>, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>.</li>
+                        <li>No canto superior direito, clique na engrenagem de <em>Configurações > Importar e exportar</em>. Selecione o arquivo no seu computador e clique em <strong>Importar</strong>.</li>
+                        <li>Se usa Outlook ou Calendário do Windows, basta dar um duplo clique no arquivo baixado.</li>
                     </ol>
                 `;
             }
@@ -1155,12 +1165,13 @@
                     const uidUnico = `${codigoDisc}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
                     const summary = `Prova ${tipoAP} ${nomeDisc} ${semestreTextoFormatado}`;
                     
+                    // Removido o TZID para usar os horários fixos convertidos em UTC
                     return `BEGIN:VEVENT
 UID:${uidUnico}
 DTSTAMP:${dtstampStr}
 SEQUENCE:${novaSequence}
-DTSTART;TZID=America/Sao_Paulo:${parsed.dtstart}
-DTEND;TZID=America/Sao_Paulo:${parsed.dtend}
+DTSTART:${parsed.dtstart}
+DTEND:${parsed.dtend}
 SUMMARY:${summary}
 DESCRIPTION:Avaliação Presencial da disciplina ${nomeDisc}
 URL:https://www.eadblitz.com.br
@@ -1171,18 +1182,12 @@ TRANSP:OPAQUE
 BEGIN:VALARM
 ACTION:DISPLAY
 DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
-TRIGGER:-P7D
-END:VALARM
-BEGIN:VALARM
-ACTION:EMAIL
-DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
-SUMMARY:Aviso Prévio: Prova ${tipoAP} ${nomeDisc}
-TRIGGER:-P7D
+TRIGGER:-PT168H
 END:VALARM
 BEGIN:VALARM
 ACTION:DISPLAY
 DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
-TRIGGER:-P2D
+TRIGGER:-PT48H
 END:VALARM
 END:VEVENT`;
                 };
@@ -1216,8 +1221,6 @@ END:VEVENT`;
                 'PRODID:-//BlitzEAD//Planejamento Academico//PT',
                 'CALSCALE:GREGORIAN',
                 'METHOD:PUBLISH',
-                'X-WR-CALNAME:Provas - ' + semestreNome,
-                'X-WR-TIMEZONE:America/Sao_Paulo',
                 ...eventosIcs,
                 'END:VCALENDAR'
             ].join('\r\n');
@@ -1234,95 +1237,7 @@ END:VEVENT`;
 
             await carregarDadosBanco();
             window.scrollTo({ top: scrollSalvo });
-        }
-
-        function exportarGradeCompletaPDF() {
-            if (!usuarioAtual) {
-                alert("Para exportar a grade completa em PDF, é necessário estar logado.");
-                abrirModalAuth('login');
-                return;
-            }
-
-            const scrollSalvo = window.scrollY;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            const semestresPossiveis = [
-                '1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre',
-                '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'
-            ];
-
-            const semestresComDados = semestresPossiveis.map(sem => {
-                const registros = planejamentoGlobal
-                    .filter(p => p.semestre === sem)
-                    .sort((a, b) => {
-                        const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
-                        const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
-                        return indexA - indexB;
-                    });
-                return { semestre: sem, registros };
-            }).filter(s => s.registros.length > 0);
-
-            if (semestresComDados.length === 0) {
-                alert("Não há disciplinas alocadas em nenhum semestre para exportar.");
-                return;
-            }
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Planejamento Acadêmico - Lista de Disciplinas", 14, 20);
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 26);
-
-            let y = 36;
-
-            semestresComDados.forEach(grupo => {
-                const alturaBlocoSemestre = 16 + (grupo.registros.length * 6);
-
-                if (y + alturaBlocoSemestre > 280) {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text(grupo.semestre, 14, y);
-                y += 5;
-
-                doc.setFontSize(8);
-                doc.setFillColor(245, 247, 250);
-                doc.rect(14, y - 4, 182, 6, "F");
-                doc.text("Código", 16, y);
-                doc.text("Nome da Disciplina", 42, y);
-                doc.text("Período", 145, y);
-                doc.text("Status", 170, y);
-
-                y += 6;
-                doc.setFont("helvetica", "bold");
-
-                grupo.registros.forEach(reg => {
-                    const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                    if (!d) return;
-
-                    doc.text(d.codigo || '-', 16, y);
-                    const nomeDisc = (d.nome || '-').length > 45 ? (d.nome || '-').substring(0, 42) + '...' : (d.nome || '-');
-                    doc.text(nomeDisc, 42, y);
-                    doc.text(d.periodo || '-', 145, y);
-                    doc.text(reg.status || 'Inscrita', 170, y);
-
-                    y += 6;
-                });
-
-                y += 8;
-            });
-
-            doc.save("grade_completa_disciplinas.pdf");
-            window.scrollTo({ top: scrollSalvo });
-        }
-
-        init();
+        });
     </script>
 </body>
 </html>
