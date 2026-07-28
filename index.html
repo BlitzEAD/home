@@ -1002,7 +1002,7 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // Regex ajustado para ser mais flexível com espaços e letras (ex: 'Às', 'as', sem zeros à esquerda)
+        // Função de parser convertendo rigorosamente para UTC (+3h) para não cair em falsos testes de Horário de Verão local
         function parseDataHoraStrICS(str) {
             if (!str) return null;
             
@@ -1166,7 +1166,6 @@
                     const parsed = parseDataHoraStrICS(dataString);
                     if (!parsed) return [];
                     
-                    // Adicionando o ID único da disciplina (disc.id) para o Google não sobreescrever eventos que tenham o mesmo código (ou ausência de código)
                     const uidUnico = `${codigoDisc}-${disc.id}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
                     const summary = `Prova ${tipoAP} ${nomeDisc} ${semestreTextoFormatado}`;
                     
@@ -1186,13 +1185,13 @@
                         'TRANSP:OPAQUE',
                         'BEGIN:VALARM',
                         'ACTION:DISPLAY',
-                        `DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}`,
-                        'TRIGGER;RELATED=START:-P7D',
+                        `DESCRIPTION:${summary}`,
+                        'TRIGGER:-P7D',
                         'END:VALARM',
                         'BEGIN:VALARM',
                         'ACTION:DISPLAY',
-                        `DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}`,
-                        'TRIGGER;RELATED=START:-P2D',
+                        `DESCRIPTION:${summary}`,
+                        'TRIGGER:-P2D',
                         'END:VALARM',
                         'END:VEVENT'
                     ];
