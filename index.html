@@ -1162,48 +1162,50 @@
 
                 const dtstampStr = formatarDataHoraAtualZ();
 
-                // FUNÇÃO AUXILIAR PARA GERAR O BLOCO VEVENT USANDO ALERTAS ESTRITOS (7 dias e 2 dias)
+                // Usar Arrays aqui força que as quebras de linha incluam SEMPRE \r\n ao fazermos o join('\r\n') depois.
                 const gerarBlocoEvento = (tipoAP, dataString) => {
                     const parsed = parseDataHoraStrICS(dataString);
-                    if (!parsed) return "";
+                    if (!parsed) return [];
                     
                     const uidUnico = `${codigoDisc}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
                     const summary = `Prova ${tipoAP} ${nomeDisc} ${semestreTextoFormatado}`;
                     
-                    return `BEGIN:VEVENT
-UID:${uidUnico}
-DTSTAMP:${dtstampStr}
-SEQUENCE:${novaSequence}
-DTSTART:${parsed.dtstart}
-DTEND:${parsed.dtend}
-SUMMARY:${summary}
-DESCRIPTION:Avaliação Presencial da disciplina ${nomeDisc}
-URL:https://www.eadblitz.com.br
-CATEGORIES:Provas
-ORGANIZER;CN="BlitzEAD":mailto:blitzead@gmail.com
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
-TRIGGER:-PT168H
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}
-TRIGGER:-PT48H
-END:VALARM
-END:VEVENT`;
+                    return [
+                        'BEGIN:VEVENT',
+                        `UID:${uidUnico}`,
+                        `DTSTAMP:${dtstampStr}`,
+                        `SEQUENCE:${novaSequence}`,
+                        `DTSTART:${parsed.dtstart}`,
+                        `DTEND:${parsed.dtend}`,
+                        `SUMMARY:${summary}`,
+                        `DESCRIPTION:Avaliação Presencial da disciplina ${nomeDisc}`,
+                        'URL:https://www.eadblitz.com.br',
+                        'CATEGORIES:Provas',
+                        'ORGANIZER;CN=BlitzEAD:mailto:blitzead@gmail.com',
+                        'STATUS:CONFIRMED',
+                        'TRANSP:OPAQUE',
+                        'BEGIN:VALARM',
+                        'ACTION:DISPLAY',
+                        `DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}`,
+                        'TRIGGER:-PT168H',
+                        'END:VALARM',
+                        'BEGIN:VALARM',
+                        'ACTION:DISPLAY',
+                        `DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}`,
+                        'TRIGGER:-PT48H',
+                        'END:VALARM',
+                        'END:VEVENT'
+                    ];
                 };
 
                 const blocoAP1 = gerarBlocoEvento('AP1', disc.data_ap1);
-                if (blocoAP1) eventosIcs.push(blocoAP1);
+                if (blocoAP1.length > 0) eventosIcs.push(...blocoAP1);
 
                 const blocoAP2 = gerarBlocoEvento('AP2', disc.data_ap2);
-                if (blocoAP2) eventosIcs.push(blocoAP2);
+                if (blocoAP2.length > 0) eventosIcs.push(...blocoAP2);
                 
                 const blocoAP3 = gerarBlocoEvento('AP3', disc.data_ap3);
-                if (blocoAP3) eventosIcs.push(blocoAP3);
+                if (blocoAP3.length > 0) eventosIcs.push(...blocoAP3);
             });
 
             if (eventosIcs.length === 0) {
@@ -1219,6 +1221,7 @@ END:VEVENT`;
                     .eq('semestre', att.semestre);
             }
 
+            // Unindo tudo com \r\n de forma exata para obedecer a RFC 5545
             const conteudoIcs = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
