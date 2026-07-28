@@ -1002,11 +1002,11 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // Função de parser convertendo rigorosamente para UTC (+3h) para não cair em falsos testes de Horário de Verão local
+        // Regex ajustado para ser mais flexível com espaços e letras (ex: 'Às', 'as', sem zeros à esquerda)
         function parseDataHoraStrICS(str) {
             if (!str) return null;
             
-            const regex = /^(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}):(\d{2})\s*às\s*(\d{2}):(\d{2})$/;
+            const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2}):(\d{2})\s*(?:às|as)\s*(\d{1,2}):(\d{2})$/i;
             const match = str.trim().match(regex);
             
             if (match) {
@@ -1162,12 +1162,12 @@
 
                 const dtstampStr = formatarDataHoraAtualZ();
 
-                // Usar Arrays aqui força que as quebras de linha incluam SEMPRE \r\n ao fazermos o join('\r\n') depois.
                 const gerarBlocoEvento = (tipoAP, dataString) => {
                     const parsed = parseDataHoraStrICS(dataString);
                     if (!parsed) return [];
                     
-                    const uidUnico = `${codigoDisc}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
+                    // Adicionando o ID único da disciplina (disc.id) para o Google não sobreescrever eventos que tenham o mesmo código (ou ausência de código)
+                    const uidUnico = `${codigoDisc}-${disc.id}-${tipoAP}-${codigoSemestreFormatado}@eadblitz.com.br`;
                     const summary = `Prova ${tipoAP} ${nomeDisc} ${semestreTextoFormatado}`;
                     
                     return [
@@ -1187,12 +1187,12 @@
                         'BEGIN:VALARM',
                         'ACTION:DISPLAY',
                         `DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}`,
-                        'TRIGGER:-PT168H',
+                        'TRIGGER;RELATED=START:-P7D',
                         'END:VALARM',
                         'BEGIN:VALARM',
                         'ACTION:DISPLAY',
                         `DESCRIPTION:Lembrete de Prova - ${tipoAP} ${nomeDisc}`,
-                        'TRIGGER:-PT48H',
+                        'TRIGGER;RELATED=START:-P2D',
                         'END:VALARM',
                         'END:VEVENT'
                     ];
@@ -1221,7 +1221,6 @@
                     .eq('semestre', att.semestre);
             }
 
-            // Unindo tudo com \r\n de forma exata para obedecer a RFC 5545
             const conteudoIcs = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
