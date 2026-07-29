@@ -1168,7 +1168,7 @@
                     if (parsed) {
                         provasDoTipo.push({
                             reg,
-                            disc,
+                    disc,
                             parsed,
                             timestamp: parsed.dateObj.getTime()
                         });
@@ -1200,17 +1200,17 @@
                     const primeiraProvaTimestamp = fdsProvas[0].timestamp;
                     const primeiraProvaDate = new Date(primeiraProvaTimestamp);
 
-                    // CORREÇÃO: Alerta Prévio posicionado EXATAMENTE na segunda-feira da semana da prova (ou 4 dias antes da primeira prova)
+                    // Alerta Prévio na segunda-feira da semana da prova (configurado como evento com horário das 08:00 às 09:00 UTC para garantir visibilidade em todos os apps)
                     const dataAlerta = new Date(primeiraProvaDate);
                     const diaSemanaPrimeiraProva = primeiraProvaDate.getUTCDay(); // 0=Dom, 6=Sáb
-                    // Recua para a segunda-feira daquela mesma semana (se Sábado=6 recua 5 dias, se Domingo=0 recua 6 dias)
                     let diasAteSegunda = diaSemanaPrimeiraProva === 0 ? 6 : diaSemanaPrimeiraProva - 1;
                     dataAlerta.setUTCDate(dataAlerta.getUTCDate() - diasAteSegunda);
 
                     const yyyyA = dataAlerta.getUTCFullYear();
                     const mmA = String(dataAlerta.getUTCMonth() + 1).padStart(2, '0');
                     const ddA = String(dataAlerta.getUTCDate()).padStart(2, '0');
-                    const dtAlertaStr = `${yyyyA}${mmA}${ddA}`;
+                    const dtAlertaStart = `${yyyyA}${mmA}${ddA}T080000Z`;
+                    const dtAlertaEnd = `${yyyyA}${mmA}${ddA}T090000Z`;
 
                     const nomeFdsOrdem = fdsIndex === 0 ? 'Primeiro' : (fdsIndex === 1 ? 'Segundo' : `${fdsIndex + 1}º`);
                     const summaryAlerta = `Provas ${tipoAP} chegando! ${nomeFdsOrdem} fim de semana!`;
@@ -1220,7 +1220,7 @@
                         const diaSemanaStr = p.parsed.dateObj.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
                         descAlertaLinhas.push(`${diaSemanaStr.charAt(0).toUpperCase() + diaSemanaStr.slice(1)}, ${p.parsed.diaStr}/${p.parsed.mesStr} - ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h: ${p.disc.nome}`);
                     });
-                    const descriptionAlerta = `Cronograma de provas deste fim de semana:\\n` + descAlertaLinhas.join('\\n');
+                    const descriptionAlerta = `Cronograma de provas deste fim de semana: ` + descAlertaLinhas.join(' | ');
 
                     const uidAlerta = `ALERTA-${tipoAP}-FDS${fdsIndex+1}-${codigoSemestreFormatado}@eadblitz.com.br`;
                     const dtstampStr = formatarDataHoraAtualZ();
@@ -1229,8 +1229,8 @@
                         'BEGIN:VEVENT',
                         `UID:${uidAlerta}`,
                         `DTSTAMP:${dtstampStr}`,
-                        `DTSTART;VALUE=DATE:${dtAlertaStr}`,
-                        `DTEND;VALUE=DATE:${dtAlertaStr}`,
+                        `DTSTART:${dtAlertaStart}`,
+                        `DTEND:${dtAlertaEnd}`,
                         `SUMMARY:${summaryAlerta}`,
                         `DESCRIPTION:${descriptionAlerta}`,
                         'URL:https://www.eadblitz.com.br',
@@ -1240,7 +1240,7 @@
                         'END:VEVENT'
                     );
 
-                    // 2. Lembrete na véspera (Sexta-feira anterior) para cada prova
+                    // 2. Lembrete na véspera (Sexta-feira anterior) para cada prova (configurado das 18:00 às 19:00 UTC para garantir visualização correta)
                     fdsProvas.forEach(p => {
                         const provaDate = p.parsed.dateObj;
                         const diaSemanaProva = provaDate.getUTCDay(); // 0=Dom, 6=Sáb, 5=Sex, etc.
@@ -1259,11 +1259,12 @@
                         const yyyyS = sextaVespers.getUTCFullYear();
                         const mmS = String(sextaVespers.getUTCMonth() + 1).padStart(2, '0');
                         const ddS = String(sextaVespers.getUTCDate()).padStart(2, '0');
-                        const dtSextaStr = `${yyyyS}${mmS}${ddS}`;
+                        const dtSextaStart = `${yyyyS}${mmS}${ddS}T180000Z`;
+                        const dtSextaEnd = `${yyyyS}${mmS}${ddS}T190000Z`;
 
                         const diaSemanaProvaNome = provaDate.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
                         const summaryVespers = `Prova de ${p.disc.nome} no ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, dia ${p.parsed.diaStr}/${p.parsed.mesStr}, de ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h`;
-                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome}\\nHorário: ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h\\nData: ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}`;
+                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome} - Horário: ${p.parsed.horaInicioStr}h às ${p.parsed.horaFimStr}h - Data: ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}`;
 
                         const codigoDisc = p.disc.codigo || 'GERAL';
                         const uidVespers = `${codigoDisc}-${p.disc.id}-${tipoAP}-VESP-${codigoSemestreFormatado}@eadblitz.com.br`;
@@ -1280,8 +1281,8 @@
                             `UID:${uidVespers}`,
                             `DTSTAMP:${dtstampStr}`,
                             `SEQUENCE:${novaSequence}`,
-                            `DTSTART;VALUE=DATE:${dtSextaStr}`,
-                            `DTEND;VALUE=DATE:${dtSextaStr}`,
+                            `DTSTART:${dtSextaStart}`,
+                            `DTEND:${dtSextaEnd}`,
                             `SUMMARY:${summaryVespers}`,
                             `DESCRIPTION:${descriptionVespers}`,
                             'URL:https://www.eadblitz.com.br',
