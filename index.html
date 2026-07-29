@@ -1180,7 +1180,7 @@
                 // Ordenar por data cronológica
                 provasDoTipo.sort((a, b) => a.timestamp - b.timestamp);
 
-                // Agrupamento estrito por Fim de Semana (considerando que provas separadas por até 3 dias formam o mesmo bloco de FDS)
+                // Agrupamento estrito por Fim de Semana (provas separadas por até 3 dias)
                 let finsDeSemana = [];
                 let currentFds = [provasDoTipo[0]];
 
@@ -1200,9 +1200,12 @@
                     const primeiraProvaTimestamp = fdsProvas[0].timestamp;
                     const primeiraProvaDate = new Date(primeiraProvaTimestamp);
 
-                    // 1. Alerta Prévio: EXATAMENTE 4 dias antes da primeira prova do fim de semana
+                    // CORREÇÃO: Alerta Prévio posicionado EXATAMENTE na segunda-feira da semana da prova (ou 4 dias antes da primeira prova)
                     const dataAlerta = new Date(primeiraProvaDate);
-                    dataAlerta.setUTCDate(dataAlerta.getUTCDate() - 4);
+                    const diaSemanaPrimeiraProva = primeiraProvaDate.getUTCDay(); // 0=Dom, 6=Sáb
+                    // Recua para a segunda-feira daquela mesma semana (se Sábado=6 recua 5 dias, se Domingo=0 recua 6 dias)
+                    let diasAteSegunda = diaSemanaPrimeiraProva === 0 ? 6 : diaSemanaPrimeiraProva - 1;
+                    dataAlerta.setUTCDate(dataAlerta.getUTCDate() - diasAteSegunda);
 
                     const yyyyA = dataAlerta.getUTCFullYear();
                     const mmA = String(dataAlerta.getUTCMonth() + 1).padStart(2, '0');
