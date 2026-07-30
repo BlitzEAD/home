@@ -142,7 +142,7 @@
                             <option value="">Nenhum / Não informar</option>
                         </select>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition text-sm mt-2">Cadastrar e Entrar</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition text-sm mt-2">Criar Conta</button>
                 </form>
                 <div id="msg-cadastro" class="mt-2 text-xs text-center"></div>
 
@@ -158,9 +158,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative overflow-hidden">
             <button onclick="fecharModalIcsGuia()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
             <h3 id="ics-guia-titulo" class="text-xl font-extrabold text-gray-900 mb-2">Adicionar Provas à Agenda</h3>
-            <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6">
-                <!-- Preenchido dinamicamente via JS de acordo com o device -->
-            </div>
+            <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6"></div>
             <div class="flex justify-end space-x-3 mt-4 border-t pt-4">
                 <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition">Cancelar</button>
                 <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Fazer Download (.ics)</button>
@@ -176,7 +174,6 @@
     </main>
 
     <script>
-        // MANTENHA SUAS CREDENCIAIS AQUI
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
 
@@ -232,7 +229,6 @@
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
 
-            // Verifica se o usuário atual é Administrador
             const isAdmin = usuarioAtual && usuarioAtual.user_metadata && usuarioAtual.user_metadata.is_admin === true;
 
             if (isAdmin && containerBtnAdmin) {
@@ -382,26 +378,12 @@
                 return;
             }
 
-            if (!data.session) {
-                const loginAuto = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-                if (loginAuto.data && loginAuto.data.session) {
-                    usuarioAtual = loginAuto.data.session.user;
-                } else if (data.user) {
-                    usuarioAtual = data.user;
-                }
-            } else {
-                usuarioAtual = data.session.user;
-            }
-
-            if (usuarioAtual) {
-                await migrarDadosLocaisParaBanco(usuarioAtual.id);
-            }
-
-            fecharModalAuth();
-            renderizarTopoUsuario();
-            await carregarDadosBanco();
-            await processarPendenciaCadastro();
-            alert("✅ Cadastro realizado com sucesso! Você já está logado e suas disciplinas foram salvas.");
+            // Conta criada com sucesso, mas como a confirmação por e-mail está ativa, 
+            // o usuário NÃO está logado ainda. Apenas informamos e mantemos a pendência salva para o futuro login.
+            msg.innerHTML = "✅ Conta criada com sucesso!<br><span class='text-blue-600 font-semibold'>Enviamos um e-mail de confirmação. Confirme seu e-mail e faça login para sincronizar suas disciplinas.</span>";
+            msg.className = "mt-2 text-xs text-center text-green-600";
+            
+            document.getElementById('form-cadastro').reset();
         });
 
         async function migrarDadosLocaisParaBanco(userId) {
@@ -1020,7 +1002,6 @@
             window.scrollTo({ top: scrollSalvo });
         }
 
-        // Função de parser convertendo rigorosamente para UTC (+3h) para não cair em falsos testes de Horário de Verão local
         function parseDataHoraStrICS(str) {
             if (!str) return null;
             
@@ -1167,7 +1148,6 @@
             const anoVigente = now.getFullYear();
             const semestreVigenteNum = (now.getMonth() + 1) >= 6 ? 2 : 1;
             const codigoSemestreFormatado = `${anoVigente}${semestreVigenteNum}`;
-            const semestreTextoFormatado = `${anoVigente}-${semestreVigenteNum}`;
 
             let eventosIcs = [];
             let atualizacoesSequenciais = [];
@@ -1310,7 +1290,7 @@
             });
 
             if (eventosIcs.length === 0) {
-                alert("Nenhuma data válida encontrada para exportação. (Disciplinas com controle indisponível são ignoradas).");
+                alert("Nenhuma data válida encontrada para exportação.");
                 return;
             }
 
