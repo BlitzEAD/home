@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Planejamento Acadêmico</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pt-32">
+
+    <!-- MENU SUPERIOR FIXO (Idêntico ao Principal) -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.location.href='index.html'">Planejamento Acadêmico</h1>
+                <div id="container-btn-admin"></div>
+            </div>
+
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
+            </div>
+        </div>
+
+        <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
+            <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
+                <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
+                <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO DO PERFIL -->
+    <main class="w-full max-w-2xl mx-auto px-6 py-8 flex-1">
+        
+        <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">Configurações de Perfil</h2>
+            <p class="text-gray-500 text-xs mb-6">Atualize suas informações cadastrais e dados acadêmicos.</p>
+
+            <form id="form-perfil" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nome Completo</label>
+                    <input type="text" id="perfil-nome" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail de Acesso <span class="text-gray-400 font-normal">(Alterar o e-mail exigirá confirmação)</span></label>
+                    <input type="email" id="perfil-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Curso</label>
+                    <select id="perfil-curso" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="Administração">Administração</option>
+                        <option value="Administração Pública">Administração Pública</option>
+                        <option value="Biblioteconomia">Biblioteconomia</option>
+                        <option value="Ciências Contábeis">Ciências Contábeis</option>
+                        <option value="Engenharia de Produção">Engenharia de Produção</option>
+                        <option value="Engenharia Meteorológica">Engenharia Meteorológica</option>
+                        <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
+                        <option value="Licenciatura em Física">Licenciatura em Física</option>
+                        <option value="Licenciatura em Geografia">Licenciatura em Geografia</option>
+                        <option value="Licenciatura em História">Licenciatura em História</option>
+                        <option value="Licenciatura em Letras">Licenciatura em Letras</option>
+                        <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
+                        <option value="Licenciatura em Química">Licenciatura em Química</option>
+                        <option value="Licenciatura em Turismo">Licenciatura em Turismo</option>
+                        <option value="Tecnologia em Segurança Pública">Tecnologia em Segurança Pública</option>
+                        <option value="Tecnologia em Sistemas de Computação">Tecnologia em Sistemas de Computação</option>
+                        <option value="Tecnologia em Turismo">Tecnologia em Turismo</option>
+                        <option value="Tecnologia em Design Gráfico">Tecnologia em Design Gráfico</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Semestre de Ingresso</label>
+                    <select id="perfil-semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Nenhum / Não informar</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 border-t flex items-center justify-between">
+                    <a href="index.html" class="text-xs text-gray-600 hover:underline font-semibold">← Voltar ao Planejamento</a>
+                    <button type="submit" id="btn-salvar-perfil" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+            <div id="msg-perfil" class="mt-4 text-xs text-center font-medium"></div>
+        </div>
+
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let usuarioAtual = null;
+
+        async function initPerfil() {
+            gerarOpcoesSemestres();
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert("Você precisa estar logado para acessar seu perfil.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            usuarioAtual = session.user;
+            renderizarTopoUsuario();
+            preencherDadosPerfil();
+        }
+
+        function gerarOpcoesSemestres() {
+            const select = document.getElementById('perfil-semestre');
+            if (!select) return;
+            const anoAtual = 2026;
+            const semestreAtualConst = 2;
+            
+            let opcoesHtml = '<option value="">Nenhum / Não informar</option>';
+            for (let ano = anoAtual; ano >= 2019; ano--) {
+                for (let sem = 2; sem >= 1; sem--) {
+                    if (ano === anoAtual && sem > semestreAtualConst) continue;
+                    const valor = `${ano}-${sem}`;
+                    opcoesHtml += `<option value="${valor}">${valor}</option>`;
+                }
+            }
+            select.innerHTML = opcoesHtml;
+        }
+
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            const containerBtnAdmin = document.getElementById('container-btn-admin');
+            const isAdmin = usuarioAtual && usuarioAtual.user_metadata && usuarioAtual.user_metadata.is_admin === true;
+
+            if (isAdmin && containerBtnAdmin) {
+                containerBtnAdmin.innerHTML = `
+                    <a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center space-x-1 whitespace-nowrap">
+                        <span>⚙️ Área Administrativa</span>
+                    </a>
+                `;
+            }
+
+            const email = usuarioAtual.email || "Usuário";
+            const primeiraLetra = email.charAt(0).toUpperCase();
+            const nomeExibicao = (usuarioAtual.user_metadata && usuarioAtual.user_metadata.nome) ? usuarioAtual.user_metadata.nome.split(' ')[0] : email.split('@')[0];
+
+            bloco.innerHTML = `
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
+                <div class="relative">
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        ${primeiraLetra}
+                    </button>
+                    <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                        <a href="perfil.html" class="block px-4 py-2 text-blue-600 font-semibold bg-blue-50 transition">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('dropdown-perfil').classList.toggle('hidden');
+            });
+            window.addEventListener('click', () => {
+                const drop = document.getElementById('dropdown-perfil');
+                if (drop && !drop.classList.contains('hidden')) drop.classList.add('hidden');
+            });
+
+            document.getElementById('btn-sair').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
+
+        function preencherDadosPerfil() {
+            if (!usuarioAtual) return;
+            document.getElementById('perfil-email').value = usuarioAtual.email || '';
+            const metadata = usuarioAtual.user_metadata || {};
+            document.getElementById('perfil-nome').value = metadata.nome || '';
+            document.getElementById('perfil-curso').value = metadata.curso || 'Administração';
+            document.getElementById('perfil-semestre').value = metadata.semestre_ingresso || '';
+        }
+
+        document.getElementById('form-perfil').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-perfil');
+            const msg = document.getElementById('msg-perfil');
+
+            const novoNome = document.getElementById('perfil-nome').value;
+            const novoEmail = document.getElementById('perfil-email').value.trim();
+            const novoCurso = document.getElementById('perfil-curso').value;
+            const novoSemestre = document.getElementById('perfil-semestre').value;
+
+            btn.disabled = true;
+            btn.textContent = "Salvando alterações...";
+            msg.textContent = "";
+
+            try {
+                let alterouEmail = novoEmail !== usuarioAtual.email;
+
+                // 1. Atualiza metadados e/ou e-mail no Supabase Auth
+                const dadosAtualizacao = {
+                    data: {
+                        nome: novoNome,
+                        curso: novoCurso,
+                        semestre_ingresso: novoSemestre
+                    }
+                };
+
+                if (alterouEmail) {
+                    dadosAtualizacao.email = novoEmail;
+                }
+
+                const { data, error } = await supabaseClient.auth.updateUser(dadosAtualizacao);
+                if (error) throw error;
+
+                if (alterouEmail) {
+                    msg.innerHTML = "✅ Dados atualizados com sucesso!<br><span class='text-blue-600 font-semibold'>Como você alterou seu e-mail, enviamos uma mensagem de confirmação para o novo endereço. Verifique sua caixa de entrada.</span>";
+                    msg.className = "mt-4 text-xs text-center font-medium text-green-600";
+                } else {
+                    msg.textContent = "✅ Perfil atualizado com sucesso!";
+                    msg.className = "mt-4 text-xs text-center font-medium text-green-600";
+                }
+
+                // Atualiza o objeto local
+                usuarioAtual = data.user;
+                renderizarTopoUsuario();
+
+            } catch (err) {
+                msg.textContent = "❌ Erro ao atualizar: " + err.message;
+                msg.className = "mt-4 text-xs text-center font-medium text-red-600";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Salvar Alterações";
+            }
+        });
+
+        initPerfil();
+    </script>
+</body>
+</html>
