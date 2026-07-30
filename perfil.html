@@ -20,11 +20,14 @@
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
             </div>
         </div>
+        <!-- MENU INFERIOR COMPLETO -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
         </div>
     </header>
@@ -36,16 +39,11 @@
             <p class="text-gray-500 text-xs mb-6">Atualize suas informações cadastrais e foto de perfil.</p>
 
             <form id="form-perfil" class="space-y-4">
-                
-                <!-- FOTO DE PERFIL -->
                 <div class="flex items-center space-x-4 pb-4 border-b">
-                    <div id="preview-avatar" class="w-16 h-16 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xl overflow-hidden shadow-sm border-2 border-gray-100">
-                        <!-- Preenchido via JS -->
-                    </div>
+                    <div id="preview-avatar" class="w-16 h-16 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xl overflow-hidden shadow-sm border-2 border-gray-100"></div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Foto de Perfil (Opcional)</label>
                         <input type="file" id="input-foto-perfil" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
-                        <p class="text-[10px] text-gray-400 mt-1">A imagem será otimizada automaticamente para ocupar pouco espaço.</p>
                     </div>
                 </div>
 
@@ -55,7 +53,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail de Acesso <span class="text-gray-400 font-normal">(Alterar exigirá nova confirmação)</span></label>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail de Acesso</label>
                     <input type="email" id="perfil-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
@@ -92,9 +90,7 @@
 
                 <div class="pt-4 border-t flex items-center justify-between">
                     <a href="index.html" class="text-xs text-gray-600 hover:underline font-semibold">← Voltar ao Planejamento</a>
-                    <button type="submit" id="btn-salvar-perfil" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">
-                        Salvar Alterações
-                    </button>
+                    <button type="submit" id="btn-salvar-perfil" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Salvar Alterações</button>
                 </div>
             </form>
             <div id="msg-perfil" class="mt-4 text-xs text-center font-medium"></div>
@@ -104,7 +100,6 @@
     <script>
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let usuarioAtual = null;
 
@@ -124,14 +119,14 @@
         function gerarOpcoesSemestres() {
             const select = document.getElementById('perfil-semestre');
             if (!select) return;
-            let opcoesHtml = '<option value="">Nenhum / Não informar</option>';
+            let html = '<option value="">Nenhum / Não informar</option>';
             for (let ano = 2026; ano >= 2019; ano--) {
                 for (let sem = 2; sem >= 1; sem--) {
                     if (ano === 2026 && sem > 2) continue;
-                    opcoesHtml += `<option value="${ano}-${sem}">${ano}-${sem}</option>`;
+                    html += `<option value="${ano}-${sem}">${ano}-${sem}</option>`;
                 }
             }
-            select.innerHTML = opcoesHtml;
+            select.innerHTML = html;
         }
 
         function renderizarTopoUsuario() {
@@ -140,11 +135,7 @@
             const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
 
             if (isAdmin && containerBtnAdmin) {
-                containerBtnAdmin.innerHTML = `
-                    <a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center space-x-1 whitespace-nowrap">
-                        <span>⚙️ Área Administrativa</span>
-                    </a>
-                `;
+                containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Área Administrativa</a>`;
             }
 
             const metadata = usuarioAtual.user_metadata || {};
@@ -152,20 +143,13 @@
             const primeiraLetra = nome.charAt(0).toUpperCase();
             const fotoUrl = metadata.foto_url;
             const nomeExibicao = nome.split(' ')[0];
+            let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
 
-            let avatarHtml = fotoUrl 
-                ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` 
-                : primeiraLetra;
-
-            // Atualiza preview da página de perfil
             document.getElementById('preview-avatar').innerHTML = avatarHtml;
-
             bloco.innerHTML = `
                 <span class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
                 <div class="relative">
-                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        ${avatarHtml}
-                    </button>
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none">${avatarHtml}</button>
                     <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
                         <a href="perfil.html" class="block px-4 py-2 text-blue-600 font-semibold bg-blue-50 transition">Perfil</a>
                         <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
@@ -197,7 +181,6 @@
             document.getElementById('perfil-semestre').value = metadata.semestre_ingresso || '';
         }
 
-        // Função para redimensionar imagem automaticamente no navegador antes do upload (Economiza servidor)
         async function redimensionarImagem(file, larguraMax = 300, qualidade = 0.8) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -207,14 +190,12 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let w = img.width;
-                        let h = img.height;
+                        let w = img.width, h = img.height;
                         if (w > larguraMax) {
                             h = Math.round((h * larguraMax) / w);
                             w = larguraMax;
                         }
-                        canvas.width = w;
-                        canvas.height = h;
+                        canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
                         canvas.toBlob((blob) => {
@@ -229,7 +210,6 @@
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-perfil');
             const msg = document.getElementById('msg-perfil');
-
             const novoNome = document.getElementById('perfil-nome').value;
             const novoEmail = document.getElementById('perfil-email').value.trim();
             const novoCurso = document.getElementById('perfil-curso').value;
@@ -238,38 +218,19 @@
 
             btn.disabled = true;
             btn.textContent = "Salvando...";
-            msg.textContent = "";
 
             try {
                 let fotoUrl = usuarioAtual.user_metadata?.foto_url || null;
-
-                // Se o usuário selecionou uma nova foto, redimensiona e envia para o bucket 'perfis'
                 if (fotoFile) {
-                    const fotoOtimizada = await redimensionarImagem(fotoFile, 250, 0.75); // Redimensiona para max 250px
+                    const fotoOtimizada = await redimensionarImagem(fotoFile, 250, 0.75);
                     const nomeArquivo = `avatar_${usuarioAtual.id}_${Date.now()}.jpg`;
-                    
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('perfis')
-                        .upload(nomeArquivo, fotoOtimizada, { upsert: true });
-
-                    if (uploadError) throw new Error("Erro ao enviar foto: " + uploadError.message);
-
-                    const { data: { publicUrl } } = supabaseClient.storage
-                        .from('perfis')
-                        .getPublicUrl(nomeArquivo);
-
+                    await supabaseClient.storage.from('perfis').upload(nomeArquivo, fotoOtimizada, { upsert: true });
+                    const { data: { publicUrl } } = supabaseClient.storage.from('perfis').getPublicUrl(nomeArquivo);
                     fotoUrl = publicUrl;
                 }
 
                 let alterouEmail = novoEmail !== usuarioAtual.email;
-                const dadosAtualizacao = {
-                    data: {
-                        nome: novoNome,
-                        curso: novoCurso,
-                        semestre_ingresso: novoSemestre,
-                        foto_url: fotoUrl
-                    }
-                };
+                const dadosAtualizacao = { data: { nome: novoNome, curso: novoCurso, semestre_ingresso: novoSemestre, foto_url: fotoUrl } };
                 if (alterouEmail) dadosAtualizacao.email = novoEmail;
 
                 const { data, error } = await supabaseClient.auth.updateUser(dadosAtualizacao);
@@ -278,14 +239,8 @@
                 usuarioAtual = data.user;
                 renderizarTopoUsuario();
                 preencherDadosPerfil();
-
-                if (alterouEmail) {
-                    msg.innerHTML = "✅ Dados salvos! Enviamos um e-mail de confirmação para o seu novo endereço.";
-                } else {
-                    msg.textContent = "✅ Perfil atualizado com sucesso!";
-                }
+                msg.textContent = alterouEmail ? "✅ Salvo! Verifique o e-mail de confirmação enviado." : "✅ Perfil atualizado com sucesso!";
                 msg.className = "mt-4 text-xs text-center font-medium text-green-600";
-
             } catch (err) {
                 msg.textContent = "❌ " + err.message;
                 msg.className = "mt-4 text-xs text-center font-medium text-red-600";

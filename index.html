@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- LINHA INFERIOR -->
+        <!-- LINHA INFERIOR (COMPLETA) -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="#" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Disciplinas</a>
@@ -188,6 +188,12 @@
 
         async function init() {
             gerarOpcoesSemestresCadastro();
+
+            // Verifica parâmetro da URL para abrir o login automaticamente (vindo da biblioteca)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('abrir_login') === '1') {
+                abrirModalAuth('login');
+            }
             
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
