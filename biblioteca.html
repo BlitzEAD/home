@@ -4,98 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca - Planejamento Acadêmico</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
-    <!-- MENU SUPERIOR FIXO (Idêntico ao Principal) -->
+    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
                 <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.location.href='index.html'">Planejamento Acadêmico</h1>
                 <div id="container-btn-admin"></div>
             </div>
-
             <div class="flex items-center space-x-2 md:space-x-3">
-                <!-- Área do Usuário / Login no Topo -->
-                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative">
-                    <!-- Preenchido dinamicamente via JS -->
-                </div>
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
             </div>
         </div>
-
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Biblioteca</a>
-                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
         </div>
     </header>
 
     <!-- CONTEÚDO DA BIBLIOTECA -->
     <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
-        
-        <!-- CABEÇALHO E FILTROS -->
         <div class="mb-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Biblioteca Digital</h2>
             <p class="text-gray-600 text-sm mb-6">Encontre livros, apostilas e materiais complementares para os seus estudos.</p>
             
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-                <!-- Campo de busca por texto -->
                 <div class="w-full md:w-1/2 relative">
                     <input type="text" id="input-busca" placeholder="Pesquisar por título ou palavra-chave..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                 </div>
-
-                <!-- Caixa seletora por Disciplina -->
                 <div class="w-full md:w-1/3">
-                    <select id="select-filtro-disciplina" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="select-filtro-disciplina" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
                         <option value="">Todas as Disciplinas (Geral)</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- GRID DE LIVROS -->
         <div id="grid-livros" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div class="col-span-full text-center py-12 text-gray-400">Carregando acervo da biblioteca...</div>
+            <div class="col-span-full text-center py-12 text-gray-400">Carregando acervo...</div>
         </div>
-
     </main>
 
     <!-- MODAL DE DETALHES DO LIVRO -->
     <div id="modal-livro" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative overflow-hidden max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] flex flex-col">
             <button onclick="fecharModalLivro()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
             
             <div class="overflow-y-auto pr-1 space-y-4">
-                <!-- Capa -->
                 <div class="w-full h-64 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border">
-                    <img id="modal-capa" src="" alt="Capa do Livro" class="h-full object-contain">
+                    <img id="modal-capa" src="" alt="Capa" class="h-full object-contain">
                 </div>
-
-                <!-- Título e Preço -->
                 <div>
                     <h3 id="modal-titulo" class="text-xl font-extrabold text-gray-900 mb-1"></h3>
                     <div id="modal-preco" class="text-lg font-bold text-blue-600"></div>
                 </div>
-
-                <!-- Descrição -->
                 <div>
                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Sinopse / Descrição</h4>
                     <p id="modal-descricao" class="text-sm text-gray-600 whitespace-pre-line leading-relaxed"></p>
                 </div>
             </div>
 
-            <!-- Botão de Ação Inferior -->
             <div class="mt-6 pt-4 border-t flex justify-end">
                 <a id="modal-btn-acao" href="#" target="_blank" class="w-full text-center py-3 px-4 rounded-xl font-semibold text-white transition shadow-sm text-sm"></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE AVISO DE LOGIN OBRIGATÓRIO PARA BIBLIOTECA -->
+    <div id="modal-aviso-login" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">🔒 Acesso Restrito à Biblioteca</h3>
+            <p class="text-xs text-gray-600 mb-6">Para visualizar a descrição completa, baixar os materiais gratuitos ou adquirir os livros, você precisa estar logado na sua conta.</p>
+            <div class="flex space-x-3">
+                <button onclick="document.getElementById('modal-aviso-login').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg text-xs">Cancelar</button>
+                <button onclick="window.location.href='index.html'" class="w-1/2 py-2.5 bg-blue-600 text-white font-semibold rounded-lg text-xs hover:bg-blue-700">Fazer Login / Cadastro</button>
             </div>
         </div>
     </div>
@@ -105,22 +95,17 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let listaLivrosGlobal = [];
-        let listaDisciplinasGlobal = [];
         let usuarioAtual = null;
 
         async function initBiblioteca() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                usuarioAtual = session.user;
-            }
+            if (session) usuarioAtual = session.user;
 
             renderizarTopoUsuario();
             await carregarDisciplinasSelect();
             await carregarLivros();
 
-            // Eventos de filtro em tempo real
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
             document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
         }
@@ -128,7 +113,7 @@
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
-            const isAdmin = usuarioAtual && usuarioAtual.user_metadata && usuarioAtual.user_metadata.is_admin === true;
+            const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
 
             if (isAdmin && containerBtnAdmin) {
                 containerBtnAdmin.innerHTML = `
@@ -147,24 +132,46 @@
                 return;
             }
 
-            const email = usuarioAtual.email || "Usuário";
-            const primeiraLetra = email.charAt(0).toUpperCase();
-            const nomeExibicao = (usuarioAtual.user_metadata && usuarioAtual.user_metadata.nome) ? usuarioAtual.user_metadata.nome.split(' ')[0] : email.split('@')[0];
+            const metadata = usuarioAtual.user_metadata || {};
+            const nome = metadata.nome || usuarioAtual.email || "Usuário";
+            const primeiraLetra = nome.charAt(0).toUpperCase();
+            const fotoUrl = metadata.foto_url;
+            const nomeExibicao = nome.split(' ')[0];
+
+            let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
 
             bloco.innerHTML = `
                 <span class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
-                <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
-                    ${primeiraLetra}
+                <div class="relative">
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        ${avatarHtml}
+                    </button>
+                    <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                    </div>
                 </div>
             `;
+
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('dropdown-perfil').classList.toggle('hidden');
+            });
+            window.addEventListener('click', () => {
+                const drop = document.getElementById('dropdown-perfil');
+                if (drop && !drop.classList.contains('hidden')) drop.classList.add('hidden');
+            });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                window.location.href = 'index.html';
+            });
         }
 
         async function carregarDisciplinasSelect() {
             const select = document.getElementById('select-filtro-disciplina');
-            const { data, error } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
-
-            if (error || !data) return;
-            listaDisciplinasGlobal = data;
+            const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
+            if (!data) return;
 
             let html = '<option value="">Todas as Disciplinas / Geral</option>';
             data.forEach(d => {
@@ -174,23 +181,16 @@
         }
 
         async function carregarLivros() {
-            // Busca livros e suas relações com disciplinas
-            const { data: livrosData, error: livrosError } = await supabaseClient
+            const { data: livrosData, error } = await supabaseClient
                 .from('livros')
-                .select(`
-                    *,
-                    livro_disciplinas (
-                        id_disciplina
-                    )
-                `)
+                .select(`*, livro_disciplinas ( id_disciplina )`)
                 .order('criado_em', { ascending: false });
 
-            if (livrosError) {
+            if (error || !livrosData) {
                 document.getElementById('grid-livros').innerHTML = `<div class="col-span-full text-center text-red-500">Erro ao carregar acervo.</div>`;
                 return;
             }
-
-            listaLivrosGlobal = livrosData || [];
+            listaLivrosGlobal = livrosData;
             filtrarEnderizarLivros();
         }
 
@@ -199,29 +199,22 @@
             const disciplinaIdFiltro = document.getElementById('select-filtro-disciplina').value;
 
             const filtrados = listaLivrosGlobal.filter(livro => {
-                // Filtro por texto (Título ou Descrição)
                 const matchTexto = livro.titulo.toLowerCase().includes(textoBusca) || 
                                    (livro.descricao && livro.descricao.toLowerCase().includes(textoBusca));
-                
-                // Filtro por disciplina
                 let matchDisciplina = true;
                 if (disciplinaIdFiltro !== "") {
                     const idNum = parseInt(disciplinaIdFiltro);
-                    const relacoes = livro.livro_disciplinas || [];
-                    matchDisciplina = relacoes.some(r => r.id_disciplina === idNum);
+                    matchDisciplina = (livro.livro_disciplinas || []).some(r => r.id_disciplina === idNum);
                 }
-
                 return matchTexto && matchDisciplina;
             });
-
             renderizarGrid(filtrados);
         }
 
         function renderizarGrid(livros) {
             const grid = document.getElementById('grid-livros');
-
             if (livros.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhum livro encontrado com esses critérios.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhum livro encontrado.</div>`;
                 return;
             }
 
@@ -232,7 +225,7 @@
                     : `R$ ${parseFloat(livro.preco).toFixed(2).replace('.', ',')}`;
 
                 html += `
-                    <div onclick='abrirModalLivro(${JSON.stringify(livro)})' class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between group">
+                    <div onclick='clicarLivro(${JSON.stringify(livro)})' class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between group">
                         <div>
                             <div class="w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-3 flex items-center justify-center border">
                                 <img src="${livro.capa_url}" alt="${livro.titulo}" class="h-full object-contain group-hover:scale-105 transition duration-300">
@@ -246,34 +239,38 @@
                     </div>
                 `;
             });
-
             grid.innerHTML = html;
+        }
+
+        function clicarLivro(livro) {
+            // SEGURANÇA: Se o usuário não estiver logado, bloqueia a abertura dos detalhes e exibe aviso
+            if (!usuarioAtual) {
+                document.getElementById('modal-aviso-login').classList.remove('hidden');
+                return;
+            }
+            abrirModalLivro(livro);
         }
 
         function abrirModalLivro(livro) {
             document.getElementById('modal-capa').src = livro.capa_url;
             document.getElementById('modal-titulo').textContent = livro.titulo;
-            document.getElementById('modal-descricao').textContent = livro.descricao || "Nenhuma descrição informada para este material.";
+            document.getElementById('modal-descricao').textContent = livro.descricao || "Nenhuma descrição informada.";
             
             const precoEl = document.getElementById('modal-preco');
             const btnAcao = document.getElementById('modal-btn-acao');
-
             const ehGratuito = livro.preco === 0 || livro.preco === "0.00";
 
             if (ehGratuito) {
                 precoEl.textContent = "Gratuito";
                 precoEl.className = "text-lg font-bold text-emerald-600";
-                
                 btnAcao.textContent = "📥 Download Gratuito (PDF)";
                 btnAcao.className = "w-full text-center py-3 px-4 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-sm text-sm";
             } else {
                 precoEl.textContent = `R$ ${parseFloat(livro.preco).toFixed(2).replace('.', ',')}`;
                 precoEl.className = "text-lg font-bold text-blue-600";
-                
                 btnAcao.textContent = "🛒 Comprar Loja Parceira";
                 btnAcao.className = "w-full text-center py-3 px-4 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm text-sm";
             }
-
             btnAcao.href = livro.link_destino;
             document.getElementById('modal-livro').classList.remove('hidden');
         }
