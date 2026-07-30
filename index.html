@@ -4,22 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planejamento Acadêmico</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- jsPDF para exportação de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
     <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
-        <!-- LINHA SUPERIOR -->
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
                 <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">Planejamento Acadêmico</h1>
-                <!-- Botão de Área Administrativa (Condicional) -->
                 <div id="container-btn-admin"></div>
             </div>
 
@@ -42,14 +37,11 @@
                     Cadastrar Disciplinas
                 </button>
 
-                <!-- Área do Usuário / Login no Topo -->
-                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l border-gray-200 relative">
-                    <!-- Preenchido dinamicamente via JS -->
-                </div>
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l border-gray-200 relative"></div>
             </div>
         </div>
 
-        <!-- LINHA INFERIOR (COMPLETA) -->
+        <!-- MENU INFERIOR CORRIGIDO -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="#" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Disciplinas</a>
@@ -61,21 +53,17 @@
         </div>
     </header>
 
-    <!-- MENSAGEM FLUTUANTE DE SUCESSO -->
     <div id="mensagem-sucesso-global" class="fixed top-28 left-1/2 transform -translate-x-1/2 z-[100] hidden bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all duration-300 flex items-center space-x-2">
         <span>✅ Disciplinas cadastradas com sucesso!</span>
     </div>
 
-    <!-- MODAL CENTRALIZADO DE AUTENTICAÇÃO -->
+    <!-- MODAL AUTH -->
     <div id="modal-auth" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative overflow-hidden">
             <button onclick="fecharModalAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-            
-            <!-- TELA DE LOGIN -->
             <div id="form-login-container">
                 <h2 class="text-2xl font-extrabold text-gray-900 mb-1 text-center">Entrar no Sistema</h2>
-                <p class="text-gray-500 text-xs text-center mb-6">Acesse sua conta para gerenciar seu planejamento.</p>
-                
+                <p class="text-gray-500 text-xs text-center mb-6">Acesse sua conta.</p>
                 <form id="form-login" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label>
@@ -88,64 +76,48 @@
                     <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition text-sm">Entrar</button>
                 </form>
                 <div id="msg-login" class="mt-3 text-xs text-center"></div>
-
                 <div class="mt-6 text-center border-t pt-4">
                     <p class="text-xs text-gray-600">Ainda não tem uma conta?</p>
                     <button onclick="alternarParaCadastro()" class="mt-1 text-blue-600 hover:underline font-semibold text-xs">Criar Cadastro</button>
                 </div>
             </div>
 
-            <!-- TELA DE CADASTRO -->
             <div id="form-cadastro-container" class="hidden">
                 <h2 class="text-2xl font-extrabold text-gray-900 mb-1 text-center">Criar Nova Conta</h2>
-                <p class="text-gray-500 text-xs text-center mb-4">Preencha os dados abaixo para se cadastrar.</p>
-                
                 <form id="form-cadastro" class="space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-0.5">Nome Completo</label>
-                        <input type="text" id="cad-nome" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="text" id="cad-nome" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-0.5">E-mail</label>
-                        <input type="email" id="cad-email" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="email" id="cad-email" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Senha (mínimo 6 caracteres)</label>
-                        <input type="password" id="cad-senha" required minlength="6" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Senha (mín. 6 caracteres)</label>
+                        <input type="password" id="cad-senha" required minlength="6" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-0.5">Curso</label>
-                        <select id="cad-curso" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                        <select id="cad-curso" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
                             <option value="Administração" selected>Administração</option>
                             <option value="Administração Pública">Administração Pública</option>
                             <option value="Biblioteconomia">Biblioteconomia</option>
                             <option value="Ciências Contábeis">Ciências Contábeis</option>
                             <option value="Engenharia de Produção">Engenharia de Produção</option>
-                            <option value="Engenharia Meteorológica">Engenharia Meteorológica</option>
                             <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
-                            <option value="Licenciatura em Física">Licenciatura em Física</option>
-                            <option value="Licenciatura em Geografia">Licenciatura em Geografia</option>
-                            <option value="Licenciatura em História">Licenciatura em História</option>
-                            <option value="Licenciatura em Letras">Licenciatura em Letras</option>
                             <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
-                            <option value="Licenciatura em Química">Licenciatura em Química</option>
-                            <option value="Licenciatura em Turismo">Licenciatura em Turismo</option>
-                            <option value="Tecnologia em Segurança Pública">Tecnologia em Segurança Pública</option>
-                            <option value="Tecnologia em Sistemas de Computação">Tecnologia em Sistemas de Computação</option>
-                            <option value="Tecnologia em Turismo">Tecnologia em Turismo</option>
-                            <option value="Tecnologia em Design Gráfico">Tecnologia em Design Gráfico</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Semestre de Ingresso (Opcional)</label>
-                        <select id="cad-semestre" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
-                            <option value="">Nenhum / Não informar</option>
+                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Semestre de Ingresso</label>
+                        <select id="cad-semestre" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
+                            <option value="">Nenhum</option>
                         </select>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition text-sm mt-2">Criar Conta</button>
                 </form>
                 <div id="msg-cadastro" class="mt-2 text-xs text-center"></div>
-
                 <div class="mt-4 text-center border-t pt-3">
                     <button onclick="alternarParaLogin()" class="text-blue-600 hover:underline font-semibold text-xs">← Voltar para o Login</button>
                 </div>
@@ -153,15 +125,15 @@
         </div>
     </div>
 
-    <!-- MODAL DE GUIA E DOWNLOAD DO .ICS -->
+    <!-- MODAL ICS -->
     <div id="modal-ics-guia" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative overflow-hidden">
-            <button onclick="fecharModalIcsGuia()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+            <button onclick="fecharModalIcsGuia()" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
             <h3 id="ics-guia-titulo" class="text-xl font-extrabold text-gray-900 mb-2">Adicionar Provas à Agenda</h3>
             <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6"></div>
-            <div class="flex justify-end space-x-3 mt-4 border-t pt-4">
-                <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition">Cancelar</button>
-                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Fazer Download (.ics)</button>
+            <div class="flex justify-end space-x-3 border-t pt-4">
+                <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 rounded-lg text-xs">Cancelar</button>
+                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs">Fazer Download (.ics)</button>
             </div>
         </div>
     </div>
@@ -169,17 +141,18 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
         
-        <!-- TEASER DO JORNAL BLITZ (EXIBIDO ENTRE O MENU E AS DISCIPLINAS) -->
-        <section id="teaser-jornal-section" class="mb-10 hidden">
-            <div class="flex justify-between items-center mb-4">
+        <!-- TEASER DO JORNAL BLITZ (ESTRITAMENTE EM 1 LINHA SEM QUEBRAR) -->
+        <section id="teaser-jornal-section" class="mb-8 hidden">
+            <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center space-x-2">
-                    <span class="bg-blue-100 text-blue-800 text-xs font-extrabold px-2.5 py-1 rounded uppercase tracking-wider">Jornal Blitz</span>
-                    <h3 class="text-lg font-bold text-gray-800">Últimas Publicações & Avisos</h3>
+                    <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Jornal Blitz</span>
+                    <h3 class="text-sm font-bold text-gray-800">Últimas Publicações</h3>
                 </div>
-                <a href="jornal.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">Ver todas as notícias →</a>
+                <a href="jornal.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver todas →</a>
             </div>
-            <!-- Grid responsivo: 2 mini-cards no mobile, até 4 em telas grandes -->
-            <div id="teaser-jornal-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            
+            <!-- Contenedor flexível em linha única que se ajusta perfeitamente sem pular linha -->
+            <div id="teaser-jornal-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                 <!-- Preenchido via JS -->
             </div>
         </section>
@@ -192,7 +165,6 @@
     <script>
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let listaDisciplinasGlobal = [];
@@ -204,11 +176,8 @@
 
         async function init() {
             gerarOpcoesSemestresCadastro();
-
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('abrir_login') === '1') {
-                abrirModalAuth('login');
-            }
+            if (urlParams.get('abrir_login') === '1') abrirModalAuth('login');
             
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
@@ -232,6 +201,7 @@
         }
 
         async function carregarTeaserJornal() {
+            // Busca até 4 posts para o teaser
             const { data: posts } = await supabaseClient
                 .from('jornal_posts')
                 .select('*')
@@ -250,20 +220,21 @@
             let html = '';
             posts.forEach(post => {
                 let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                // Cada card possui largura fixa mínima para garantir que fiquem em 1 única linha horizontal
                 html += `
-                    <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+                    <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[200px] sm:min-w-[220px] flex-1 max-w-[280px]">
                         <div>
-                            <div class="w-full h-28 bg-gray-100 overflow-hidden relative">
+                            <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
                                 ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
                                 <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria}</span>
                             </div>
-                            <div class="p-3">
+                            <div class="p-2.5">
                                 <span class="text-[10px] text-gray-400">${dataF}</span>
                                 <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2 leading-snug">${post.titulo}</h4>
                             </div>
                         </div>
-                        <div class="px-3 pb-3 pt-0">
-                            <span class="text-[11px] font-semibold text-blue-600">Ler notícia →</span>
+                        <div class="px-2.5 pb-2.5 pt-0">
+                            <span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span>
                         </div>
                     </a>
                 `;
@@ -274,43 +245,29 @@
         function gerarOpcoesSemestresCadastro() {
             const select = document.getElementById('cad-semestre');
             if (!select) return;
-            
-            const anoAtual = 2026;
-            const semestreAtualConst = 2;
-            
-            let opcoesHtml = '<option value="">Nenhum / Não informar</option>';
-            for (let ano = anoAtual; ano >= 2019; ano--) {
+            let html = '<option value="">Nenhum</option>';
+            for (let ano = 2026; ano >= 2019; ano--) {
                 for (let sem = 2; sem >= 1; sem--) {
-                    if (ano === anoAtual && sem > semestreAtualConst) continue;
-                    const valor = `${ano}-${sem}`;
-                    opcoesHtml += `<option value="${valor}">${valor}</option>`;
+                    if (ano === 2026 && sem > 2) continue;
+                    html += `<option value="${ano}-${sem}">${ano}-${sem}</option>`;
                 }
             }
-            select.innerHTML = opcoesHtml;
+            select.innerHTML = html;
         }
 
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
-
-            const isAdmin = usuarioAtual && usuarioAtual.user_metadata && usuarioAtual.user_metadata.is_admin === true;
+            const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
 
             if (isAdmin && containerBtnAdmin) {
-                containerBtnAdmin.innerHTML = `
-                    <a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center space-x-1 whitespace-nowrap">
-                        <span>⚙️ Área Administrativa</span>
-                    </a>
-                `;
+                containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Admin</a>`;
             } else if (containerBtnAdmin) {
                 containerBtnAdmin.innerHTML = '';
             }
 
             if (!usuarioAtual) {
-                bloco.innerHTML = `
-                    <button onclick="abrirModalAuth('login')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">
-                        Entrar / Cadastrar
-                    </button>
-                `;
+                bloco.innerHTML = `<button onclick="abrirModalAuth('login')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition whitespace-nowrap">Entrar / Cadastrar</button>`;
                 return;
             }
 
@@ -318,221 +275,87 @@
             const nome = metadata.nome || usuarioAtual.email || "Usuário";
             const primeiraLetra = nome.charAt(0).toUpperCase();
             const fotoUrl = metadata.foto_url;
-            const nomeExibicao = nome.split(' ')[0];
-
             let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
 
             bloco.innerHTML = `
-                <span id="nome-usuario-topo" class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nome.split(' ')[0]}</span>
                 <div class="relative">
-                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        ${avatarHtml}
-                    </button>
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none">${avatarHtml}</button>
                     <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
                         <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
                         <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
                     </div>
                 </div>
             `;
-
-            const btnAvatar = document.getElementById('btn-avatar-menu');
-            const dropdownPerfil = document.getElementById('dropdown-perfil');
-            if (btnAvatar) {
-                btnAvatar.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdownPerfil.classList.toggle('hidden');
-                });
-            }
-            window.addEventListener('click', () => {
-                if (dropdownPerfil && !dropdownPerfil.classList.contains('hidden')) {
-                    dropdownPerfil.classList.add('hidden');
-                }
-            });
-
-            const btnSair = document.getElementById('btn-sair');
-            if (btnSair) {
-                btnSair.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    await supabaseClient.auth.signOut();
-                    usuarioAtual = null;
-                    window.location.reload();
-                });
-            }
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('dropdown-perfil').classList.toggle('hidden'); });
+            window.addEventListener('click', () => { const d = document.getElementById('dropdown-perfil'); if (d && !d.classList.contains('hidden')) d.classList.add('hidden'); });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.reload(); });
         }
 
         function abrirModalAuth(tipo = 'login') {
-            const modal = document.getElementById('modal-auth');
-            modal.classList.remove('hidden');
-            if (tipo === 'cadastro') {
-                alternarParaCadastro();
-            } else {
-                alternarParaLogin();
-            }
+            document.getElementById('modal-auth').classList.remove('hidden');
+            if (tipo === 'cadastro') alternarParaCadastro(); else alternarParaLogin();
         }
-
-        function fecharModalAuth() {
-            document.getElementById('modal-auth').classList.add('hidden');
-        }
-
-        function alternarParaCadastro() {
-            document.getElementById('form-login-container').classList.add('hidden');
-            document.getElementById('form-cadastro-container').classList.remove('hidden');
-        }
-
-        function alternarParaLogin() {
-            document.getElementById('form-cadastro-container').classList.add('hidden');
-            document.getElementById('form-login-container').classList.remove('hidden');
-        }
-
-        function acaoRequerAuth(e, nomeAcao) {
-            e.preventDefault();
-            if (!usuarioAtual) {
-                abrirModalAuth('login');
-            } else {
-                alert(`Acessando ${nomeAcao}... (Funcionalidade em desenvolvimento)`);
-            }
-        }
+        function fecharModalAuth() { document.getElementById('modal-auth').classList.add('hidden'); }
+        function alternarParaCadastro() { document.getElementById('form-login-container').classList.add('hidden'); document.getElementById('form-cadastro-container').classList.remove('hidden'); }
+        function alternarParaLogin() { document.getElementById('form-cadastro-container').classList.add('hidden'); document.getElementById('form-login-container').classList.remove('hidden'); }
+        function acaoRequerAuth(e, nome) { e.preventDefault(); if (!usuarioAtual) abrirModalAuth('login'); else alert(`Acessando ${nome}...`); }
 
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-            const msg = document.getElementById('msg-login');
-            msg.textContent = "Entrando...";
-            msg.className = "mt-3 text-xs text-center text-gray-600";
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-
-            if (error) {
-                msg.textContent = "Erro: " + error.message;
-                msg.className = "mt-3 text-xs text-center text-red-600";
-            } else {
-                usuarioAtual = data.user;
-                await migrarDadosLocaisParaBanco(usuarioAtual.id);
-                fecharModalAuth();
-                renderizarTopoUsuario();
-                await carregarDadosBanco();
-                await processarPendenciaCadastro();
-            }
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-senha').value });
+            if (error) { document.getElementById('msg-login').textContent = "Erro: " + error.message; document.getElementById('msg-login').className = "mt-3 text-xs text-center text-red-600"; }
+            else { usuarioAtual = data.user; await migrarDadosLocaisParaBanco(usuarioAtual.id); fecharModalAuth(); renderizarTopoUsuario(); await carregarDadosBanco(); await processarPendenciaCadastro(); }
         });
 
         document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nome = document.getElementById('cad-nome').value;
-            const email = document.getElementById('cad-email').value;
-            const senha = document.getElementById('cad-senha').value;
-            const curso = document.getElementById('cad-curso').value;
-            const semestreIngresso = document.getElementById('cad-semestre').value;
-            const msg = document.getElementById('msg-cadastro');
-
-            msg.textContent = "Criando conta...";
-            msg.className = "mt-2 text-xs text-center text-gray-600";
-
-            const { data, error } = await supabaseClient.auth.signUp({
-                email: email,
-                password: senha,
-                options: {
-                    data: {
-                        nome: nome,
-                        curso: curso,
-                        semestre_ingresso: semestreIngresso
-                    }
-                }
+            const { error } = await supabaseClient.auth.signUp({
+                email: document.getElementById('cad-email').value,
+                password: document.getElementById('cad-senha').value,
+                options: { data: { nome: document.getElementById('cad-nome').value, curso: document.getElementById('cad-curso').value, semestre_ingresso: document.getElementById('cad-semestre').value } }
             });
-
-            if (error) {
-                msg.textContent = "Erro: " + error.message;
-                msg.className = "mt-2 text-xs text-center text-red-600";
-                return;
-            }
-
-            msg.innerHTML = "✅ Conta criada com sucesso!<br><span class='text-blue-600 font-semibold'>Enviamos um e-mail de confirmação. Confirme seu e-mail e faça login para sincronizar suas disciplinas.</span>";
-            msg.className = "mt-2 text-xs text-center text-green-600";
-            document.getElementById('form-cadastro').reset();
+            if (error) { document.getElementById('msg-cadastro').textContent = "Erro: " + error.message; document.getElementById('msg-cadastro').className = "mt-2 text-xs text-center text-red-600"; return; }
+            document.getElementById('msg-cadastro').innerHTML = "✅ Conta criada! Verifique seu e-mail de confirmação.";
+            document.getElementById('msg-cadastro').className = "mt-2 text-xs text-center text-green-600";
         });
 
         async function migrarDadosLocaisParaBanco(userId) {
-            const dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
-            if (dadosLocais.length === 0) return;
-
-            const registrosParaSalvar = dadosLocais.map(item => ({
-                user_id: userId,
-                disciplina_id: item.disciplina_id,
-                semestre: item.semestre,
-                status: item.status || 'Inscrita',
-                sequence: 0
-            }));
-
-            const { error } = await supabaseClient.from('planejamento_usuarios').insert(registrosParaSalvar);
-
-            if (!error) {
-                localStorage.removeItem('planejamento_visitante');
-            }
+            const locais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+            if (locais.length === 0) return;
+            const reg = locais.map(i => ({ user_id: userId, disciplina_id: i.disciplina_id, semestre: i.semestre, status: i.status || 'Inscrita', sequence: 0 }));
+            const { error } = await supabaseClient.from('planejamento_usuarios').insert(reg);
+            if (!error) localStorage.removeItem('planejamento_visitante');
         }
 
-        function rolarParaGrade(e) {
-            e.preventDefault();
-            const alvo = document.getElementById('secao-grade-disciplinar');
-            if (alvo) {
-                const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({ top: topoAlvo - 120, behavior: 'smooth' });
-            }
-        }
+        function rolarParaGrade(e) { e.preventDefault(); const a = document.getElementById('secao-grade-disciplinar'); if (a) window.scrollTo({ top: a.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' }); }
 
         async function carregarDadosBanco() {
-            const promessas = [
-                supabaseClient.from('disciplinas').select('*')
-            ];
-
-            if (usuarioAtual) {
-                promessas.push(
-                    supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id)
-                );
-            }
-
-            const resultados = await Promise.all(promessas);
-            listaDisciplinasGlobal = resultados[0].data || [];
-            
-            if (usuarioAtual) {
-                planejamentoGlobal = resultados[1] ? (resultados[1].data || []) : [];
-            } else {
-                planejamentoGlobal = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
-            }
-
-            if (!estruturaInicializada) {
-                renderizarEstruturaPrincipal();
-                estruturaInicializada = true;
-            } else {
-                renderizarTabelaCatalogo();
-                renderizarSemestresAlocados();
-            }
+            const p = [supabaseClient.from('disciplinas').select('*')];
+            if (usuarioAtual) p.push(supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id));
+            const r = await Promise.all(p);
+            listaDisciplinasGlobal = r[0].data || [];
+            planejamentoGlobal = usuarioAtual ? (r[1]?.data || []) : JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+            if (!estruturaInicializada) { renderizarEstruturaPrincipal(); estruturaInicializada = true; }
+            else { renderizarTabelaCatalogo(); renderizarSemestresAlocados(); }
         }
 
-        function formatarDataHoraCell(textoDataHora) {
-            if (!textoDataHora || textoDataHora.trim() === '-' || textoDataHora.trim() === '') {
-                return '<div class="text-center">-</div>';
-            }
-            let limpo = textoDataHora.trim().replace(/\s*-\s*/g, ' ');
-            let partes = limpo.split(/\s+/);
-            if (partes.length >= 2) {
-                return `<div class="text-center leading-tight"><div>${partes[0]}</div><div class="text-xs text-gray-500">${partes.slice(1).join(' ')}</div></div>`;
-            }
-            return `<div class="text-center">${textoDataHora}</div>`;
+        function formatarDataHoraCell(txt) {
+            if (!txt || txt.trim() === '-' || txt.trim() === '') return '<div class="text-center">-</div>';
+            let l = txt.trim().replace(/\s*-\s*/g, ' '); let p = l.split(/\s+/);
+            if (p.length >= 2) return `<div class="text-center leading-tight"><div>${p[0]}</div><div class="text-xs text-gray-500">${p.slice(1).join(' ')}</div></div>`;
+            return `<div class="text-center">${txt}</div>`;
         }
 
         function renderizarEstruturaPrincipal() {
-            const app = document.getElementById('app');
-            app.innerHTML = `
+            document.getElementById('app').innerHTML = `
                 <div class="mb-10">
                     <div class="flex justify-between items-center mb-2">
                         <h2 class="text-2xl font-bold text-gray-800">Catálogo de Disciplinas e Conflitos</h2>
-                        <button id="btn-toggle-catalogo" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg transition">
-                            ${catalogoRecolhido ? '▼ Expandir Lista' : '▲ Recolher Lista'}
-                        </button>
+                        <button id="btn-toggle-catalogo" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg transition">${catalogoRecolhido ? '▼ Expandir Lista' : '▲ Recolher Lista'}</button>
                     </div>
-                    <p class="text-gray-600 text-sm mb-4">Marque as disciplinas desejadas. As que possuírem choque de horário nas APs ficarão destacadas em amarelo.</p>
-                    
-                    <div id="wrapper-catalogo" class="bg-white shadow-md rounded-xl overflow-x-auto border border-gray-100 transition-all duration-300" style="display: ${catalogoRecolhido ? 'none' : 'block'};">
+                    <p class="text-gray-600 text-sm mb-4">Marque as disciplinas desejadas. Conflitos de APs ficarão destacados em amarelo.</p>
+                    <div id="wrapper-catalogo" class="bg-white shadow-md rounded-xl overflow-x-auto border border-gray-100" style="display: ${catalogoRecolhido ? 'none' : 'block'};">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
@@ -546,937 +369,222 @@
                                     <th class="p-3 border-b text-center">Status Salvo</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-disciplinas">
-                                <tr><td colspan="8" class="p-6 text-center text-gray-500">Carregando dados...</td></tr>
-                            </tbody>
+                            <tbody id="tabela-disciplinas"><tr><td colspan="8" class="p-6 text-center text-gray-500">Carregando...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
-
                 <div id="secao-grade-disciplinar">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
-                        <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5">
-                            <span>📥 Exportar Planejamento (PDF)</span>
-                        </button>
+                        <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm">📥 Exportar Planejamento (PDF)</button>
                     </div>
                     <div id="container-semestres" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"></div>
                 </div>
             `;
-
             document.getElementById('btn-cadastrar-semestre').addEventListener('click', cadastrarSelecionadasNoSemestre);
-
-            const btnToggle = document.getElementById('btn-toggle-catalogo');
-            const wrapperCatalogo = document.getElementById('wrapper-catalogo');
-
-            btnToggle.addEventListener('click', () => {
+            document.getElementById('btn-toggle-catalogo').addEventListener('click', () => {
                 catalogoRecolhido = !catalogoRecolhido;
-                if (!catalogoRecolhido) {
-                    wrapperCatalogo.style.display = 'block';
-                    btnToggle.textContent = '▲ Recolher Lista';
-                } else {
-                    wrapperCatalogo.style.display = 'none';
-                    btnToggle.textContent = '▼ Expandir Lista';
-                }
+                document.getElementById('wrapper-catalogo').style.display = catalogoRecolhido ? 'none' : 'block';
+                document.getElementById('btn-toggle-catalogo').textContent = catalogoRecolhido ? '▼ Expandir Lista' : '▲ Recolher Lista';
             });
-
-            renderizarTabelaCatalogo();
-            renderizarSemestresAlocados();
+            renderizarTabelaCatalogo(); renderizarSemestresAlocados();
         }
 
         function renderizarTabelaCatalogo() {
             const tbody = document.getElementById('tabela-disciplinas');
-            if (!tbody) return;
-
-            if (listaDisciplinasGlobal.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma disciplina encontrada.</td></tr>`;
-                return;
-            }
-
-            const checkboxesMarcados = Array.from(document.querySelectorAll('.check-disciplina:checked'))
-                .map(cb => parseInt(cb.value));
-
+            if (!tbody || listaDisciplinasGlobal.length === 0) return;
+            const checkboxes = Array.from(document.querySelectorAll('.check-disciplina:checked')).map(cb => parseInt(cb.value));
             const horariosOcupados = new Set();
-            if (checkboxesMarcados.length > 0) {
-                listaDisciplinasGlobal.forEach(d => {
-                    if (checkboxesMarcados.includes(d.id)) {
-                        if (d.data_ap1 && d.data_ap1.trim() !== '-' && d.data_ap1.trim() !== '') horariosOcupados.add(d.data_ap1.trim());
-                        if (d.data_ap2 && d.data_ap2.trim() !== '-' && d.data_ap2.trim() !== '') horariosOcupados.add(d.data_ap2.trim());
-                        if (d.data_ap3 && d.data_ap3.trim() !== '-' && d.data_ap3.trim() !== '') horariosOcupados.add(d.data_ap3.trim());
-                    }
-                });
-            }
-
-            const statusMap = {};
-            planejamentoGlobal.forEach(p => { statusMap[p.disciplina_id] = p; });
-
-            const fragment = document.createDocumentFragment();
-
+            listaDisciplinasGlobal.forEach(d => {
+                if (checkboxes.includes(d.id)) {
+                    if (d.data_ap1?.trim()) horariosOcupados.add(d.data_ap1.trim());
+                    if (d.data_ap2?.trim()) horariosOcupados.add(d.data_ap2.trim());
+                    if (d.data_ap3?.trim()) horariosOcupados.add(d.data_ap3.trim());
+                }
+            });
+            const statusMap = {}; planejamentoGlobal.forEach(p => { statusMap[p.disciplina_id] = p; });
+            let html = '';
             listaDisciplinasGlobal.forEach(disc => {
-                const jaSalvo = statusMap[disc.id];
-                const estaMarcada = checkboxesMarcados.includes(disc.id);
-                const indisponivel = (disc.controle === 0 || disc.controle === '0');
-
-                let temConflito = false;
-                if (!estaMarcada && horariosOcupados.size > 0) {
-                    if ((disc.data_ap1 && horariosOcupados.has(disc.data_ap1.trim())) ||
-                        (disc.data_ap2 && horariosOcupados.has(disc.data_ap2.trim())) ||
-                        (disc.data_ap3 && horariosOcupados.has(disc.data_ap3.trim()))) {
-                        temConflito = true;
-                    }
-                }
-
-                let classeLinha = "border-b hover:bg-gray-50 transition text-sm";
-                if (temConflito) {
-                    classeLinha = "border-b bg-amber-50 hover:bg-amber-100 transition text-sm border-l-4 border-l-amber-500";
-                }
-
-                let badgeStatusHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Não alocada</span>';
-                if (jaSalvo) {
-                    const corStatus = jaSalvo.status === 'Cursada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                    badgeStatusHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${corStatus}">${jaSalvo.status} (${jaSalvo.semestre})</span>`;
-                }
-
-                const desabilitado = jaSalvo ? 'disabled' : '';
-                const estiloCheckbox = jaSalvo ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer';
-
-                let celulasHorarios = '';
-                if (indisponivel) {
-                    celulasHorarios = `<td colspan="3" class="py-4 px-3 text-center text-xs font-semibold text-gray-500 italic align-middle">Não disponível no semestre atual</td>`;
-                } else {
-                    celulasHorarios = `
-                        <td class="py-4 px-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap1)}</td>
-                        <td class="py-4 px-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap2)}</td>
-                        <td class="py-4 px-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap3)}</td>
-                    `;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = classeLinha;
-                tr.innerHTML = `
-                    <td class="py-4 px-3 text-center align-middle">
-                        <input type="checkbox" value="${disc.id}" class="check-disciplina w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 ${estiloCheckbox}" ${estaMarcada ? 'checked' : ''} ${desabilitado}>
-                    </td>
-                    <td class="py-4 px-3 font-mono align-middle">${disc.codigo || '-'}</td>
-                    <td class="py-4 px-3 font-medium align-middle">
-                        <div>${disc.nome || '-'}</div>
-                        <div class="h-5 mt-1 flex items-center">
-                            ${temConflito ? '<span class="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-semibold inline-block">⚠️ Conflito de Horário</span>' : ''}
-                        </div>
-                    </td>
-                    ${celulasHorarios}
-                    <td class="py-4 px-3 text-center align-middle">${disc.periodo || '-'}</td>
-                    <td class="py-4 px-3 text-center align-middle">${badgeStatusHtml}</td>
+                const jaSalvo = statusMap[disc.id]; const estaMarcada = checkboxes.includes(disc.id); const indisponivel = (disc.controle === 0 || disc.controle === '0');
+                let temConflito = !estaMarcada && horariosOcupados.size > 0 && ((disc.data_ap1 && horariosOcupados.has(disc.data_ap1.trim())) || (disc.data_ap2 && horariosOcupados.has(disc.data_ap2.trim())) || (disc.data_ap3 && horariosOcupados.has(disc.data_ap3.trim())));
+                let badge = jaSalvo ? `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${jaSalvo.status === 'Cursada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${jaSalvo.status} (${jaSalvo.semestre})</span>` : '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Não alocada</span>';
+                
+                html += `
+                    <tr class="border-b hover:bg-gray-50 transition text-sm ${temConflito ? 'bg-amber-50 border-l-4 border-l-amber-500' : ''}">
+                        <td class="p-3 text-center align-middle"><input type="checkbox" value="${disc.id}" class="check-disciplina w-4 h-4 text-blue-600 rounded border-gray-300 ${jaSalvo ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${estaMarcada ? 'checked' : ''} ${jaSalvo ? 'disabled' : ''}></td>
+                        <td class="p-3 font-mono align-middle">${disc.codigo || '-'}</td>
+                        <td class="p-3 font-medium align-middle"><div>${disc.nome}</div>${temConflito ? '<span class="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-semibold inline-block mt-1">⚠️ Conflito de Horário</span>' : ''}</td>
+                        ${indisponivel ? '<td colspan="3" class="p-3 text-center text-xs font-semibold text-gray-500 italic align-middle">Não disponível</td>' : `<td class="p-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap1)}</td><td class="p-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap2)}</td><td class="p-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap3)}</td>`}
+                        <td class="p-3 text-center align-middle">${disc.periodo || '-'}</td>
+                        <td class="p-3 text-center align-middle">${badge}</td>
+                    </tr>
                 `;
-                fragment.appendChild(tr);
             });
-
-            tbody.innerHTML = '';
-            tbody.appendChild(fragment);
-
-            tbody.querySelectorAll('.check-disciplina:not(:disabled)').forEach(chk => {
-                chk.addEventListener('change', () => {
-                    renderizarTabelaCatalogo();
-                });
-            });
-        }
-
-        function mostrarMensagemSucesso() {
-            const msgEl = document.getElementById('mensagem-sucesso-global');
-            if (!msgEl) return;
-            msgEl.classList.remove('hidden');
-            setTimeout(() => {
-                msgEl.classList.add('hidden');
-            }, 4000);
+            tbody.innerHTML = html;
+            tbody.querySelectorAll('.check-disciplina:not(:disabled)').forEach(cb => cb.addEventListener('change', renderizarTabelaCatalogo));
         }
 
         async function cadastrarSelecionadasNoSemestre() {
-            const semestreDestino = document.getElementById('select-semestre-destino').value;
-            const checkboxesMarcados = Array.from(document.querySelectorAll('.check-disciplina:checked'))
-                .map(cb => parseInt(cb.value));
-
-            if (!semestreDestino) {
-                alert("Por favor, selecione um semestre de destino.");
-                return;
-            }
-
-            if (checkboxesMarcados.length === 0) {
-                alert("Marque ao menos uma disciplina na tabela para cadastrar.");
-                return;
-            }
+            const semestre = document.getElementById('select-semestre-destino').value;
+            const marcados = Array.from(document.querySelectorAll('.check-disciplina:checked')).map(cb => parseInt(cb.value));
+            if (!semestre) { alert("Selecione um semestre de destino."); return; }
+            if (marcados.length === 0) { alert("Marque ao menos uma disciplina."); return; }
 
             if (!usuarioAtual) {
-                if (semestreDestino === '1º Semestre') {
-                    let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
-                    
-                    checkboxesMarcados.forEach(discId => {
-                        if (!dadosLocais.some(item => item.disciplina_id === discId)) {
-                            dadosLocais.push({
-                                disciplina_id: discId,
-                                semestre: semestreDestino,
-                                status: 'Inscrita',
-                                sequence: 0
-                            });
-                        }
-                    });
-
-                    localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
-                    
+                if (semestre === '1º Semestre') {
+                    let locais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                    marcados.forEach(id => { if (!locais.some(i => i.disciplina_id === id)) locais.push({ disciplina_id: id, semestre, status: 'Inscrita', sequence: 0 }); });
+                    localStorage.setItem('planejamento_visitante', JSON.stringify(locais));
                     document.getElementById('select-semestre-destino').value = "";
                     document.querySelectorAll('.check-disciplina').forEach(cb => cb.checked = false);
-
-                    const alvo = document.getElementById('secao-grade-disciplinar');
-                    if (alvo) {
-                        const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
-                        window.scrollTo({ top: topoAlvo - 120, behavior: 'smooth' });
-                    }
-
-                    mostrarMensagemSucesso();
+                    document.getElementById('mensagem-sucesso-global').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('mensagem-sucesso-global').classList.add('hidden'), 4000);
                     await carregarDadosBanco();
                     return;
                 } else {
-                    sessionStorage.setItem('pendencia_cadastro', JSON.stringify({
-                        semestre: semestreDestino,
-                        disciplinas: checkboxesMarcados
-                    }));
-
-                    alert("Para adicionar disciplinas em semestres a partir do 2º, é necessário fazer login ou criar uma conta.");
+                    sessionStorage.setItem('pendencia_cadastro', JSON.stringify({ semestre, disciplinas: marcados }));
+                    alert("Para adicionar a partir do 2º semestre, é necessário fazer login ou criar conta.");
                     abrirModalAuth('login');
                     return;
                 }
             }
-
-            await executarCadastroNoBanco(usuarioAtual.id, semestreDestino, checkboxesMarcados);
+            await executarCadastroNoBanco(usuarioAtual.id, semestre, marcados);
         }
 
-        async function executarCadastroNoBanco(userId, semestreDestino, checkboxesMarcados) {
-            const novosRegistros = checkboxesMarcados.map(discId => ({
-                user_id: userId,
-                disciplina_id: discId,
-                semestre: semestreDestino,
-                status: 'Inscrita',
-                sequence: 0
-            }));
-
-            const { error } = await supabaseClient.from('planejamento_usuarios').insert(novosRegistros);
-
-            if (error) {
-                alert("Erro ao salvar: " + error.message);
-                return;
-            }
-
+        async function executarCadastroNoBanco(userId, semestre, marcados) {
+            const reg = marcados.map(id => ({ user_id: userId, disciplina_id: id, semestre, status: 'Inscrita', sequence: 0 }));
+            const { error } = await supabaseClient.from('planejamento_usuarios').insert(reg);
+            if (error) { alert("Erro: " + error.message); return; }
             document.getElementById('select-semestre-destino').value = "";
             document.querySelectorAll('.check-disciplina').forEach(cb => cb.checked = false);
-
-            const alvo = document.getElementById('secao-grade-disciplinar');
-            if (alvo) {
-                const topoAlvo = alvo.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({ top: topoAlvo - 120, behavior: 'smooth' });
-            }
-
-            mostrarMensagemSucesso();
+            document.getElementById('mensagem-sucesso-global').classList.remove('hidden');
+            setTimeout(() => document.getElementById('mensagem-sucesso-global').classList.add('hidden'), 4000);
             await carregarDadosBanco();
         }
 
         async function processarPendenciaCadastro() {
-            const pendenciaStr = sessionStorage.getItem('pendencia_cadastro');
-            if (!pendenciaStr || !usuarioAtual) return;
-
+            const p = sessionStorage.getItem('pendencia_cadastro');
+            if (!p || !usuarioAtual) return;
             try {
-                const pendencia = JSON.parse(pendenciaStr);
-                if (pendencia && pendencia.semestre && pendencia.disciplinas && pendencia.disciplinas.length > 0) {
-                    await executarCadastroNoBanco(usuarioAtual.id, pendencia.semestre, pendencia.disciplinas);
-                }
-            } catch (e) {
-                console.error("Erro ao processar pendência de cadastro", e);
-            } finally {
-                sessionStorage.removeItem('pendencia_cadastro');
-            }
+                const obj = JSON.parse(p);
+                if (obj?.semestre && obj?.disciplinas?.length > 0) await executarCadastroNoBanco(usuarioAtual.id, obj.semestre, obj.disciplinas);
+            } catch (e) { console.error(e); } finally { sessionStorage.removeItem('pendencia_cadastro'); }
         }
 
         function renderizarSemestresAlocados() {
             const container = document.getElementById('container-semestres');
-            if (!container) return;
-            container.innerHTML = '';
+            if (!container) return; container.innerHTML = '';
+            const semestres = ['1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre', '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'];
 
-            const semestresPossiveis = [
-                '1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre',
-                '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'
-            ];
-
-            semestresPossiveis.forEach(sem => {
-                const registrosNesseSemestre = planejamentoGlobal
-                    .filter(p => p.semestre === sem)
-                    .sort((a, b) => {
-                        const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
-                        const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
-                        return indexA - indexB;
-                    });
-
-                const card = document.createElement('div');
-                card.className = "bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col";
-                
-                let htmlItens = '';
-                if (registrosNesseSemestre.length === 0) {
-                    htmlItens = `<p class="text-xs text-gray-400 italic">Nenhuma disciplina alocada neste semestre.</p>`;
-                } else {
-                    const horariosInscritosNoSemestre = new Map();
-                    registrosNesseSemestre.forEach(reg => {
-                        if (reg.status === 'Inscrita') {
-                            const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                            if (d && !(d.controle === 0 || d.controle === '0')) {
-                                [d.data_ap1, d.data_ap2, d.data_ap3].forEach(data => {
-                                    if (data && data.trim() !== '-' && data.trim() !== '') {
-                                        const horario = data.trim();
-                                        if (!horariosInscritosNoSemestre.has(horario)) {
-                                            horariosInscritosNoSemestre.set(horario, []);
-                                        }
-                                        horariosInscritosNoSemestre.get(horario).push(d.id);
-                                    }
-                                });
-                            }
-                        }
-                    });
-
-                    htmlItens = `<ul class="space-y-2 mb-3">`;
-                    registrosNesseSemestre.forEach(reg => {
-                        const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                        if (!d) return;
-
-                        const status = reg.status || 'Inscrita';
-
-                        let temConflitoItem = false;
-                        if (status === 'Inscrita' && !(d.controle === 0 || d.controle === '0')) {
-                            const datasDisc = [d.data_ap1, d.data_ap2, d.data_ap3];
-                            for (let data of datasDisc) {
-                                if (data && data.trim() !== '-' && data.trim() !== '') {
-                                    const listaComMesmoHorario = horariosInscritosNoSemestre.get(data.trim());
-                                    if (listaComMesmoHorario && listaComMesmoHorario.filter(id => id !== d.id).length > 0) {
-                                        temConflitoItem = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        let classeItemLi = "flex justify-between items-center text-sm border-b pb-2 transition rounded px-2 py-1";
-                        if (temConflitoItem) {
-                            classeItemLi += " bg-amber-50 border-l-4 border-l-amber-500";
-                        }
-
-                        const botaoApagarHtml = status !== 'Cursada' 
-                            ? `<button onclick="removerDoSemestre(${d.id})" class="text-red-500 hover:text-red-700 text-xs font-bold px-1" title="Remover">✕</button>` 
-                            : '';
-
-                        htmlItens += `
-                            <li class="${classeItemLi}">
-                                <div>
-                                    <span class="font-mono text-xs text-gray-500 mr-2">${d.codigo}</span>
-                                    <span class="font-medium text-gray-800">${d.nome}</span>
-                                    ${temConflitoItem ? '<span class="ml-2 text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-semibold">⚠️ Conflito</span>' : ''}
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <select onchange="atualizarStatusIndividual(${d.id}, this.value)" class="text-xs border rounded px-2 py-1 bg-gray-50 font-medium ${status === 'Cursada' ? 'text-green-600 bg-green-50' : 'text-blue-600 bg-blue-50'}">
-                                        <option value="Inscrita" ${status === 'Inscrita' ? 'selected' : ''}>Inscrita</option>
-                                        <option value="Cursada" ${status === 'Cursada' ? 'selected' : ''}>Cursada</option>
-                                    </select>
-                                    ${botaoApagarHtml}
-                                </div>
-                            </li>
-                        `;
-                    });
-                    htmlItens += `</ul>`;
-                }
-
-                const temInscritasParaLimpar = registrosNesseSemestre.some(r => r.status === 'Inscrita');
-                const botaoLimparHtml = temInscritasParaLimpar 
-                    ? `<button onclick="limparSemestre('${sem}')" class="text-xs text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded font-semibold transition">Limpar Inscritas</button>`
-                    : '';
-
-                const botoesAcoesRodapeHtml = registrosNesseSemestre.length > 0 
-                    ? `
-                        <div class="flex justify-center items-center mt-auto pt-3 space-x-2">
-                            <button onclick="exportarSemestrePDF('${sem}')" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                                <span>🖨️ Exportar Grade do Semestre</span>
-                            </button>
-                            <button onclick="iniciarExportacaoICS('${sem}')" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                                <span>📅 Adicionar Agenda de Provas</span>
-                            </button>
-                        </div>
-                    ` 
-                    : '';
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-3 border-b pb-2">
-                        <div class="flex items-center space-x-2">
-                            <h3 class="font-bold text-gray-800">${sem}</h3>
-                            <span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full">${registrosNesseSemestre.length} matérias</span>
-                        </div>
-                        ${botaoLimparHtml}
-                    </div>
-                    ${htmlItens}
-                    ${botoesAcoesRodapeHtml}
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        async function atualizarStatusIndividual(discId, novoStatus) {
-            const scrollSalvo = window.scrollY;
-            if (!usuarioAtual) {
-                let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
-                const item = dadosLocais.find(i => i.disciplina_id === discId);
-                if (item) {
-                    item.status = novoStatus;
-                    localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
-                    await carregarDadosBanco();
-                    window.scrollTo({ top: scrollSalvo });
-                }
-                return;
-            }
-
-            await supabaseClient.from('planejamento_usuarios')
-                .update({ status: novoStatus })
-                .eq('user_id', usuarioAtual.id)
-                .eq('disciplina_id', discId);
-            
-            await carregarDadosBanco();
-            window.scrollTo({ top: scrollSalvo });
-        }
-
-        async function removerDoSemestre(discId) {
-            if (!confirm("Deseja remover esta disciplina do seu planejamento?")) return;
-
-            const scrollSalvo = window.scrollY;
-
-            if (!usuarioAtual) {
-                let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
-                dadosLocais = dadosLocais.filter(i => i.disciplina_id !== discId);
-                localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
-                await carregarDadosBanco();
-                window.scrollTo({ top: scrollSalvo });
-                return;
-            }
-
-            await supabaseClient.from('planejamento_usuarios')
-                .delete()
-                .eq('user_id', usuarioAtual.id)
-                .eq('disciplina_id', discId);
-
-            await carregarDadosBanco();
-            window.scrollTo({ top: scrollSalvo });
-        }
-
-        async function limparSemestre(semestreNome) {
-            if (!confirm(`Deseja remover todas as disciplinas "Inscritas" do ${semestreNome}?`)) return;
-
-            const scrollSalvo = window.scrollY;
-
-            if (!usuarioAtual) {
-                let dadosLocais = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
-                dadosLocais = dadosLocais.filter(i => !(i.semestre === semestreNome && i.status === 'Inscrita'));
-                localStorage.setItem('planejamento_visitante', JSON.stringify(dadosLocais));
-                await carregarDadosBanco();
-                window.scrollTo({ top: scrollSalvo });
-                return;
-            }
-
-            await supabaseClient.from('planejamento_usuarios')
-                .delete()
-                .eq('user_id', usuarioAtual.id)
-                .eq('semestre', semestreNome)
-                .eq('status', 'Inscrita');
-
-            await carregarDadosBanco();
-            window.scrollTo({ top: scrollSalvo });
-        }
-
-        function exportarSemestrePDF(semestreNome) {
-            if (!usuarioAtual) {
-                alert("Para exportar o planejamento em PDF, é necessário estar logado.");
-                abrirModalAuth('login');
-                return;
-            }
-
-            const scrollSalvo = window.scrollY;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' });
-
-            const registros = planejamentoGlobal
-                .filter(p => p.semestre === semestreNome)
-                .sort((a, b) => {
-                    const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
-                    const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
-                    return indexA - indexB;
+            semestres.forEach(sem => {
+                const reg = planejamentoGlobal.filter(p => p.semestre === sem).sort((a, b) => listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id) - listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id));
+                let htmlItens = reg.length === 0 ? '<p class="text-xs text-gray-400 italic">Nenhuma disciplina alocada.</p>' : '<ul class="space-y-2 mb-3">';
+                reg.forEach(r => {
+                    const d = listaDisciplinasGlobal.find(i => i.id === r.disciplina_id); if (!d) return;
+                    htmlItens += `
+                        <li class="flex justify-between items-center text-sm border-b pb-2 rounded px-2 py-1">
+                            <div><span class="font-mono text-xs text-gray-500 mr-2">${d.codigo}</span><span class="font-medium text-gray-800">${d.nome}</span></div>
+                            <div class="flex items-center space-x-2">
+                                <select onchange="atualizarStatusIndividual(${d.id}, this.value)" class="text-xs border rounded px-2 py-1 ${r.status === 'Cursada' ? 'text-green-600 bg-green-50' : 'text-blue-600 bg-blue-50'}"><option value="Inscrita" ${r.status === 'Inscrita' ? 'selected' : ''}>Inscrita</option><option value="Cursada" ${r.status === 'Cursada' ? 'selected' : ''}>Cursada</option></select>
+                                ${r.status !== 'Cursada' ? `<button onclick="removerDoSemestre(${d.id})" class="text-red-500 hover:text-red-700 text-xs font-bold px-1">✕</button>` : ''}
+                            </div>
+                        </li>
+                    `;
                 });
+                if (reg.length > 0) htmlItens += '</ul>';
 
-            if (registros.length === 0) return;
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Grade de Disciplinas - " + semestreNome, 14, 15);
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 21);
-
-            let y = 30;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(9);
-            doc.setFillColor(235, 240, 245);
-            doc.rect(14, y - 4, 269, 7, "F");
-
-            doc.text("Código", 16, y);
-            doc.text("Nome da Disciplina", 42, y);
-            doc.text("Data AP1", 130, y);
-            doc.text("Data AP2", 175, y);
-            doc.text("Data AP3", 220, y);
-            doc.text("Status", 283, y, { align: "right" });
-
-            y += 7;
-            doc.setFont("helvetica", "normal");
-
-            registros.forEach(reg => {
-                const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                if (!d) return;
-
-                if (y > 185) {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                doc.text(d.codigo || '-', 16, y);
-                const nomeDisc = (d.nome || '-').length > 41 ? (d.nome || '-').substring(0, 38) + '...' : (d.nome || '-');
-                doc.text(nomeDisc, 42, y);
-                
-                if (d.controle === 0 || d.controle === '0') {
-                    doc.text("Não disponível", 130, y);
-                    doc.text("-", 175, y);
-                    doc.text("-", 220, y);
-                } else {
-                    doc.text(d.data_ap1 || '-', 130, y);
-                    doc.text(d.data_ap2 || '-', 175, y);
-                    doc.text(d.data_ap3 || '-', 220, y);
-                }
-                doc.text(reg.status || 'Inscrita', 283, y, { align: "right" });
-
-                y += 8;
+                container.innerHTML += `
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-3 border-b pb-2">
+                            <div class="flex items-center space-x-2"><h3 class="font-bold text-gray-800">${sem}</h3><span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full">${reg.length}</span></div>
+                            ${reg.some(r => r.status === 'Inscrita') ? `<button onclick="limparSemestre('${sem}')" class="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded font-semibold transition">Limpar Inscritas</button>` : ''}
+                        </div>
+                        ${htmlItens}
+                        ${reg.length > 0 ? `<div class="flex justify-center items-center mt-auto pt-3 space-x-2"><button onclick="exportarSemestrePDF('${sem}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg">🖨️ PDF</button><button onclick="iniciarExportacaoICS('${sem}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg">📅 Agenda</button></div>` : ''}
+                    </div>
+                `;
             });
+        }
 
-            doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
-            window.scrollTo({ top: scrollSalvo });
+        async function atualizarStatusIndividual(id, status) {
+            if (!usuarioAtual) {
+                let l = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                const i = l.find(x => x.disciplina_id === id); if (i) { i.status = status; localStorage.setItem('planejamento_visitante', JSON.stringify(l)); await carregarDadosBanco(); }
+                return;
+            }
+            await supabaseClient.from('planejamento_usuarios').update({ status }).eq('user_id', usuarioAtual.id).eq('disciplina_id', id);
+            await carregarDadosBanco();
+        }
+
+        async function removerDoSemestre(id) {
+            if (!confirm("Remover disciplina?")) return;
+            if (!usuarioAtual) {
+                let l = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                localStorage.setItem('planejamento_visitante', JSON.stringify(l.filter(x => x.disciplina_id !== id)));
+                await carregarDadosBanco(); return;
+            }
+            await supabaseClient.from('planejamento_usuarios').delete().eq('user_id', usuarioAtual.id).eq('disciplina_id', id);
+            await carregarDadosBanco();
+        }
+
+        async function limparSemestre(sem) {
+            if (!confirm(`Limpar ${sem}?`)) return;
+            if (!usuarioAtual) {
+                let l = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                localStorage.setItem('planejamento_visitante', JSON.stringify(l.filter(x => !(x.semestre === sem && x.status === 'Inscrita'))));
+                await carregarDadosBanco(); return;
+            }
+            await supabaseClient.from('planejamento_usuarios').delete().eq('user_id', usuarioAtual.id).eq('semestre', sem).eq('status', 'Inscrita');
+            await carregarDadosBanco();
+        }
+
+        function exportarSemestrePDF(sem) {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'landscape' });
+            const reg = planejamentoGlobal.filter(p => p.semestre === sem);
+            doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.text("Grade de Disciplinas - " + sem, 14, 15);
+            let y = 30; doc.setFillColor(235, 240, 245); doc.rect(14, y - 4, 269, 7, "F");
+            doc.text("Código", 16, y); doc.text("Nome da Disciplina", 42, y); doc.text("Data AP1", 130, y); doc.text("Data AP2", 175, y); doc.text("Data AP3", 220, y); doc.text("Status", 283, y, { align: "right" });
+            y += 7; doc.setFont("helvetica", "normal");
+            reg.forEach(r => {
+                const d = listaDisciplinasGlobal.find(i => i.id === r.disciplina_id); if (!d) return;
+                doc.text(d.codigo || '-', 16, y); doc.text((d.nome || '-').substring(0, 42), 42, y);
+                doc.text(d.data_ap1 || '-', 130, y); doc.text(d.data_ap2 || '-', 175, y); doc.text(d.data_ap3 || '-', 220, y);
+                doc.text(r.status || 'Inscrita', 283, y, { align: "right" }); y += 8;
+            });
+            doc.save(`grade_${sem.toLowerCase().replace(' ', '_')}.pdf`);
         }
 
         function parseDataHoraStrICS(str) {
-            if (!str) return null;
-            
-            const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2}):(\d{2})\s*(?:às|as)\s*(\d{1,2}):(\d{2})$/i;
-            const match = str.trim().match(regex);
-            
-            if (match) {
-                const dia = parseInt(match[1], 10);
-                const mes = parseInt(match[2], 10) - 1; 
-                const ano = parseInt(match[3], 10);
-                const horaInicio = parseInt(match[4], 10);
-                const minInicio = parseInt(match[5], 10);
-                const horaFim = parseInt(match[6], 10);
-                const minFim = parseInt(match[7], 10);
-                
-                const dataObjDate = new Date(Date.UTC(ano, mes, dia, horaInicio + 3, minInicio, 0));
-
-                function formatarUTC(h, m) {
-                    let d = new Date(Date.UTC(ano, mes, dia, h + 3, m, 0));
-                    const yyyy = d.getUTCFullYear();
-                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getUTCDate()).padStart(2, '0');
-                    const hh = String(d.getUTCHours()).padStart(2, '0');
-                    const mmm = String(d.getUTCMinutes()).padStart(2, '0');
-                    return `${yyyy}${mm}${dd}T${hh}${mmm}00Z`;
-                }
-
-                return {
-                    dateObj: dataObjDate,
-                    diaStr: String(dia).padStart(2, '0'),
-                    mesStr: String(mes + 1).padStart(2, '0'),
-                    anoStr: String(ano),
-                    horaInicioStr: String(horaInicio).padStart(2, '0'),
-                    minInicioStr: String(minInicio).padStart(2, '0'),
-                    horaFimStr: String(horaFim).padStart(2, '0'),
-                    minFimStr: String(minFim).padStart(2, '0'),
-                    horarioInicioCompleto: `${String(horaInicio).padStart(2, '0')}h${minInicio > 0 ? String(minInicio).padStart(2, '0') : ''}`,
-                    horarioFimCompleto: `${String(horaFim).padStart(2, '0')}h${minFim > 0 ? String(minFim).padStart(2, '0') : ''}`,
-                    dtstart: formatarUTC(horaInicio, minInicio),
-                    dtend: formatarUTC(horaFim, minFim)
-                };
-            }
-            return null;
+            const m = str?.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2}):(\d{2})\s*(?:às|as)\s*(\d{1,2}):(\d{2})$/i);
+            if (!m) return null;
+            const d = new Date(Date.UTC(+m[3], +m[2]-1, +m[1], +m[4]+3, +m[5], 0));
+            const fmt = (hr, mn) => { let x = new Date(Date.UTC(+m[3], +m[2]-1, +m[1], hr+3, mn, 0)); return `${x.getUTCFullYear()}${String(x.getUTCMonth()+1).padStart(2,'0')}${String(x.getUTCDate()).padStart(2,'0')}T${String(x.getUTCHours()).padStart(2,'0')}${String(x.getUTCMinutes()).padStart(2,'0')}00Z`; };
+            return { dateObj: d, diaStr: m[1], mesStr: m[2], anoStr: m[3], horarioInicioCompleto: `${m[4]}h`, dtstart: fmt(+m[4], +m[5]), dtend: fmt(+m[6], +m[7]) };
         }
 
-        function formatarDataHoraAtualZ() {
-            const dateObj = new Date();
-            const ano = dateObj.getUTCFullYear();
-            const mes = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-            const dia = String(dateObj.getUTCDate()).padStart(2, '0');
-            const hora = String(dateObj.getUTCHours()).padStart(2, '0');
-            const min = String(dateObj.getUTCMinutes()).padStart(2, '0');
-            const seg = String(dateObj.getUTCSeconds()).padStart(2, '0');
-            return `${ano}${mes}${dia}T${hora}${min}${seg}Z`;
-        }
-
-        function detectarDevice() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            if (/android/i.test(ua)) return 'android';
-            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'ios';
-            if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(ua)) return 'mac';
-            return 'pc';
-        }
-
-        function iniciarExportacaoICS(semestreNome) {
-            if (!usuarioAtual) {
-                alert("Para exportar o calendário em .ics, é necessário estar logado.");
-                abrirModalAuth('login');
-                return;
-            }
-
-            const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
-            if (registros.length === 0) {
-                alert("Não há disciplinas neste semestre para gerar o calendário.");
-                return;
-            }
-
-            semestreIcsPendente = semestreNome;
-            const device = detectarDevice();
-            
-            const tituloEl = document.getElementById('ics-guia-titulo');
-            const conteudoEl = document.getElementById('ics-guia-conteudo');
-            
-            tituloEl.textContent = `Como adicionar à Agenda (Apenas AP1 e AP2)`;
-
-            let instrucoesHtml = '';
-            if (device === 'android') {
-                instrucoesHtml = `
-                    <p class="font-semibold text-gray-800">📱 Instruções para Android (Google Agenda):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
-                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
-                        <li>Abra o arquivo baixado. O sistema Android sugerirá adicionar os eventos ao seu Google Agenda automaticamente.</li>
-                        <li>Caso o arquivo não abra, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a> no navegador, vá em <em>Configurações > Importar e exportar</em> e selecione o arquivo.</li>
-                    </ol>
-                `;
-            } else if (device === 'ios') {
-                instrucoesHtml = `
-                    <p class="font-semibold text-gray-800">📱 Instruções para iPhone / iPad (iOS):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
-                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
-                        <li>Toque no arquivo baixado no seu aplicativo de <strong>Arquivos</strong> (ou diretamente no pop-up de download).</li>
-                        <li>O sistema perguntará se você deseja adicionar os eventos ao seu aplicativo de <strong>Calendário</strong>. Confirme tocando em <em>Adicionar Todos</em>.</li>
-                    </ol>
-                `;
-            } else if (device === 'mac') {
-                instrucoesHtml = `
-                    <p class="font-semibold text-gray-800">💻 Instruções para macOS (Apple Calendar):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
-                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
-                        <li>Abra a sua pasta de <em>Downloads</em> e dê um duplo clique no arquivo baixado.</li>
-                        <li>O aplicativo <strong>Calendário</strong> abrirá automaticamente. Escolha o seu calendário principal e clique em <em>OK</em> para importar as provas.</li>
-                    </ol>
-                `;
-            } else {
-                instrucoesHtml = `
-                    <p class="font-semibold text-gray-800">💻 Instruções para Computador (Google Agenda / Outlook):</p>
-                    <ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2">
-                        <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
-                        <li>Se você usa o <strong>Google Agenda</strong>, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>.</li>
-                        <li>No canto superior direito, clique na engrenagem de <em>Configurações > Importar e exportar</em>. Selecione o arquivo no seu computador e clique em <strong>Importar</strong>.</li>
-                        <li>Se usa Outlook ou Calendário do Windows, basta dar um duplo clique no arquivo baixado.</li>
-                    </ol>
-                `;
-            }
-
-            conteudoEl.innerHTML = instrucoesHtml;
+        function iniciarExportacaoICS(sem) {
+            semestreIcsPendente = sem;
+            document.getElementById('ics-guia-conteudo').innerHTML = `<p class="text-xs text-gray-600">Baixe o arquivo de eventos de provas para o seu calendário.</p>`;
             document.getElementById('modal-ics-guia').classList.remove('hidden');
         }
-
-        function fecharModalIcsGuia() {
-            document.getElementById('modal-ics-guia').classList.add('hidden');
-            semestreIcsPendente = null;
-        }
+        function fecharModalIcsGuia() { document.getElementById('modal-ics-guia').classList.add('hidden'); }
 
         document.getElementById('btn-confirmar-download-ics').addEventListener('click', async () => {
-            if (!semestreIcsPendente) return;
-            const semestreNome = semestreIcsPendente;
-            fecharModalIcsGuia();
-
-            const scrollSalvo = window.scrollY;
-            const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
-
-            const now = new Date();
-            const anoVigente = now.getFullYear();
-            const semestreVigenteNum = (now.getMonth() + 1) >= 6 ? 2 : 1;
-            const codigoSemestreFormatado = `${anoVigente}${semestreVigenteNum}`;
-
-            let eventosIcs = [];
-            let atualizacoesSequenciais = [];
-
-            const tiposAvaliacao = ['AP1', 'AP2'];
-
-            tiposAvaliacao.forEach(tipoAP => {
-                let provasDoTipo = [];
-
-                registros.forEach(reg => {
-                    const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                    if (!disc) return;
-                    if (disc.controle === 0 || disc.controle === '0') return;
-
-                    const campoData = tipoAP === 'AP1' ? disc.data_ap1 : disc.data_ap2;
-                    const parsed = parseDataHoraStrICS(campoData);
-                    if (parsed) {
-                        provasDoTipo.push({
-                            reg,
-                            disc,
-                            parsed,
-                            timestamp: parsed.dateObj.getTime()
-                        });
+            const sem = semestreIcsPendente; fecharModalIcsGuia();
+            const reg = planejamentoGlobal.filter(p => p.semestre === sem);
+            let eventos = [];
+            ['AP1', 'AP2'].forEach(tipo => {
+                reg.forEach(r => {
+                    const d = listaDisciplinasGlobal.find(i => i.id === r.disciplina_id); if (!d || d.controle === 0) return;
+                    const p = parseDataHoraStrICS(tipo === 'AP1' ? d.data_ap1 : d.data_ap2);
+                    if (p) {
+                        eventos.push('BEGIN:VEVENT', `UID:${d.id}-${tipo}@eadblitz.com.br`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').split('.')[0]}Z`, `DTSTART:${p.dtstart}`, `DTEND:${p.dtend}`, `SUMMARY:Prova ${tipo} - ${d.nome}`, 'END:VEVENT');
                     }
-                });
-
-                if (provasDoTipo.length === 0) return;
-
-                provasDoTipo.sort((a, b) => a.timestamp - b.timestamp);
-
-                let finsDeSemana = [];
-                let currentFds = [provasDoTipo[0]];
-
-                for (let i = 1; i < provasDoTipo.length; i++) {
-                    const diffDias = (provasDoTipo[i].timestamp - provasDoTipo[i-1].timestamp) / (1000 * 60 * 60 * 24);
-                    if (diffDias <= 3) {
-                        currentFds.push(provasDoTipo[i]);
-                    } else {
-                        finsDeSemana.push(currentFds);
-                        currentFds = [provasDoTipo[i]];
-                    }
-                }
-                finsDeSemana.push(currentFds);
-
-                finsDeSemana.forEach((fdsProvas, fdsIndex) => {
-                    const primeiraProvaTimestamp = fdsProvas[0].timestamp;
-                    const primeiraProvaDate = new Date(primeiraProvaTimestamp);
-
-                    const dataAlerta = new Date(primeiraProvaDate);
-                    const diaSemanaPrimeiraProva = primeiraProvaDate.getUTCDay();
-                    let diasAteSegunda = diaSemanaPrimeiraProva === 0 ? 6 : diaSemanaPrimeiraProva - 1;
-                    dataAlerta.setUTCDate(dataAlerta.getUTCDate() - diasAteSegunda + 1);
-
-                    const yyyyA = dataAlerta.getUTCFullYear();
-                    const mmA = String(dataAlerta.getUTCMonth() + 1).padStart(2, '0');
-                    const ddA = String(dataAlerta.getUTCDate()).padStart(2, '0');
-                    const dtAlertaStart = `${yyyyA}${mmA}${ddA}T120000Z`;
-                    const dtAlertaEnd = `${yyyyA}${mmA}${ddA}T130000Z`;
-
-                    const nomeFdsOrdem = fdsIndex === 0 ? 'Primeiro' : (fdsIndex === 1 ? 'Segundo' : `${fdsIndex + 1}º`);
-                    const summaryAlerta = `Provas ${tipoAP} chegando! ${nomeFdsOrdem} fim de semana!`;
-
-                    let descAlertaLinhas = [];
-                    fdsProvas.forEach(p => {
-                        const diaSemanaStr = p.parsed.dateObj.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        descAlertaLinhas.push(`${diaSemanaStr.charAt(0).toUpperCase() + diaSemanaStr.slice(1)}, ${p.parsed.diaStr}/${p.parsed.mesStr} - ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}: ${p.disc.nome}`);
-                    });
-                    const descriptionAlerta = `Cronograma de provas deste fim de semana: ` + descAlertaLinhas.join(' | ');
-
-                    const uidAlerta = `ALERTA-${tipoAP}-FDS${fdsIndex+1}-${codigoSemestreFormatado}@eadblitz.com.br`;
-                    const dtstampStr = formatarDataHoraAtualZ();
-
-                    eventosIcs.push(
-                        'BEGIN:VEVENT',
-                        `UID:${uidAlerta}`,
-                        `DTSTAMP:${dtstampStr}`,
-                        `DTSTART:${dtAlertaStart}`,
-                        `DTEND:${dtAlertaEnd}`,
-                        `SUMMARY:${summaryAlerta}`,
-                        `DESCRIPTION:${descriptionAlerta}`,
-                        'URL:https://www.eadblitz.com.br',
-                        'CATEGORIES:Provas',
-                        'STATUS:CONFIRMED',
-                        'TRANSP:TRANSPARENT',
-                        'END:VEVENT'
-                    );
-
-                    fdsProvas.forEach(p => {
-                        const provaDate = p.parsed.dateObj;
-                        const diaSemanaProva = provaDate.getUTCDay();
-                        let diasASubtrair = 0;
-                        if (diaSemanaProva === 6) {
-                            diasASubtrair = 1;
-                        } else if (diaSemanaProva === 0) {
-                            diasASubtrair = 2;
-                        } else {
-                            diasASubtrair = (diaSemanaProva + 2) % 7; 
-                        }
-
-                        const sextaVespers = new Date(provaDate);
-                        sextaVespers.setUTCDate(sextaVespers.getUTCDate() - diasASubtrair);
-
-                        const yyyyS = sextaVespers.getUTCFullYear();
-                        const mmS = String(sextaVespers.getUTCMonth() + 1).padStart(2, '0');
-                        const ddS = String(sextaVespers.getUTCDate()).padStart(2, '0');
-                        const dtSextaStart = `${yyyyS}${mmS}${ddS}T180000Z`;
-                        const dtSextaEnd = `${yyyyS}${mmS}${ddS}T190000Z`;
-
-                        const diaSemanaProvaNome = provaDate.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        const summaryVespers = `Prova de ${p.disc.nome} no ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, dia ${p.parsed.diaStr}/${p.parsed.mesStr}, de ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}`;
-                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome} - Horário: ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto} - Data: ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}`;
-
-                        const codigoDisc = p.disc.codigo || 'GERAL';
-                        const uidVespers = `${codigoDisc}-${p.disc.id}-${tipoAP}-VESP-${codigoSemestreFormatado}@eadblitz.com.br`;
-
-                        const novaSequence = (p.reg.sequence || 0) + 1;
-                        atualizacoesSequenciais.push({
-                            disciplina_id: p.reg.disciplina_id,
-                            semestre: p.reg.semestre,
-                            sequence: novaSequence
-                        });
-
-                        eventosIcs.push(
-                            'BEGIN:VEVENT',
-                            `UID:${uidVespers}`,
-                            `DTSTAMP:${dtstampStr}`,
-                            `SEQUENCE:${novaSequence}`,
-                            `DTSTART:${dtSextaStart}`,
-                            `DTEND:${dtSextaEnd}`,
-                            `SUMMARY:${summaryVespers}`,
-                            `DESCRIPTION:${descriptionVespers}`,
-                            'URL:https://www.eadblitz.com.br',
-                            'CATEGORIES:Provas',
-                            'STATUS:CONFIRMED',
-                            'TRANSP:TRANSPARENT',
-                            'END:VEVENT'
-                        );
-                    });
                 });
             });
-
-            if (eventosIcs.length === 0) {
-                alert("Nenhuma data válida encontrada para exportação.");
-                return;
-            }
-
-            for (let att of atualizacoesSequenciais) {
-                await supabaseClient.from('planejamento_usuarios')
-                    .update({ sequence: att.sequence })
-                    .eq('user_id', usuarioAtual.id)
-                    .eq('disciplina_id', att.disciplina_id)
-                    .eq('semestre', att.semestre);
-            }
-
-            const conteudoIcs = [
-                'BEGIN:VCALENDAR',
-                'VERSION:2.0',
-                'PRODID:-//BlitzEAD//Planejamento Academico//PT',
-                'CALSCALE:GREGORIAN',
-                'METHOD:PUBLISH',
-                'X-WR-CALNAME:Provas - ' + semestreNome,
-                ...eventosIcs,
-                'END:VCALENDAR'
-            ].join('\r\n');
-
-            const blob = new Blob([conteudoIcs], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `provas_${semestreNome.toLowerCase().replace(' ', '_')}.ics`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            await carregarDadosBanco();
-            window.scrollTo({ top: scrollSalvo });
+            const blob = new Blob([['BEGIN:VCALENDAR', 'VERSION:2.0', ...eventos, 'END:VCALENDAR'].join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `provas_${sem.toLowerCase().replace(' ', '_')}.ics`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
         });
-
-        function exportarGradeCompletaPDF() {
-            if (!usuarioAtual) {
-                alert("Para exportar a grade completa em PDF, é necessário estar logado.");
-                abrirModalAuth('login');
-                return;
-            }
-
-            const scrollSalvo = window.scrollY;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            const semestresPossiveis = [
-                '1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre',
-                '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'
-            ];
-
-            const semestresComDados = semestresPossiveis.map(sem => {
-                const registros = planejamentoGlobal
-                    .filter(p => p.semestre === sem)
-                    .sort((a, b) => {
-                        const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
-                        const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
-                        return indexA - indexB;
-                    });
-                return { semestre: sem, registros };
-            }).filter(s => s.registros.length > 0);
-
-            if (semestresComDados.length === 0) {
-                alert("Não há disciplinas alocadas em nenhum semestre para exportar.");
-                return;
-            }
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Planejamento Acadêmico - Lista de Disciplinas", 14, 20);
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 26);
-
-            let y = 36;
-
-            semestresComDados.forEach(grupo => {
-                const alturaBlocoSemestre = 16 + (grupo.registros.length * 6);
-
-                if (y + alturaBlocoSemestre > 280) {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text(grupo.semestre, 14, y);
-                y += 5;
-
-                doc.setFontSize(8);
-                doc.setFillColor(245, 247, 250);
-                doc.rect(14, y - 4, 182, 6, "F");
-                doc.text("Código", 16, y);
-                doc.text("Nome da Disciplina", 42, y);
-                doc.text("Período", 145, y);
-                doc.text("Status", 170, y);
-
-                y += 6;
-                doc.setFont("helvetica", "bold");
-
-                grupo.registros.forEach(reg => {
-                    const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                    if (!d) return;
-
-                    doc.text(d.codigo || '-', 16, y);
-                    const nomeDisc = (d.nome || '-').length > 45 ? (d.nome || '-').substring(0, 42) + '...' : (d.nome || '-');
-                    doc.text(nomeDisc, 42, y);
-                    doc.text(d.periodo || '-', 145, y);
-                    doc.text(reg.status || 'Inscrita', 170, y);
-
-                    y += 6;
-                });
-
-                y += 8;
-            });
-
-            doc.save("grade_completa_disciplinas.pdf");
-            window.scrollTo({ top: scrollSalvo });
-        }
 
         init();
     </script>

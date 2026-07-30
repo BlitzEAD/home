@@ -20,19 +20,18 @@
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
             </div>
         </div>
-        <!-- MENU INFERIOR COMPLETO -->
+        <!-- MENU INFERIOR CORRIGIDO -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="jornal.html" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
                 <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
         </div>
     </header>
 
-    <!-- CONTEÚDO DO PERFIL -->
     <main class="w-full max-w-2xl mx-auto px-6 py-8 flex-1">
         <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
             <h2 class="text-2xl font-bold text-gray-900 mb-1">Configurações de Perfil</h2>
@@ -65,26 +64,15 @@
                         <option value="Biblioteconomia">Biblioteconomia</option>
                         <option value="Ciências Contábeis">Ciências Contábeis</option>
                         <option value="Engenharia de Produção">Engenharia de Produção</option>
-                        <option value="Engenharia Meteorológica">Engenharia Meteorológica</option>
                         <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
-                        <option value="Licenciatura em Física">Licenciatura em Física</option>
-                        <option value="Licenciatura em Geografia">Licenciatura em Geografia</option>
-                        <option value="Licenciatura em História">Licenciatura em História</option>
-                        <option value="Licenciatura em Letras">Licenciatura em Letras</option>
                         <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
-                        <option value="Licenciatura em Química">Licenciatura em Química</option>
-                        <option value="Licenciatura em Turismo">Licenciatura em Turismo</option>
-                        <option value="Tecnologia em Segurança Pública">Tecnologia em Segurança Pública</option>
-                        <option value="Tecnologia em Sistemas de Computação">Tecnologia em Sistemas de Computação</option>
-                        <option value="Tecnologia em Turismo">Tecnologia em Turismo</option>
-                        <option value="Tecnologia em Design Gráfico">Tecnologia em Design Gráfico</option>
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Semestre de Ingresso</label>
                     <select id="perfil-semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
-                        <option value="">Nenhum / Não informar</option>
+                        <option value="">Nenhum</option>
                     </select>
                 </div>
 
@@ -106,20 +94,15 @@
         async function initPerfil() {
             gerarOpcoesSemestres();
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                alert("Você precisa estar logado para acessar seu perfil.");
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!session) { alert("Faça login para acessar o perfil."); window.location.href = 'index.html'; return; }
             usuarioAtual = session.user;
             renderizarTopoUsuario();
             preencherDadosPerfil();
         }
 
         function gerarOpcoesSemestres() {
-            const select = document.getElementById('perfil-semestre');
-            if (!select) return;
-            let html = '<option value="">Nenhum / Não informar</option>';
+            const select = document.getElementById('perfil-semestre'); if (!select) return;
+            let html = '<option value="">Nenhum</option>';
             for (let ano = 2026; ano >= 2019; ano--) {
                 for (let sem = 2; sem >= 1; sem--) {
                     if (ano === 2026 && sem > 2) continue;
@@ -133,74 +116,49 @@
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
             const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
-
-            if (isAdmin && containerBtnAdmin) {
-                containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Área Administrativa</a>`;
-            }
+            if (isAdmin && containerBtnAdmin) containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">⚙️ Admin</a>`;
 
             const metadata = usuarioAtual.user_metadata || {};
             const nome = metadata.nome || usuarioAtual.email || "Usuário";
             const primeiraLetra = nome.charAt(0).toUpperCase();
             const fotoUrl = metadata.foto_url;
-            const nomeExibicao = nome.split(' ')[0];
             let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
 
             document.getElementById('preview-avatar').innerHTML = avatarHtml;
             bloco.innerHTML = `
-                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nome.split(' ')[0]}</span>
                 <div class="relative">
-                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none">${avatarHtml}</button>
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden focus:outline-none">${avatarHtml}</button>
                     <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
-                        <a href="perfil.html" class="block px-4 py-2 text-blue-600 font-semibold bg-blue-50 transition">Perfil</a>
-                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                        <a href="perfil.html" class="block px-4 py-2 text-blue-600 font-semibold bg-blue-50">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50">Sair</a>
                     </div>
                 </div>
             `;
-
-            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('dropdown-perfil').classList.toggle('hidden');
-            });
-            window.addEventListener('click', () => {
-                const drop = document.getElementById('dropdown-perfil');
-                if (drop && !drop.classList.contains('hidden')) drop.classList.add('hidden');
-            });
-            document.getElementById('btn-sair').addEventListener('click', async (e) => {
-                e.preventDefault();
-                await supabaseClient.auth.signOut();
-                window.location.href = 'index.html';
-            });
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('dropdown-perfil').classList.toggle('hidden'); });
+            window.addEventListener('click', () => { const d = document.getElementById('dropdown-perfil'); if (d && !d.classList.contains('hidden')) d.classList.add('hidden'); });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
         }
 
         function preencherDadosPerfil() {
             if (!usuarioAtual) return;
             document.getElementById('perfil-email').value = usuarioAtual.email || '';
-            const metadata = usuarioAtual.user_metadata || {};
-            document.getElementById('perfil-nome').value = metadata.nome || '';
-            document.getElementById('perfil-curso').value = metadata.curso || 'Administração';
-            document.getElementById('perfil-semestre').value = metadata.semestre_ingresso || '';
+            const md = usuarioAtual.user_metadata || {};
+            document.getElementById('perfil-nome').value = md.nome || '';
+            document.getElementById('perfil-curso').value = md.curso || 'Administração';
+            document.getElementById('perfil-semestre').value = md.semestre_ingresso || '';
         }
 
         async function redimensionarImagem(file, larguraMax = 300, qualidade = 0.8) {
             return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
+                const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
+                    const img = new Image(); img.src = event.target.result;
                     img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width, h = img.height;
-                        if (w > larguraMax) {
-                            h = Math.round((h * larguraMax) / w);
-                            w = larguraMax;
-                        }
-                        canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        canvas.toBlob((blob) => {
-                            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
-                        }, 'image/jpeg', qualidade);
+                        const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                        if (w > larguraMax) { h = Math.round((h * larguraMax) / w); w = larguraMax; }
+                        canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                        canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() })), 'image/jpeg', qualidade);
                     };
                 };
             });
@@ -208,46 +166,31 @@
 
         document.getElementById('form-perfil').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-perfil');
-            const msg = document.getElementById('msg-perfil');
-            const novoNome = document.getElementById('perfil-nome').value;
-            const novoEmail = document.getElementById('perfil-email').value.trim();
-            const novoCurso = document.getElementById('perfil-curso').value;
-            const novoSemestre = document.getElementById('perfil-semestre').value;
+            const btn = document.getElementById('btn-salvar-perfil'); const msg = document.getElementById('msg-perfil');
+            const nome = document.getElementById('perfil-nome').value; const email = document.getElementById('perfil-email').value.trim();
+            const curso = document.getElementById('perfil-curso').value; const semestre = document.getElementById('perfil-semestre').value;
             const fotoFile = document.getElementById('input-foto-perfil').files[0];
-
-            btn.disabled = true;
-            btn.textContent = "Salvando...";
+            btn.disabled = true; btn.textContent = "Salvando...";
 
             try {
                 let fotoUrl = usuarioAtual.user_metadata?.foto_url || null;
                 if (fotoFile) {
-                    const fotoOtimizada = await redimensionarImagem(fotoFile, 250, 0.75);
-                    const nomeArquivo = `avatar_${usuarioAtual.id}_${Date.now()}.jpg`;
-                    await supabaseClient.storage.from('perfis').upload(nomeArquivo, fotoOtimizada, { upsert: true });
-                    const { data: { publicUrl } } = supabaseClient.storage.from('perfis').getPublicUrl(nomeArquivo);
-                    fotoUrl = publicUrl;
+                    const otimizada = await redimensionarImagem(fotoFile, 250, 0.75);
+                    const nomeArq = `avatar_${usuarioAtual.id}_${Date.now()}.jpg`;
+                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada, { upsert: true });
+                    const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
+                    fotoUrl = pub.publicUrl;
                 }
 
-                let alterouEmail = novoEmail !== usuarioAtual.email;
-                const dadosAtualizacao = { data: { nome: novoNome, curso: novoCurso, semestre_ingresso: novoSemestre, foto_url: fotoUrl } };
-                if (alterouEmail) dadosAtualizacao.email = novoEmail;
-
-                const { data, error } = await supabaseClient.auth.updateUser(dadosAtualizacao);
+                let alterouEmail = email !== usuarioAtual.email;
+                const { data, error } = await supabaseClient.auth.updateUser({ email: alterouEmail ? email : undefined, data: { nome, curso, semestre_ingresso: semestre, foto_url: fotoUrl } });
                 if (error) throw error;
-
-                usuarioAtual = data.user;
-                renderizarTopoUsuario();
-                preencherDadosPerfil();
-                msg.textContent = alterouEmail ? "✅ Salvo! Verifique o e-mail de confirmação enviado." : "✅ Perfil atualizado com sucesso!";
+                usuarioAtual = data.user; renderizarTopoUsuario(); preencherDadosPerfil();
+                msg.textContent = alterouEmail ? "✅ Salvo! Verifique o e-mail de confirmação." : "✅ Perfil atualizado com sucesso!";
                 msg.className = "mt-4 text-xs text-center font-medium text-green-600";
             } catch (err) {
-                msg.textContent = "❌ " + err.message;
-                msg.className = "mt-4 text-xs text-center font-medium text-red-600";
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Salvar Alterações";
-            }
+                msg.textContent = "❌ " + err.message; msg.className = "mt-4 text-xs text-center font-medium text-red-600";
+            } finally { btn.disabled = false; btn.textContent = "Salvar Alterações"; }
         });
 
         initPerfil();

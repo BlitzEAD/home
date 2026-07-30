@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="meta-titulo">Carregando Matéria - Jornal Blitz</title>
-    <!-- Meta SEOdinâmica -->
-    <meta id="meta-descricao" name="description" content="Acompanhe as notícias e avisos acadêmicos no Jornal Blitz.">
-    <!-- Tailwind CSS -->
+    <title id="meta-titulo">Jornal Blitz</title>
+    <meta id="meta-descricao" name="description" content="Notícias e avisos acadêmicos.">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
@@ -24,7 +21,7 @@
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
             </div>
         </div>
-        <!-- MENU INFERIOR -->
+        <!-- MENU INFERIOR CORRIGIDO -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
@@ -36,20 +33,11 @@
         </div>
     </header>
 
-    <!-- CONTEÚDO DA MATÉRIA -->
     <main class="w-full max-w-4xl mx-auto px-6 py-8 flex-1">
-        
-        <!-- BOTÃO VOLTAR -->
-        <div class="mb-6">
-            <a href="jornal.html" class="text-xs font-bold text-gray-600 hover:text-blue-600 transition flex items-center space-x-1">
-                <span>← Voltar para o Jornal Blitz</span>
-            </a>
-        </div>
-
+        <div class="mb-6"><a href="jornal.html" class="text-xs font-bold text-gray-600 hover:text-blue-600 transition">← Voltar para o Jornal Blitz</a></div>
         <article id="artigo-materia" class="bg-white rounded-2xl shadow-md p-6 md:p-10 border border-gray-200">
-            <div class="text-center py-16 text-gray-400">Carregando conteúdo da matéria...</div>
+            <div class="text-center py-16 text-gray-400">Carregando conteúdo...</div>
         </article>
-
     </main>
 
     <script>
@@ -62,118 +50,66 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
             renderizarTopoUsuario();
-
-            // Pega o ID da URL (?id=...)
-            const urlParams = new URLSearchParams(window.location.search);
-            const postId = urlParams.get('id');
-
-            if (!postId) {
-                document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`;
-                return;
-            }
-
-            await carregarDetalhesPost(postId);
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (!id) { document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`; return; }
+            await carregarDetalhesPost(id);
         }
 
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
             const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
-
-            if (isAdmin && containerBtnAdmin) {
-                containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Área Administrativa</a>`;
-            }
+            if (isAdmin && containerBtnAdmin) containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">⚙️ Admin</a>`;
 
             if (!usuarioAtual) {
-                bloco.innerHTML = `<button onclick="window.location.href='index.html?abrir_login=1'" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">Entrar / Cadastrar</button>`;
+                bloco.innerHTML = `<button onclick="window.location.href='index.html?abrir_login=1'" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Entrar / Cadastrar</button>`;
                 return;
             }
-
-            const metadata = usuarioAtual.user_metadata || {};
-            const nome = metadata.nome || usuarioAtual.email || "Usuário";
-            const primeiraLetra = nome.charAt(0).toUpperCase();
-            const fotoUrl = metadata.foto_url;
-            const nomeExibicao = nome.split(' ')[0];
-            let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
-
+            const nome = usuarioAtual.user_metadata?.nome || usuarioAtual.email || "U";
             bloco.innerHTML = `
-                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nome.split(' ')[0]}</span>
                 <div class="relative">
-                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none">${avatarHtml}</button>
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden">${usuarioAtual.user_metadata?.foto_url ? `<img src="${usuarioAtual.user_metadata.foto_url}" class="w-full h-full object-cover">` : nome.charAt(0).toUpperCase()}</button>
                     <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
-                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
-                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50">Sair</a>
                     </div>
                 </div>
             `;
-
-            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('dropdown-perfil').classList.toggle('hidden');
-            });
-            window.addEventListener('click', () => {
-                const drop = document.getElementById('dropdown-perfil');
-                if (drop && !drop.classList.contains('hidden')) drop.classList.add('hidden');
-            });
-            document.getElementById('btn-sair').addEventListener('click', async (e) => {
-                e.preventDefault();
-                await supabaseClient.auth.signOut();
-                window.location.href = 'index.html';
-            });
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('dropdown-perfil').classList.toggle('hidden'); });
+            window.addEventListener('click', () => { const d = document.getElementById('dropdown-perfil'); if (d && !d.classList.contains('hidden')) d.classList.add('hidden'); });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
         }
 
         async function carregarDetalhesPost(id) {
-            const { data: post, error } = await supabaseClient
-                .from('jornal_posts')
-                .select('*')
-                .eq('id', id)
-                .single();
+            const { data: post, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id).single();
+            const art = document.getElementById('artigo-materia');
+            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`; return; }
 
-            const artigoEl = document.getElementById('artigo-materia');
-
-            if (error || !post) {
-                artigoEl.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada ou removida.</div>`;
-                return;
-            }
-
-            // Atualiza tags de SEO da página dinamicamente
             document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
-            if (post.resumo) {
-                document.getElementById('meta-descricao').setAttribute('content', post.resumo);
-            }
+            if (post.resumo) document.getElementById('meta-descricao').setAttribute('content', post.resumo);
 
-            let dataFormatada = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+            const dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+            const autor = post.autor || 'BlitzEAD';
 
             let tagsHtml = '';
             if (post.tags && post.tags.length > 0) {
                 tagsHtml = `<div class="flex flex-wrap gap-2 mt-6 pt-6 border-t">`;
-                post.tags.forEach(tag => {
-                    tagsHtml += `<span class="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">#${tag.trim()}</span>`;
-                });
+                post.tags.forEach(t => tagsHtml += `<span class="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">#${t.trim()}</span>`);
                 tagsHtml += `</div>`;
             }
 
-            artigoEl.innerHTML = `
+            art.innerHTML = `
                 <div class="mb-6">
-                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${post.categoria}</span>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">${post.categoria}</span>
                     <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-2 leading-tight">${post.titulo}</h1>
-                    <p class="text-xs text-gray-400 font-medium">Publicado em ${dataFormatada}</p>
+                    <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>Publicado em ${dataF}</span></div>
                 </div>
-
-                ${post.capa_url ? `
-                    <div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border">
-                        <img src="${post.capa_url}" class="w-full h-full object-cover">
-                    </div>
-                ` : ''}
-
-                <div class="prose max-w-none text-gray-700 leading-relaxed space-y-4 whitespace-pre-line text-base">
-                    ${post.conteudo}
-                </div>
-
+                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" class="w-full h-full object-cover"></div>` : ''}
+                <div class="prose max-w-none text-gray-700 leading-relaxed space-y-4 whitespace-pre-line text-base">${post.conteudo}</div>
                 ${tagsHtml}
             `;
         }
-
         initMateria();
     </script>
 </body>

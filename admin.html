@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área Administrativa - Planejamento Acadêmico</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24">
@@ -23,21 +21,20 @@
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l relative"></div>
             </div>
         </div>
-        <!-- ABAS DE NAVEGAÇÃO DO ADMIN -->
+        <!-- ABAS -->
         <div class="w-full bg-gray-100 px-4 md:px-6 py-2 flex space-x-4">
             <button onclick="mudarAbaAdmin('livros')" id="tab-btn-livros" class="text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm">📚 Gerenciar Livros</button>
             <button onclick="mudarAbaAdmin('jornal')" id="tab-btn-jornal" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition">📰 Gerenciar Jornal Blitz</button>
         </div>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL DO ADMIN -->
     <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
         
         <!-- ================= ABA 1: LIVROS ================= -->
         <div id="secao-admin-livros" class="space-y-8">
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h2 id="titulo-form-livro" class="text-xl font-bold text-gray-900 mb-1">Cadastrar Novo Livro / Material</h2>
-                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital vinculando-os a disciplinas específicas.</p>
+                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital (com envio de PDF ou link externo).</p>
 
                 <form id="form-livro" class="space-y-4">
                     <input type="hidden" id="livro-id-edicao">
@@ -54,8 +51,9 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Link de Destino (PDF no Storage ou Kiwify)</label>
-                            <input type="url" id="livro-link" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="https://...">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Arquivo PDF (Opcional - Envio Direto)</label>
+                            <input type="file" id="livro-arquivo-pdf" accept="application/pdf" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer mb-1">
+                            <input type="url" id="livro-link" placeholder="Ou cole a URL externa de destino aqui" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Imagem de Capa (Arquivo ou URL)</label>
@@ -70,7 +68,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-2">Vincular às Disciplinas (Opcional)</label>
+                        <label class="block text-xs font-semibold text-gray-700 mb-2">Vincular às Disciplinas</label>
                         <div id="container-checkboxes-disciplinas" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border rounded-xl bg-gray-50 text-xs">
                             <span class="text-gray-400">Carregando disciplinas...</span>
                         </div>
@@ -83,7 +81,7 @@
                 </form>
             </div>
 
-            <!-- LISTA DE LIVROS CADASTRADOS -->
+            <!-- TABELA DE LIVROS -->
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Livros Cadastrados no Acervo</h3>
                 <div class="overflow-x-auto">
@@ -108,7 +106,7 @@
         <div id="secao-admin-jornal" class="space-y-8 hidden">
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h2 id="titulo-form-post" class="text-xl font-bold text-gray-900 mb-1">Criar Nova Publicação (Jornal Blitz)</h2>
-                <p class="text-gray-500 text-xs mb-6">Publique notícias, avisos ou artigos com otimização SEO para os alunos.</p>
+                <p class="text-gray-500 text-xs mb-6">Publique notícias ou artigos com SEO e autoria personalizada.</p>
 
                 <form id="form-post" class="space-y-4">
                     <input type="hidden" id="post-id-edicao">
@@ -128,26 +126,30 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Imagem de Capa (Arquivo ou URL)</label>
-                            <input type="file" id="post-arquivo-capa" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer mb-1">
-                            <input type="text" id="post-capa-url" placeholder="Ou cole a URL da imagem aqui" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Autor (Opcional - Padrão: BlitzEAD)</label>
+                            <input type="text" id="post-autor" placeholder="Ex: Nome do Colaborador" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Tags (separadas por vírgula para SEO)</label>
-                            <input type="text" id="post-tags" placeholder="ex: provas, ap1, vestibular, prazos" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Tags (separadas por vírgula)</label>
+                            <input type="text" id="post-tags" placeholder="ex: provas, ap1, prazos" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Capa (Arquivo ou URL)</label>
+                            <input type="file" id="post-arquivo-capa" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer mb-1">
+                            <input type="text" id="post-capa-url" placeholder="Ou URL da imagem" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Resumo / Meta Description (SEO)</label>
-                        <textarea id="post-resumo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Breve resumo que aparece na listagem e no Google..."></textarea>
+                        <textarea id="post-resumo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Breve resumo..."></textarea>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Conteúdo Completo da Matéria</label>
-                        <textarea id="post-conteudo" rows="8" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Escreva o texto completo da publicação..."></textarea>
+                        <textarea id="post-conteudo" rows="8" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Texto completo..."></textarea>
                     </div>
 
                     <div class="flex items-center space-x-3 pt-2">
@@ -157,7 +159,7 @@
                 </form>
             </div>
 
-            <!-- TABELA DE GERENCIAMENTO DE POSTS -->
+            <!-- TABELA POSTS -->
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Publicações do Jornal Blitz</h3>
                 <div class="overflow-x-auto">
@@ -165,8 +167,8 @@
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
                                 <th class="p-3 border-b">Título</th>
+                                <th class="p-3 border-b">Autor</th>
                                 <th class="p-3 border-b">Categoria</th>
-                                <th class="p-3 border-b">Data</th>
                                 <th class="p-3 border-b text-center">Ações</th>
                             </tr>
                         </thead>
@@ -189,13 +191,12 @@
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session || session.user.user_metadata?.is_admin !== true) {
-                alert("Acesso negado. Apenas administradores.");
+                alert("Acesso negado.");
                 window.location.href = 'index.html';
                 return;
             }
             usuarioAtual = session.user;
             renderizarTopoUsuario();
-
             await carregarCheckboxesDisciplinas();
             await carregarAdminLivros();
             await carregarAdminPosts();
@@ -223,8 +224,7 @@
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const metadata = usuarioAtual.user_metadata || {};
-            const nome = metadata.nome || usuarioAtual.email || "Admin";
-            bloco.innerHTML = `<span class="text-xs font-medium text-gray-700">${nome.split(' ')[0]} (Admin)</span>`;
+            bloco.innerHTML = `<span class="text-xs font-medium text-gray-700">${(metadata.nome || usuarioAtual.email).split(' ')[0]} (Admin)</span>`;
         }
 
         async function redimensionarImagem(file, larguraMax = 400, qualidade = 0.8) {
@@ -237,10 +237,7 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         let w = img.width, h = img.height;
-                        if (w > larguraMax) {
-                            h = Math.round((h * larguraMax) / w);
-                            w = larguraMax;
-                        }
+                        if (w > larguraMax) { h = Math.round((h * larguraMax) / w); w = larguraMax; }
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
@@ -258,7 +255,13 @@
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) { container.innerHTML = 'Nenhuma disciplina encontrada.'; return; }
 
-            let html = '';
+            // Inclui a opção GERAL no topo
+            let html = `
+                <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded font-bold text-blue-600 col-span-full border-b pb-1 mb-1">
+                    <input type="checkbox" value="GERAL" class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
+                    <span>📌 GERAL (Material geral / Disponível para todos)</span>
+                </label>
+            `;
             data.forEach(d => {
                 html += `
                     <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
@@ -298,24 +301,36 @@
             const idEdicao = document.getElementById('livro-id-edicao').value;
             const titulo = document.getElementById('livro-titulo').value;
             const preco = parseFloat(document.getElementById('livro-preco').value);
-            const linkDestino = document.getElementById('livro-link').value;
             const descricao = document.getElementById('livro-descricao').value;
+            let linkDestino = document.getElementById('livro-link').value.trim();
             let capaUrl = document.getElementById('livro-capa-url').value.trim();
+            const arquivoPdf = document.getElementById('livro-arquivo-pdf').files[0];
             const arquivoCapa = document.getElementById('livro-arquivo-capa').files[0];
 
             try {
-                if (arquivoCapa) {
-                    const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75);
-                    const nomeArq = `livro_${Date.now()}.jpg`;
-                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada);
-                    const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
-                    capaUrl = pub.publicUrl;
+                // Upload do PDF se selecionado
+                if (arquivoPdf) {
+                    const nomePdf = `pdf_${Date.now()}.pdf`;
+                    await supabaseClient.storage.from('biblioteca').upload(nomePdf, arquivoPdf);
+                    const { data: pubPdf } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf);
+                    linkDestino = pubPdf.publicUrl;
                 }
 
-                const disciplinasSelecionadas = Array.from(document.querySelectorAll('.check-disc-livro:checked')).map(cb => parseInt(cb.value));
+                // Upload da Capa se selecionada
+                if (arquivoCapa) {
+                    const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75);
+                    const nomeArq = `capa_${Date.now()}.jpg`;
+                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada);
+                    const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
+                    capaUrl = pubCapa.publicUrl;
+                }
+
+                const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
+                const eGeral = checkboxes.some(cb => cb.value === 'GERAL');
+                const disciplinasSelecionadas = checkboxes.filter(cb => cb.value !== 'GERAL').map(cb => parseInt(cb.value));
 
                 if (idEdicao) {
-                    await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
+                    await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, geral: eGeral }).eq('id', idEdicao);
                     await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', idEdicao);
                     if (disciplinasSelecionadas.length > 0) {
                         const vinculos = disciplinasSelecionadas.map(id_disc => ({ id_livro: idEdicao, id_disciplina: id_disc }));
@@ -323,7 +338,7 @@
                     }
                     alert("Livro atualizado com sucesso!");
                 } else {
-                    const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }]).select().single();
+                    const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, geral: eGeral }]).select().single();
                     if (error) throw error;
                     if (disciplinasSelecionadas.length > 0) {
                         const vinculos = disciplinasSelecionadas.map(id_disc => ({ id_livro: novoLivro.id, id_disciplina: id_disc }));
@@ -353,7 +368,8 @@
             const { data: vinculos } = await supabaseClient.from('livro_disciplinas').select('id_disciplina').eq('id_livro', livro.id);
             const idsVinculados = (vinculos || []).map(v => v.id_disciplina);
             document.querySelectorAll('.check-disc-livro').forEach(cb => {
-                cb.checked = idsVinculados.includes(parseInt(cb.value));
+                if (cb.value === 'GERAL') cb.checked = livro.geral;
+                else cb.checked = idsVinculados.includes(parseInt(cb.value));
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -368,26 +384,25 @@
         }
 
         async function deletarLivro(id) {
-            if (!confirm("Tem certeza que deseja excluir este livro?")) return;
+            if (!confirm("Excluir este livro?")) return;
             await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', id);
             await supabaseClient.from('livros').delete().eq('id', id);
             await carregarAdminLivros();
         }
 
-        // ================= GESTÃO DE JORNAL BLITZ =================
+        // ================= GESTÃO DE JORNAL =================
         async function carregarAdminPosts() {
             const { data } = await supabaseClient.from('jornal_posts').select('*').order('criado_em', { ascending: false });
             const tbody = document.getElementById('tabela-admin-posts');
-            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhuma publicação encontrada.</td></tr>`; return; }
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhuma publicação.</td></tr>`; return; }
 
             let html = '';
             data.forEach(p => {
-                let dataF = new Date(p.criado_em).toLocaleDateString('pt-BR');
                 html += `
                     <tr class="border-b hover:bg-gray-50 text-sm">
                         <td class="p-3 font-medium text-gray-800">${p.titulo}</td>
+                        <td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td>
-                        <td class="p-3 text-gray-500 text-xs">${dataF}</td>
                         <td class="p-3 text-center space-x-2">
                             <button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button>
                             <button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button>
@@ -403,6 +418,8 @@
             const idEdicao = document.getElementById('post-id-edicao').value;
             const titulo = document.getElementById('post-titulo').value;
             const categoria = document.getElementById('post-categoria').value;
+            const autorInput = document.getElementById('post-autor').value.trim();
+            const autor = autorInput !== "" ? autorInput : "BlitzEAD";
             const resumo = document.getElementById('post-resumo').value;
             const conteudo = document.getElementById('post-conteudo').value;
             const tagsStr = document.getElementById('post-tags').value;
@@ -421,12 +438,12 @@
                 }
 
                 if (idEdicao) {
-                    await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao);
-                    alert("Publicação atualizada com sucesso!");
+                    await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao);
+                    alert("Atualizado com sucesso!");
                 } else {
-                    const { error } = await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, resumo, conteudo, tags, capa_url: capaUrl }]);
+                    const { error } = await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]);
                     if (error) throw error;
-                    alert("Notícia publicada com sucesso!");
+                    alert("Publicado com sucesso!");
                 }
 
                 cancelarEdicaoPost();
@@ -440,6 +457,7 @@
             document.getElementById('post-id-edicao').value = post.id;
             document.getElementById('post-titulo').value = post.titulo;
             document.getElementById('post-categoria').value = post.categoria;
+            document.getElementById('post-autor').value = post.autor === 'BlitzEAD' ? '' : (post.autor || '');
             document.getElementById('post-resumo').value = post.resumo || '';
             document.getElementById('post-conteudo').value = post.conteudo || '';
             document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : '';
@@ -460,7 +478,7 @@
         }
 
         async function deletarPost(id) {
-            if (!confirm("Tem certeza que deseja excluir esta publicação?")) return;
+            if (!confirm("Excluir publicação?")) return;
             await supabaseClient.from('jornal_posts').delete().eq('id', id);
             await carregarAdminPosts();
         }
