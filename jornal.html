@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jornal Blitz - Planejamento Acadêmico</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pt-32">
+
+    <!-- MENU SUPERIOR FIXO -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.location.href='index.html'">Planejamento Acadêmico</h1>
+                <div id="container-btn-admin"></div>
+            </div>
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
+            </div>
+        </div>
+        <!-- MENU INFERIOR -->
+        <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
+            <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
+                <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
+                <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
+                <a href="jornal.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL DO JORNAL -->
+    <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
+        
+        <!-- CABEÇALHO DA SEÇÃO -->
+        <div class="mb-8 border-b pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Portal de Notícias & Blog</span>
+                <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Jornal Blitz</h2>
+                <p class="text-gray-600 text-sm mt-1">Fique por dentro das últimas novidades, avisos acadêmicos e dicas para os seus estudos.</p>
+            </div>
+            <!-- BUSCA RÁPIDA -->
+            <div class="w-full md:w-80 relative">
+                <input type="text" id="input-busca-jornal" placeholder="Pesquisar notícias..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            </div>
+        </div>
+
+        <!-- LAYOUT DE PORTAL: DESTAQUE PRINCIPAL + GRID -->
+        <div id="container-portal-jornal" class="space-y-10">
+            <div class="text-center py-16 text-gray-400">Carregando publicações...</div>
+        </div>
+
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let usuarioAtual = null;
+        let listaPostsGlobal = [];
+
+        async function initJornal() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) usuarioAtual = session.user;
+
+            renderizarTopoUsuario();
+            await carregarPosts();
+
+            document.getElementById('input-busca-jornal').addEventListener('input', filtrarEnderizarPosts);
+        }
+
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            const containerBtnAdmin = document.getElementById('container-btn-admin');
+            const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
+
+            if (isAdmin && containerBtnAdmin) {
+                containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Área Administrativa</a>`;
+            }
+
+            if (!usuarioAtual) {
+                bloco.innerHTML = `<button onclick="window.location.href='index.html?abrir_login=1'" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">Entrar / Cadastrar</button>`;
+                return;
+            }
+
+            const metadata = usuarioAtual.user_metadata || {};
+            const nome = metadata.nome || usuarioAtual.email || "Usuário";
+            const primeiraLetra = nome.charAt(0).toUpperCase();
+            const fotoUrl = metadata.foto_url;
+            const nomeExibicao = nome.split(' ')[0];
+            let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
+
+            bloco.innerHTML = `
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nomeExibicao}</span>
+                <div class="relative">
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none">${avatarHtml}</button>
+                    <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('dropdown-perfil').classList.toggle('hidden');
+            });
+            window.addEventListener('click', () => {
+                const drop = document.getElementById('dropdown-perfil');
+                if (drop && !drop.classList.contains('hidden')) drop.classList.add('hidden');
+            });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
+
+        async function carregarPosts() {
+            const { data, error } = await supabaseClient
+                .from('jornal_posts')
+                .select('*')
+                .order('criado_em', { ascending: false });
+
+            if (error || !data) {
+                document.getElementById('container-portal-jornal').innerHTML = `<div class="text-center py-12 text-red-500">Erro ao carregar notícias.</div>`;
+                return;
+            }
+
+            listaPostsGlobal = data;
+            filtrarEnderizarPosts();
+        }
+
+        function filtrarEnderizarPosts() {
+            const termo = document.getElementById('input-busca-jornal').value.toLowerCase().trim();
+            const postsFiltrados = listaPostsGlobal.filter(p => 
+                p.titulo.toLowerCase().includes(termo) || 
+                (p.resumo && p.resumo.toLowerCase().includes(termo)) || 
+                p.categoria.toLowerCase().includes(termo)
+            );
+
+            const container = document.getElementById('container-portal-jornal');
+
+            if (postsFiltrados.length === 0) {
+                container.innerHTML = `<div class="text-center py-16 text-gray-400">Nenhuma publicação encontrada.</div>`;
+                return;
+            }
+
+            // O primeiro post vira o DESTAQUE PRINCIPAL (Hero)
+            const postDestaque = postsFiltrados[0];
+            const postsSecundarios = postsFiltrados.slice(1);
+
+            let dataDestaqueFormatada = new Date(postDestaque.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+            let html = `
+                <!-- DESTAQUE PRINCIPAL -->
+                <a href="materia.html?id=${postDestaque.id}" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition group">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                        <div class="lg:col-span-7 h-72 lg:h-96 bg-gray-100 overflow-hidden relative">
+                            ${postDestaque.capa_url ? `<img src="${postDestaque.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">Sem Capa</div>'}
+                            <span class="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg uppercase tracking-wider">${postDestaque.categoria}</span>
+                        </div>
+                        <div class="lg:col-span-5 p-6 lg:p-8 flex flex-col justify-between">
+                            <div>
+                                <span class="text-xs text-gray-400 font-medium">${dataDestaqueFormatada}</span>
+                                <h3 class="text-2xl font-extrabold text-gray-900 mt-2 mb-3 group-hover:text-blue-600 transition line-clamp-3">${postDestaque.titulo}</h3>
+                                <p class="text-gray-600 text-sm line-clamp-4 leading-relaxed">${postDestaque.resumo || ''}</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t flex items-center justify-between">
+                                <span class="text-xs font-bold text-blue-600 flex items-center space-x-1"><span>Ler Matéria Completa</span> →</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `;
+
+            if (postsSecundarios.length > 0) {
+                html += `
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Outras Publicações</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                `;
+
+                postsSecundarios.forEach(post => {
+                    let dataFormatada = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    html += `
+                        <a href="materia.html?id=${post.id}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition flex flex-col justify-between group">
+                            <div>
+                                <div class="w-full h-48 bg-gray-100 overflow-hidden relative">
+                                    ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">Sem Capa</div>'}
+                                    <span class="absolute top-3 left-3 bg-gray-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">${post.categoria}</span>
+                                </div>
+                                <div class="p-5">
+                                    <span class="text-[11px] text-gray-400">${dataFormatada}</span>
+                                    <h4 class="font-bold text-gray-800 text-base mt-1 mb-2 group-hover:text-blue-600 transition line-clamp-2">${post.titulo}</h4>
+                                    <p class="text-xs text-gray-600 line-clamp-3 leading-relaxed">${post.resumo || ''}</p>
+                                </div>
+                            </div>
+                            <div class="px-5 pb-5 pt-0">
+                                <span class="text-xs font-semibold text-blue-600">Ler mais →</span>
+                            </div>
+                        </a>
+                    `;
+                });
+
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        initJornal();
+    </script>
+</body>
+</html>

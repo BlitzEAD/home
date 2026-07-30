@@ -9,339 +9,460 @@
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-50 min-h-screen flex flex-col pt-24">
 
-    <!-- TOPO ADMIN -->
-    <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <h1 class="text-base font-extrabold text-blue-600">Painel Administrativo</h1>
-            <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded">Admin</span>
+    <!-- MENU SUPERIOR FIXO -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.location.href='index.html'">Planejamento Acadêmico</h1>
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Painel Admin</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="text-xs font-semibold text-gray-600 hover:text-blue-600 transition">Voltar ao site</a>
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l relative"></div>
+            </div>
         </div>
-        <div>
-            <a href="index.html" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg transition">
-                ← Voltar para o Site
-            </a>
+        <!-- ABAS DE NAVEGAÇÃO DO ADMIN -->
+        <div class="w-full bg-gray-100 px-4 md:px-6 py-2 flex space-x-4">
+            <button onclick="mudarAbaAdmin('livros')" id="tab-btn-livros" class="text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm">📚 Gerenciar Livros</button>
+            <button onclick="mudarAbaAdmin('jornal')" id="tab-btn-jornal" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition">📰 Gerenciar Jornal Blitz</button>
         </div>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="w-full max-w-5xl mx-auto px-4 py-8 flex-1 space-y-8">
+    <!-- CONTEÚDO PRINCIPAL DO ADMIN -->
+    <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
         
-        <!-- MENSAGEM DE ALERTA DE SEGURANÇA / CARREGANDO -->
-        <div id="painel-loading" class="bg-white rounded-xl shadow-md p-8 text-center">
-            <p class="text-gray-600 font-medium">Verificando permissões de administrador...</p>
-        </div>
+        <!-- ================= ABA 1: LIVROS ================= -->
+        <div id="secao-admin-livros" class="space-y-8">
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+                <h2 id="titulo-form-livro" class="text-xl font-bold text-gray-900 mb-1">Cadastrar Novo Livro / Material</h2>
+                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital vinculando-os a disciplinas específicas.</p>
 
-        <!-- CONTEÚDO REAL DO PAINEL -->
-        <div id="painel-conteudo" class="hidden space-y-8">
-            
-            <!-- FORMULÁRIO DE CADASTRO DE LIVRO -->
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">Cadastrar Novo Livro / Material</h3>
-
-                <form id="form-cadastro-livro" class="space-y-4">
+                <form id="form-livro" class="space-y-4">
+                    <input type="hidden" id="livro-id-edicao">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Título do Livro / Material *</label>
-                            <input type="text" id="livro-titulo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ex: Introdução à Administração">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Título do Livro / Material</label>
+                            <input type="text" id="livro-titulo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Preço (R$) (Digite 0 para Gratuito) *</label>
-                            <input type="number" step="0.01" min="0" id="livro-preco" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" value="0.00">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Preço (0 para Gratuito)</label>
+                            <input type="number" step="0.01" id="livro-preco" value="0" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Descrição Detalhada / Sinopse</label>
-                        <textarea id="livro-descricao" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Escreva os detalhes, ementa ou informações do material..."></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Imagem da Capa (Arquivo) *</label>
-                            <input type="file" id="livro-capa-file" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Link de Destino (PDF no Storage ou Kiwify)</label>
+                            <input type="url" id="livro-link" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="https://...">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Arquivo PDF ou Link Externo (Kiwify)</label>
-                            <input type="file" id="livro-pdf-file" accept="application/pdf" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 cursor-pointer mb-1">
-                            <input type="url" id="livro-link-externo" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none" placeholder="Ou cole o link direto da Kiwify / Site">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Imagem de Capa (Arquivo ou URL)</label>
+                            <input type="file" id="livro-arquivo-capa" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer mb-1">
+                            <input type="text" id="livro-capa-url" placeholder="Ou cole a URL da imagem aqui" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Vincular a Disciplinas (Opcional)</label>
-                        <div id="lista-checkbox-disciplinas" class="max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50 text-xs">
-                            <span class="text-gray-400 italic">Carregando disciplinas...</span>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Descrição / Sinopse</label>
+                        <textarea id="livro-descricao" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Resumo do livro..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-2">Vincular às Disciplinas (Opcional)</label>
+                        <div id="container-checkboxes-disciplinas" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border rounded-xl bg-gray-50 text-xs">
+                            <span class="text-gray-400">Carregando disciplinas...</span>
                         </div>
                     </div>
 
-                    <button type="submit" id="btn-salvar-livro" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition text-sm shadow-sm">
-                        Salvar e Publicar Livro
-                    </button>
+                    <div class="flex items-center space-x-3 pt-2">
+                        <button type="submit" id="btn-salvar-livro" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Salvar Livro</button>
+                        <button type="button" id="btn-cancelar-edicao-livro" onclick="cancelarEdicaoLivro()" class="hidden bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-300 transition text-sm">Cancelar Edição</button>
+                    </div>
                 </form>
-                <div id="msg-cadastro-livro" class="mt-3 text-xs text-center font-medium"></div>
             </div>
 
-            <!-- LISTAGEM DE GERENCIAMENTO DE LIVROS -->
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">Acervo Cadastrado (Gerenciar / Editar / Apagar)</h3>
-                <div id="tabela-gerenciamento-livros" class="overflow-x-auto">
-                    <p class="text-xs text-gray-400 italic">Carregando livros...</p>
+            <!-- LISTA DE LIVROS CADASTRADOS -->
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Livros Cadastrados no Acervo</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                                <th class="p-3 border-b w-16 text-center">Capa</th>
+                                <th class="p-3 border-b">Título</th>
+                                <th class="p-3 border-b">Preço</th>
+                                <th class="p-3 border-b text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin-livros">
+                            <tr><td colspan="4" class="p-6 text-center text-gray-400">Carregando...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
         </div>
+
+        <!-- ================= ABA 2: JORNAL BLITZ ================= -->
+        <div id="secao-admin-jornal" class="space-y-8 hidden">
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+                <h2 id="titulo-form-post" class="text-xl font-bold text-gray-900 mb-1">Criar Nova Publicação (Jornal Blitz)</h2>
+                <p class="text-gray-500 text-xs mb-6">Publique notícias, avisos ou artigos com otimização SEO para os alunos.</p>
+
+                <form id="form-post" class="space-y-4">
+                    <input type="hidden" id="post-id-edicao">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Título da Publicação</label>
+                            <input type="text" id="post-titulo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Categoria</label>
+                            <select id="post-categoria" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                                <option value="Aviso">Aviso</option>
+                                <option value="Notícia" selected>Notícia</option>
+                                <option value="Dica de Estudo">Dica de Estudo</option>
+                                <option value="Institucional">Institucional</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Imagem de Capa (Arquivo ou URL)</label>
+                            <input type="file" id="post-arquivo-capa" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer mb-1">
+                            <input type="text" id="post-capa-url" placeholder="Ou cole a URL da imagem aqui" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Tags (separadas por vírgula para SEO)</label>
+                            <input type="text" id="post-tags" placeholder="ex: provas, ap1, vestibular, prazos" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Resumo / Meta Description (SEO)</label>
+                        <textarea id="post-resumo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Breve resumo que aparece na listagem e no Google..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Conteúdo Completo da Matéria</label>
+                        <textarea id="post-conteudo" rows="8" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Escreva o texto completo da publicação..."></textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-3 pt-2">
+                        <button type="submit" id="btn-salvar-post" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Publicar Notícia</button>
+                        <button type="button" id="btn-cancelar-edicao-post" onclick="cancelarEdicaoPost()" class="hidden bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-300 transition text-sm">Cancelar Edição</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TABELA DE GERENCIAMENTO DE POSTS -->
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Publicações do Jornal Blitz</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                                <th class="p-3 border-b">Título</th>
+                                <th class="p-3 border-b">Categoria</th>
+                                <th class="p-3 border-b">Data</th>
+                                <th class="p-3 border-b text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin-posts">
+                            <tr><td colspan="4" class="p-6 text-center text-gray-400">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </main>
-
-    <!-- MODAL DE EDIÇÃO DE LIVRO -->
-    <div id="modal-editar" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="fecharModalEditar()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-            <h3 class="text-lg font-extrabold text-gray-900 mb-4">Editar Livro / Material</h3>
-            
-            <form id="form-editar-livro" class="space-y-3">
-                <input type="hidden" id="edit-id">
-                <input type="hidden" id="edit-capa-atual">
-                <input type="hidden" id="edit-link-atual">
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Título *</label>
-                    <input type="text" id="edit-titulo" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Preço (R$) *</label>
-                    <input type="number" step="0.01" min="0" id="edit-preco" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Descrição</label>
-                    <textarea id="edit-descricao" rows="3" class="w-full px-3 py-1.5 border rounded-lg text-sm"></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Substituir Imagem da Capa (Opcional)</label>
-                    <input type="file" id="edit-capa-file" accept="image/*" class="w-full text-xs text-gray-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Substituir PDF ou Link (Opcional)</label>
-                    <input type="file" id="edit-pdf-file" accept="application/pdf" class="w-full text-xs text-gray-500 mb-1">
-                    <input type="url" id="edit-link-externo" class="w-full px-3 py-1.5 border rounded-lg text-xs" placeholder="Ou link externo / Kiwify">
-                </div>
-
-                <div class="pt-3 flex justify-end space-x-2">
-                    <button type="button" onclick="fecharModalEditar()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold">Cancelar</button>
-                    <button type="submit" id="btn-atualizar-livro" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700">Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <script>
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let usuarioAtual = null;
 
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session || !session.user.user_metadata?.is_admin) {
-                alert("Acesso negado.");
+            if (!session || session.user.user_metadata?.is_admin !== true) {
+                alert("Acesso negado. Apenas administradores.");
                 window.location.href = 'index.html';
                 return;
             }
+            usuarioAtual = session.user;
+            renderizarTopoUsuario();
 
-            document.getElementById('painel-loading').classList.add('hidden');
-            document.getElementById('painel-conteudo').classList.remove('hidden');
-
-            await carregarDisciplinasCheckbox();
-            await carregarTabelaGerenciamento();
+            await carregarCheckboxesDisciplinas();
+            await carregarAdminLivros();
+            await carregarAdminPosts();
         }
 
-        async function carregarDisciplinasCheckbox() {
-            const container = document.getElementById('lista-checkbox-disciplinas');
+        function mudarAbaAdmin(aba) {
+            const secLivros = document.getElementById('secao-admin-livros');
+            const secJornal = document.getElementById('secao-admin-jornal');
+            const btnLivros = document.getElementById('tab-btn-livros');
+            const btnJornal = document.getElementById('tab-btn-jornal');
+
+            if (aba === 'livros') {
+                secLivros.classList.remove('hidden');
+                secJornal.classList.add('hidden');
+                btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm";
+                btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition";
+            } else {
+                secLivros.classList.add('hidden');
+                secJornal.classList.remove('hidden');
+                btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm";
+                btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition";
+            }
+        }
+
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            const metadata = usuarioAtual.user_metadata || {};
+            const nome = metadata.nome || usuarioAtual.email || "Admin";
+            bloco.innerHTML = `<span class="text-xs font-medium text-gray-700">${nome.split(' ')[0]} (Admin)</span>`;
+        }
+
+        async function redimensionarImagem(file, larguraMax = 400, qualidade = 0.8) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > larguraMax) {
+                            h = Math.round((h * larguraMax) / w);
+                            w = larguraMax;
+                        }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                        }, 'image/jpeg', qualidade);
+                    };
+                };
+            });
+        }
+
+        // ================= GESTÃO DE LIVROS =================
+        async function carregarCheckboxesDisciplinas() {
+            const container = document.getElementById('container-checkboxes-disciplinas');
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
-            if (!data) return;
+            if (!data) { container.innerHTML = 'Nenhuma disciplina encontrada.'; return; }
 
             let html = '';
-            data.forEach(disc => {
+            data.forEach(d => {
                 html += `
                     <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="checkbox" name="disciplina_checkbox" value="${disc.id}" class="w-3.5 h-3.5 text-blue-600 rounded">
-                        <span class="font-mono text-gray-500">${disc.codigo || ''}</span>
-                        <span class="font-medium text-gray-700">${disc.nome}</span>
+                        <input type="checkbox" value="${d.id}" class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
+                        <span class="truncate">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</span>
                     </label>
                 `;
             });
             container.innerHTML = html;
         }
 
-        async function carregarTabelaGerenciamento() {
-            const container = document.getElementById('tabela-gerenciamento-livros');
-            const { data: livros, error } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false });
+        async function carregarAdminLivros() {
+            const { data } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false });
+            const tbody = document.getElementById('tabela-admin-livros');
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum livro cadastrado.</td></tr>`; return; }
 
-            if (error || !livros || livros.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 italic">Nenhum livro cadastrado ainda.</p>`;
-                return;
-            }
-
-            let html = `
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-700 uppercase">
-                            <th class="p-2 border-b w-12 text-center">Capa</th>
-                            <th class="p-2 border-b">Título</th>
-                            <th class="p-2 border-b text-center">Preço</th>
-                            <th class="p-2 border-b text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            livros.forEach(livro => {
-                const precoTxt = livro.preco === 0 ? 'Gratuito' : `R$ ${parseFloat(livro.preco).toFixed(2)}`;
+            let html = '';
+            data.forEach(l => {
+                const precoFormatado = l.preco === 0 || l.preco === "0.00" ? 'Gratuito' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
                 html += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2 text-center">
-                            <img src="${livro.capa_url}" class="w-8 h-10 object-cover mx-auto rounded border">
-                        </td>
-                        <td class="p-2 font-medium text-gray-800">${livro.titulo}</td>
-                        <td class="p-2 text-center font-semibold text-blue-600">${precoTxt}</td>
-                        <td class="p-2 text-center space-x-2">
-                            <button onclick='abrirModalEditar(${JSON.stringify(livro)})' class="bg-amber-500 text-white px-2.5 py-1 rounded font-semibold hover:bg-amber-600">Editar</button>
-                            <button onclick="excluirLivro(${livro.id})" class="bg-red-500 text-white px-2.5 py-1 rounded font-semibold hover:bg-red-600">Apagar</button>
+                    <tr class="border-b hover:bg-gray-50 text-sm">
+                        <td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td>
+                        <td class="p-3 font-medium text-gray-800">${l.titulo}</td>
+                        <td class="p-3 font-bold text-blue-600">${precoFormatado}</td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick='editarLivro(${JSON.stringify(l)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button>
+                            <button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button>
                         </td>
                     </tr>
                 `;
             });
-
-            html += `</tbody></table>`;
-            container.innerHTML = html;
+            tbody.innerHTML = html;
         }
 
-        // CADASTRO
-        document.getElementById('form-cadastro-livro').addEventListener('submit', async (e) => {
+        document.getElementById('form-livro').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-livro');
-            const msg = document.getElementById('msg-cadastro-livro');
-            btn.disabled = true;
-            btn.textContent = "Salvando...";
+            const idEdicao = document.getElementById('livro-id-edicao').value;
+            const titulo = document.getElementById('livro-titulo').value;
+            const preco = parseFloat(document.getElementById('livro-preco').value);
+            const linkDestino = document.getElementById('livro-link').value;
+            const descricao = document.getElementById('livro-descricao').value;
+            let capaUrl = document.getElementById('livro-capa-url').value.trim();
+            const arquivoCapa = document.getElementById('livro-arquivo-capa').files[0];
 
             try {
-                const titulo = document.getElementById('livro-titulo').value;
-                const preco = parseFloat(document.getElementById('livro-preco').value) || 0;
-                const descricao = document.getElementById('livro-descricao').value;
-                const linkExterno = document.getElementById('livro-link-externo').value.trim();
-                const capaFile = document.getElementById('livro-capa-file').files[0];
-                const pdfFile = document.getElementById('livro-pdf-file').files[0];
-
-                // Upload Capa
-                const nomeCapa = `capas/${Date.now()}_${capaFile.name.replace(/\s+/g, '_')}`;
-                await supabaseClient.storage.from('biblioteca').upload(nomeCapa, capaFile);
-                const { data: { publicUrl: capaUrl } } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeCapa);
-
-                // Upload PDF ou Link
-                let linkDestino = linkExterno;
-                if (pdfFile) {
-                    const nomePdf = `pdfs/${Date.now()}_${pdfFile.name.replace(/\s+/g, '_')}`;
-                    await supabaseClient.storage.from('biblioteca').upload(nomePdf, pdfFile);
-                    const { data: { publicUrl: pdfUrl } } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf);
-                    linkDestino = pdfUrl;
+                if (arquivoCapa) {
+                    const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75);
+                    const nomeArq = `livro_${Date.now()}.jpg`;
+                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada);
+                    const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
+                    capaUrl = pub.publicUrl;
                 }
 
-                const { data: livroInserido, error } = await supabaseClient.from('livros').insert([{
-                    titulo, preco, descricao, capa_url: capaUrl, link_destino: linkDestino
-                }]).select().single();
+                const disciplinasSelecionadas = Array.from(document.querySelectorAll('.check-disc-livro:checked')).map(cb => parseInt(cb.value));
 
-                if (error) throw error;
-
-                // Relação Disciplinas
-                const discMarcadas = Array.from(document.querySelectorAll('input[name="disciplina_checkbox"]:checked')).map(cb => parseInt(cb.value));
-                if (discMarcadas.length > 0) {
-                    const rel = discMarcadas.map(id => ({ livro_id: livroInserido.id, id_disciplina: id }));
-                    await supabaseClient.from('livro_disciplinas').insert(rel);
+                if (idEdicao) {
+                    await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
+                    await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', idEdicao);
+                    if (disciplinasSelecionadas.length > 0) {
+                        const vinculos = disciplinasSelecionadas.map(id_disc => ({ id_livro: idEdicao, id_disciplina: id_disc }));
+                        await supabaseClient.from('livro_disciplinas').insert(vinculos);
+                    }
+                    alert("Livro atualizado com sucesso!");
+                } else {
+                    const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }]).select().single();
+                    if (error) throw error;
+                    if (disciplinasSelecionadas.length > 0) {
+                        const vinculos = disciplinasSelecionadas.map(id_disc => ({ id_livro: novoLivro.id, id_disciplina: id_disc }));
+                        await supabaseClient.from('livro_disciplinas').insert(vinculos);
+                    }
+                    alert("Livro cadastrado com sucesso!");
                 }
 
-                msg.textContent = "✅ Cadastrado com sucesso!";
-                msg.className = "mt-3 text-xs text-center font-semibold text-green-600";
-                document.getElementById('form-cadastro-livro').reset();
-                carregarTabelaGerenciamento();
+                cancelarEdicaoLivro();
+                await carregarAdminLivros();
             } catch (err) {
-                msg.textContent = "❌ " + err.message;
-                msg.className = "mt-3 text-xs text-center font-semibold text-red-600";
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Salvar e Publicar Livro";
+                alert("Erro: " + err.message);
             }
         });
 
-        // EDITAR
-        function abrirModalEditar(livro) {
-            document.getElementById('edit-id').value = livro.id;
-            document.getElementById('edit-titulo').value = livro.titulo;
-            document.getElementById('edit-preco').value = livro.preco;
-            document.getElementById('edit-descricao').value = livro.descricao || '';
-            document.getElementById('edit-capa-atual').value = livro.capa_url;
-            document.getElementById('edit-link-atual').value = livro.link_destino;
-            document.getElementById('edit-link-externo').value = '';
-            document.getElementById('modal-editar').classList.remove('hidden');
+        async function editarLivro(livro) {
+            document.getElementById('livro-id-edicao').value = livro.id;
+            document.getElementById('livro-titulo').value = livro.titulo;
+            document.getElementById('livro-preco').value = livro.preco;
+            document.getElementById('livro-link').value = livro.link_destino;
+            document.getElementById('livro-descricao').value = livro.descricao || '';
+            document.getElementById('livro-capa-url').value = livro.capa_url || '';
+            document.getElementById('titulo-form-livro').textContent = "Editar Livro / Material";
+            document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
+            document.getElementById('btn-cancelar-edicao-livro').classList.remove('hidden');
+
+            const { data: vinculos } = await supabaseClient.from('livro_disciplinas').select('id_disciplina').eq('id_livro', livro.id);
+            const idsVinculados = (vinculos || []).map(v => v.id_disciplina);
+            document.querySelectorAll('.check-disc-livro').forEach(cb => {
+                cb.checked = idsVinculados.includes(parseInt(cb.value));
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function fecharModalEditar() {
-            document.getElementById('modal-editar').classList.add('hidden');
+        function cancelarEdicaoLivro() {
+            document.getElementById('form-livro').reset();
+            document.getElementById('livro-id-edicao').value = '';
+            document.getElementById('titulo-form-livro').textContent = "Cadastrar Novo Livro / Material";
+            document.getElementById('btn-salvar-livro').textContent = "Salvar Livro";
+            document.getElementById('btn-cancelar-edicao-livro').classList.add('hidden');
+            document.querySelectorAll('.check-disc-livro').forEach(cb => cb.checked = false);
         }
 
-        document.getElementById('form-editar-livro').addEventListener('submit', async (e) => {
+        async function deletarLivro(id) {
+            if (!confirm("Tem certeza que deseja excluir este livro?")) return;
+            await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', id);
+            await supabaseClient.from('livros').delete().eq('id', id);
+            await carregarAdminLivros();
+        }
+
+        // ================= GESTÃO DE JORNAL BLITZ =================
+        async function carregarAdminPosts() {
+            const { data } = await supabaseClient.from('jornal_posts').select('*').order('criado_em', { ascending: false });
+            const tbody = document.getElementById('tabela-admin-posts');
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhuma publicação encontrada.</td></tr>`; return; }
+
+            let html = '';
+            data.forEach(p => {
+                let dataF = new Date(p.criado_em).toLocaleDateString('pt-BR');
+                html += `
+                    <tr class="border-b hover:bg-gray-50 text-sm">
+                        <td class="p-3 font-medium text-gray-800">${p.titulo}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td>
+                        <td class="p-3 text-gray-500 text-xs">${dataF}</td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button>
+                            <button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        document.getElementById('form-post').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            const titulo = document.getElementById('edit-titulo').value;
-            const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
-            const descricao = document.getElementById('edit-descricao').value;
-            let capaUrl = document.getElementById('edit-capa-atual').value;
-            let linkDestino = document.getElementById('edit-link-atual').value;
+            const idEdicao = document.getElementById('post-id-edicao').value;
+            const titulo = document.getElementById('post-titulo').value;
+            const categoria = document.getElementById('post-categoria').value;
+            const resumo = document.getElementById('post-resumo').value;
+            const conteudo = document.getElementById('post-conteudo').value;
+            const tagsStr = document.getElementById('post-tags').value;
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+            let capaUrl = document.getElementById('post-capa-url').value.trim();
+            const arquivoCapa = document.getElementById('post-arquivo-capa').files[0];
+            const slug = titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 
-            const novaCapaFile = document.getElementById('edit-capa-file').files[0];
-            const novoPdfFile = document.getElementById('edit-pdf-file').files[0];
-            const novoLinkExt = document.getElementById('edit-link-externo').value.trim();
+            try {
+                if (arquivoCapa) {
+                    const otimizada = await redimensionarImagem(arquivoCapa, 600, 0.8);
+                    const nomeArq = `jornal_${Date.now()}.jpg`;
+                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada);
+                    const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
+                    capaUrl = pub.publicUrl;
+                }
 
-            if (novaCapaFile) {
-                const nomeCapa = `capas/${Date.now()}_${novaCapaFile.name.replace(/\s+/g, '_')}`;
-                await supabaseClient.storage.from('biblioteca').upload(nomeCapa, novaCapaFile);
-                const { data: { publicUrl } } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeCapa);
-                capaUrl = publicUrl;
+                if (idEdicao) {
+                    await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao);
+                    alert("Publicação atualizada com sucesso!");
+                } else {
+                    const { error } = await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, resumo, conteudo, tags, capa_url: capaUrl }]);
+                    if (error) throw error;
+                    alert("Notícia publicada com sucesso!");
+                }
+
+                cancelarEdicaoPost();
+                await carregarAdminPosts();
+            } catch (err) {
+                alert("Erro: " + err.message);
             }
-
-            if (novoPdfFile) {
-                const nomePdf = `pdfs/${Date.now()}_${novoPdfFile.name.replace(/\s+/g, '_')}`;
-                await supabaseClient.storage.from('biblioteca').upload(nomePdf, novoPdfFile);
-                const { data: { publicUrl } } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf);
-                linkDestino = publicUrl;
-            } else if (novoLinkExt) {
-                linkDestino = novoLinkExt;
-            }
-
-            const { error } = await supabaseClient.from('livros').update({
-                titulo, preco, descricao, capa_url: capaUrl, link_destino: linkDestino
-            }).eq('id', id);
-
-            if (error) {
-                alert("Erro ao atualizar: " + error.message);
-                return;
-            }
-
-            alert("✅ Livro atualizado com sucesso!");
-            fecharModalEditar();
-            carregarTabelaGerenciamento();
         });
 
-        // EXCLUIR
-        async function excluirLivro(id) {
-            if (!confirm("Tem certeza que deseja apagar este livro permanentemente?")) return;
+        async function editarPost(post) {
+            document.getElementById('post-id-edicao').value = post.id;
+            document.getElementById('post-titulo').value = post.titulo;
+            document.getElementById('post-categoria').value = post.categoria;
+            document.getElementById('post-resumo').value = post.resumo || '';
+            document.getElementById('post-conteudo').value = post.conteudo || '';
+            document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : '';
+            document.getElementById('post-capa-url').value = post.capa_url || '';
+            document.getElementById('titulo-form-post').textContent = "Editar Publicação";
+            document.getElementById('btn-salvar-post').textContent = "Atualizar Publicação";
+            document.getElementById('btn-cancelar-edicao-post').classList.remove('hidden');
+            mudarAbaAdmin('jornal');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-            const { error } = await supabaseClient.from('livros').delete().eq('id', id);
-            if (error) {
-                alert("Erro ao apagar: " + error.message);
-                return;
-            }
+        function cancelarEdicaoPost() {
+            document.getElementById('form-post').reset();
+            document.getElementById('post-id-edicao').value = '';
+            document.getElementById('titulo-form-post').textContent = "Criar Nova Publicação (Jornal Blitz)";
+            document.getElementById('btn-salvar-post').textContent = "Publicar Notícia";
+            document.getElementById('btn-cancelar-edicao-post').classList.add('hidden');
+        }
 
-            carregarTabelaGerenciamento();
+        async function deletarPost(id) {
+            if (!confirm("Tem certeza que deseja excluir esta publicação?")) return;
+            await supabaseClient.from('jornal_posts').delete().eq('id', id);
+            await carregarAdminPosts();
         }
 
         initAdmin();
