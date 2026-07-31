@@ -145,7 +145,6 @@
                 ${tagsHtml}
             `;
 
-            // Carrega os teasers de forma isolada após o artigo carregar
             carregarTeasersFimMateria(queryId);
         }
 
@@ -169,7 +168,7 @@
 
         async function carregarTeasersFimMateria(postIdAtual) {
             try {
-                // 1. TEASER DA BIBLIOTECA
+                // 1. TEASER DA BIBLIOTECA (Apontando para o ID específico do livro na URL)
                 const { data: livros } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false }).limit(4);
                 const sectionBib = document.getElementById('teaser-biblioteca-section');
                 const gridBib = document.getElementById('teaser-biblioteca-grid');
@@ -179,7 +178,7 @@
                     let htmlBib = '';
                     livros.forEach(l => {
                         htmlBib += `
-                            <a href="biblioteca.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
+                            <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
                                 <div>
                                     <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2">
                                         <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">

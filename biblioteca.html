@@ -24,7 +24,7 @@
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="jornal.html" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="jornal.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Biblioteca</a>
                 <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
@@ -86,9 +86,15 @@
         async function initBiblioteca() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
-            renderizarTopoUsuario(); await carregarDisciplinasSelect(); await carregarLivros();
+            renderizarTopoUsuario(); 
+            await carregarDisciplinasSelect(); 
+            await carregarLivros();
+
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
             document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
+
+            // Verifica se veio um livro específico pela URL (vindo do teaser da matéria)
+            verificarLivroUrl();
         }
 
         function renderizarTopoUsuario() {
@@ -127,7 +133,9 @@
 
         async function carregarLivros() {
             const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
-            listaLivrosGlobal = data || []; filtrarEnderizarLivros();
+            listaLivrosGlobal = data || []; 
+            filtrarEnderizarLivros();
+            verificarLivroUrl(); // Tenta abrir caso os livros já tenham carregado
         }
 
         function filtrarEnderizarLivros() {
@@ -164,17 +172,45 @@
             grid.innerHTML = html;
         }
 
-        function clicarLivro(l) { if (!usuarioAtual) { document.getElementById('modal-aviso-login').classList.remove('hidden'); return; } abrirModalLivro(l); }
+        function clicarLivro(l) { 
+            if (!usuarioAtual) { 
+                document.getElementById('modal-aviso-login').classList.remove('hidden'); 
+                return; 
+            } 
+            abrirModalLivro(l); 
+        }
+
         function abrirModalLivro(l) {
-            document.getElementById('modal-capa').src = l.capa_url; document.getElementById('modal-titulo').textContent = l.titulo;
+            document.getElementById('modal-capa').src = l.capa_url; 
+            document.getElementById('modal-titulo').textContent = l.titulo;
             document.getElementById('modal-descricao').textContent = l.descricao || "Sem descrição.";
             const gratuito = l.preco === 0 || l.preco === "0.00";
             document.getElementById('modal-preco').textContent = gratuito ? "Gratuito" : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
             const btn = document.getElementById('modal-btn-acao');
-            btn.textContent = gratuito ? "📥 Download (PDF)" : "🛒 Comprar"; btn.href = l.link_destino;
+            btn.textContent = gratuito ? "📥 Download (PDF)" : "🛒 Comprar"; 
+            btn.href = l.link_destino;
             document.getElementById('modal-livro').classList.remove('hidden');
         }
-        function fecharModalLivro() { document.getElementById('modal-livro').classList.add('hidden'); }
+
+        function fecharModalLivro() { 
+            document.getElementById('modal-livro').classList.add('hidden'); 
+            // Remove o parâmetro da URL sem recarregar a página para manter a navegação limpa
+            const url = new URL(window.location);
+            url.searchParams.delete('livro_id');
+            window.history.replaceState({}, '', url);
+        }
+
+        function verificarLivroUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const livroIdUrl = urlParams.get('livro_id');
+            if (livroIdUrl && listaLivrosGlobal.length > 0) {
+                const livroEncontrado = listaLivrosGlobal.find(l => String(l.id) === String(livroIdUrl));
+                if (livroEncontrado) {
+                    clicarLivro(livroEncontrado);
+                }
+            }
+        }
+
         initBiblioteca();
     </script>
 </body>
