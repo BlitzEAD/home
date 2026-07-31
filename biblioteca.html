@@ -24,7 +24,7 @@
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="jornal.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="jornal.html" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Biblioteca</a>
                 <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
@@ -47,6 +47,7 @@
                 </div>
             </div>
         </div>
+        
         <div id="grid-livros" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <div class="col-span-full text-center py-12 text-gray-400">Carregando acervo...</div>
         </div>
@@ -81,20 +82,46 @@
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let listaLivrosGlobal = []; let usuarioAtual = null;
+        
+        let listaLivrosGlobal = []; 
+        let usuarioAtual = null;
+        let disciplinasCursadasIds = [];
+        let semestreEmCursoAtual = "";
 
         async function initBiblioteca() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
+            
             renderizarTopoUsuario(); 
+            await carregarDadosUsuario(); // Descobre o semestre e as disciplinas atuais do aluno
             await carregarDisciplinasSelect(); 
             await carregarLivros();
 
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
             document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
 
-            // Verifica se veio um livro específico pela URL (vindo do teaser da matéria)
             verificarLivroUrl();
+        }
+
+        async function carregarDadosUsuario() {
+            try {
+                if (usuarioAtual) {
+                    semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
+                    if (semestreEmCursoAtual) {
+                        const { data } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, semestre').eq('user_id', usuarioAtual.id);
+                        const plan = data || [];
+                        disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+                    }
+                } else {
+                    semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
+                    if (semestreEmCursoAtual) {
+                        const plan = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                        disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+                    }
+                }
+            } catch (err) {
+                console.error("Erro ao carregar dados do usuário:", err);
+            }
         }
 
         function renderizarTopoUsuario() {
@@ -126,8 +153,17 @@
         async function carregarDisciplinasSelect() {
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) return;
-            let html = '<option value="">Todas as Disciplinas</option><option value="GERAL">Geral</option>';
+            
+            let html = '<option value="">Todas as Disciplinas</option>';
+            
+            // Adiciona a opção de filtro por semestre apenas se o usuário tiver um semestre definido
+            if (semestreEmCursoAtual) {
+                html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
+            }
+            
+            html += '<option value="GERAL">Geral</option>';
             data.forEach(d => html += `<option value="${d.id}">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</option>`);
+            
             document.getElementById('select-filtro-disciplina').innerHTML = html;
         }
 
@@ -135,41 +171,132 @@
             const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
             listaLivrosGlobal = data || []; 
             filtrarEnderizarLivros();
-            verificarLivroUrl(); // Tenta abrir caso os livros já tenham carregado
+            verificarLivroUrl();
+        }
+
+        function ordenarLivrosIntercalados(livrosParaOrdernar) {
+            let cursando = [];
+            let geral = [];
+            let outros = [];
+
+            // Separa os livros nos 3 grupos de prioridade
+            livrosParaOrdernar.forEach(l => {
+                const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
+                const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+
+                if (isCursando) cursando.push(l);
+                else if (isGeral) geral.push(l);
+                else outros.push(l);
+            });
+
+            let resultado = [];
+            
+            // Intercala os itens extraindo blocos na proporção: 3 Cursando, 2 Geral, 1 Outros
+            while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
+                for (let i = 0; i < 3 && cursando.length > 0; i++) resultado.push(cursando.shift());
+                for (let i = 0; i < 2 && geral.length > 0; i++) resultado.push(geral.shift());
+                for (let i = 0; i < 1 && outros.length > 0; i++) resultado.push(outros.shift());
+            }
+            return resultado;
         }
 
         function filtrarEnderizarLivros() {
             const texto = document.getElementById('input-busca').value.toLowerCase().trim();
             const filtroDisc = document.getElementById('select-filtro-disciplina').value;
-            const filtrados = listaLivrosGlobal.filter(l => {
-                const matchTexto = l.titulo.toLowerCase().includes(texto) || (l.descricao && l.descricao.toLowerCase().includes(texto));
-                let matchDisc = true;
-                if (filtroDisc !== "") {
-                    if (filtroDisc === "GERAL") matchDisc = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
-                    else matchDisc = (l.livro_disciplinas || []).some(r => r.id_disciplina === parseInt(filtroDisc));
-                }
-                return matchTexto && matchDisc;
-            });
-            renderizarGrid(filtrados);
+            
+            // 1. Aplica a busca por texto em todos os livros primeiro
+            let baseFiltrados = listaLivrosGlobal;
+            if (texto !== "") {
+                baseFiltrados = baseFiltrados.filter(l => 
+                    l.titulo.toLowerCase().includes(texto) || (l.descricao && l.descricao.toLowerCase().includes(texto))
+                );
+            }
+
+            if (filtroDisc === "") {
+                // Cenário Padrão: Sem filtro de categoria específico. Mostra tudo usando a lógica de intercalação.
+                const intercalados = ordenarLivrosIntercalados(baseFiltrados);
+                renderizarGrid(intercalados);
+            } else {
+                // Cenário Específico: O usuário filtrou uma categoria/disciplina no dropdown.
+                let matchesFiltro = [];
+                let outros = [];
+
+                baseFiltrados.forEach(l => {
+                    let matchDisc = false;
+                    if (filtroDisc === "GERAL") {
+                        matchDisc = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    } else if (filtroDisc === "CURSANDO") {
+                        matchDisc = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                    } else {
+                        matchDisc = (l.livro_disciplinas || []).some(r => r.id_disciplina === parseInt(filtroDisc));
+                    }
+
+                    if (matchDisc) matchesFiltro.push(l);
+                    else outros.push(l);
+                });
+
+                // Renderiza as correspondências exatas acima, e o resto (intercalado) abaixo do separador
+                renderizarGrid(matchesFiltro, ordenarLivrosIntercalados(outros));
+            }
         }
 
-        function renderizarGrid(livros) {
+        function renderizarGrid(principais, secundarios = null) {
             const grid = document.getElementById('grid-livros');
-            if (livros.length === 0) { grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhum material encontrado.</div>`; return; }
+            
+            if (principais.length === 0 && (!secundarios || secundarios.length === 0)) { 
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhum material encontrado.</div>`; 
+                return; 
+            }
+
             let html = '';
-            livros.forEach(l => {
-                const precoF = l.preco === 0 || l.preco === "0.00" ? '<span class="text-emerald-600 font-bold">Gratuito</span>' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
+            
+            // Renderiza o grupo principal
+            if (principais.length === 0 && secundarios && secundarios.length > 0) {
+                html += `<div class="col-span-full text-center py-8 text-gray-500 font-medium">Nenhum material exato para este filtro. Veja outras opções abaixo:</div>`;
+            } else {
+                principais.forEach(l => html += gerarHtmlCardLivro(l));
+            }
+
+            // Renderiza o separador e o grupo secundário, se existir
+            if (secundarios && secundarios.length > 0) {
                 html += `
-                    <div onclick='clicarLivro(${JSON.stringify(l)})' class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between group">
-                        <div>
-                            <div class="w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-3 flex items-center justify-center border"><img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300"></div>
-                            <h3 class="font-bold text-gray-800 text-sm line-clamp-2 mb-1">${l.titulo}</h3>
-                        </div>
-                        <div class="pt-3 border-t flex items-center justify-between mt-2"><span class="text-xs text-gray-500">Detalhes</span><span class="text-sm font-extrabold">${precoF}</span></div>
+                    <div class="col-span-full flex items-center justify-center mt-8 mb-4">
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                        <span class="px-4 bg-gray-50 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Outros títulos que podem te interessar</span>
+                        <div class="h-px bg-gray-200 flex-1"></div>
                     </div>
                 `;
-            });
+                secundarios.forEach(l => html += gerarHtmlCardLivro(l));
+            }
+            
             grid.innerHTML = html;
+        }
+
+        function gerarHtmlCardLivro(l) {
+            const precoF = l.preco === 0 || l.preco === "0.00" ? '<span class="text-emerald-600 font-bold">Gratuito</span>' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
+            
+            // Adiciona um selo visual caso o livro faça parte do semestre atual do aluno
+            const isCursando = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+            const badgeHtml = isCursando ? `<span class="absolute top-3 right-3 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
+
+            // Stringify seguro para o onClick HTML
+            const livroStr = JSON.stringify(l).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+
+            return `
+                <div onclick="clicarLivro(${livroStr})" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between group relative">
+                    ${badgeHtml}
+                    <div>
+                        <div class="w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-3 flex items-center justify-center border relative">
+                            <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-sm line-clamp-2 mb-1">${l.titulo}</h3>
+                    </div>
+                    <div class="pt-3 border-t flex items-center justify-between mt-2">
+                        <span class="text-xs text-gray-500">Detalhes</span>
+                        <span class="text-sm font-extrabold">${precoF}</span>
+                    </div>
+                </div>
+            `;
         }
 
         function clicarLivro(l) { 
@@ -194,7 +321,6 @@
 
         function fecharModalLivro() { 
             document.getElementById('modal-livro').classList.add('hidden'); 
-            // Remove o parâmetro da URL sem recarregar a página para manter a navegação limpa
             const url = new URL(window.location);
             url.searchParams.delete('livro_id');
             window.history.replaceState({}, '', url);
