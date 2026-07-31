@@ -1,0 +1,32 @@
+name: Gerador de Páginas do Jornal
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [atualizar_jornal]
+
+jobs:
+  build-paginas:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+
+      - name: Preparar o ambiente Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Instalar Supabase
+        run: npm install @supabase/supabase-js
+
+      - name: Rodar o Construtor (build.js)
+        run: node build.js
+
+      - name: Salvar novas páginas HTML no repositório
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Auto-build: Gerando páginas HTML das matérias do Jornal"
