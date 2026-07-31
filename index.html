@@ -242,8 +242,9 @@
             let html = '';
             posts.forEach(post => {
                 let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                // CORREÇÃO: Apontando para o arquivo HTML dinâmico
                 html += `
-                    <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
+                    <a href="materia_${post.id}.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
                         <div>
                             <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
                                 ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
@@ -255,6 +256,68 @@
                             </div>
                         </div>
                         <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
+                    </a>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        async function carregarTeaserBiblioteca() {
+            const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
+            if (!data || data.length === 0) return;
+
+            let disciplinasCursadasIds = [];
+            if (semestreEmCursoAtual && planejamentoGlobal) {
+                disciplinasCursadasIds = planejamentoGlobal.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+            }
+
+            let cursando = [];
+            let geral = [];
+            let outros = [];
+
+            // Separa conforme as prioridades de navegação
+            data.forEach(l => {
+                const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
+                const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+
+                if (isCursando) cursando.push(l);
+                else if (isGeral) geral.push(l);
+                else outros.push(l);
+            });
+
+            // Intercala 3 cursando, 2 gerais e 1 outros
+            let intercalados = [];
+            while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
+                for (let i = 0; i < 3 && cursando.length > 0; i++) intercalados.push(cursando.shift());
+                for (let i = 0; i < 2 && geral.length > 0; i++) intercalados.push(geral.shift());
+                for (let i = 0; i < 1 && outros.length > 0; i++) intercalados.push(outros.shift());
+            }
+
+            const livrosTeaser = intercalados.slice(0, 4);
+            const section = document.getElementById('teaser-biblioteca-section');
+            const grid = document.getElementById('teaser-biblioteca-grid');
+            
+            if (!section || !grid || livrosTeaser.length === 0) return;
+
+            section.classList.remove('hidden');
+            let html = '';
+            
+            livrosTeaser.forEach(l => {
+                const isCursandoBadge = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                const badgeHtml = isCursandoBadge ? `<span class="absolute top-2 right-2 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
+
+                html += `
+                    <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px] relative">
+                        ${badgeHtml}
+                        <div>
+                            <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b">
+                                <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                            </div>
+                            <div class="p-2.5">
+                                <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>
+                            </div>
+                        </div>
+                        <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
                     </a>
                 `;
             });
@@ -383,6 +446,31 @@
             }
         }
 
+        // Função de Animação (Piscar da Esquerda para a Direita)
+        function piscarControlesCadastro() {
+            const select = document.getElementById('select-semestre-destino');
+            const btn = document.getElementById('btn-cadastrar-semestre');
+            if(!select || !btn) return;
+
+            // Pisca o Select primeiro
+            select.classList.add('ring-4', 'ring-amber-300', 'bg-amber-50', 'transition-all', 'duration-300');
+            
+            // 100ms depois, pisca o Botão (Cria o efeito esquerda -> direita)
+            setTimeout(() => {
+                btn.classList.add('ring-4', 'ring-amber-300', 'bg-blue-500', 'scale-[1.03]', 'transition-all', 'duration-300');
+            }, 100);
+
+            // Apaga o Select suavemente
+            setTimeout(() => {
+                select.classList.remove('ring-4', 'ring-amber-300', 'bg-amber-50');
+            }, 600);
+
+            // Apaga o Botão suavemente
+            setTimeout(() => {
+                btn.classList.remove('ring-4', 'ring-amber-300', 'bg-blue-500', 'scale-[1.03]');
+            }, 700);
+        }
+
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
@@ -499,6 +587,9 @@
                 renderizarTabelaCatalogo();
                 renderizarSemestresAlocados();
             }
+            
+            // Carrega a biblioteca por último para garantir que temos o semestre atual do usuário
+            await carregarTeaserBiblioteca();
         }
 
         async function atualizarSemestreEmCurso(novoValor) {
@@ -510,6 +601,7 @@
                     localStorage.removeItem('semestre_em_curso_visitante');
                 }
                 renderizarSemestresAlocados();
+                await carregarTeaserBiblioteca();
                 return;
             }
 
@@ -524,6 +616,7 @@
                 usuarioAtual = data.user;
             }
             renderizarSemestresAlocados();
+            await carregarTeaserBiblioteca();
         }
 
         function formatarDataHoraCell(textoDataHora) {
@@ -571,12 +664,26 @@
                     </div>
                 </div>
 
+                <!-- TEASER DA BIBLIOTECA -->
+                <section id="teaser-biblioteca-section" class="mb-12 hidden border-t border-gray-200 pt-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Biblioteca</span>
+                            <h3 class="text-sm font-bold text-gray-800">Materiais Recomendados para seus Estudos</h3>
+                        </div>
+                        <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver acervo completo →</a>
+                    </div>
+                    <div id="teaser-biblioteca-grid" class="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </section>
+
                 <div id="secao-grade-disciplinar">
                     <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
                         <div class="flex flex-wrap items-center gap-3">
                             <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
                             
-                            <!-- SELETOR DE SEMESTRE EM CURSO (SEM CHECKBOX, APENAS DROPDOWN) -->
+                            <!-- SELETOR DE SEMESTRE EM CURSO -->
                             <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl shadow-xs">
                                 <select id="select-semestre-curso" class="text-xs font-semibold text-blue-900 bg-transparent border-0 focus:ring-0 cursor-pointer">
                                     <option value="">Selecionar o Semestre em Curso</option>
@@ -717,8 +824,10 @@
             tbody.innerHTML = '';
             tbody.appendChild(fragment);
 
+            // CORREÇÃO: Dispara a animação (piscar) caso o usuário tenha marcado um checkbox
             tbody.querySelectorAll('.check-disciplina:not(:disabled)').forEach(chk => {
-                chk.addEventListener('change', () => {
+                chk.addEventListener('change', (e) => {
+                    if (e.target.checked) piscarControlesCadastro();
                     renderizarTabelaCatalogo();
                 });
             });
