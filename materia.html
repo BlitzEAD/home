@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="meta-titulo">Jornal Blitz</title>
-    <!-- Open Graph (OG) Meta Tags para WhatsApp e Redes Sociais -->
+    <title id="meta-titulo">Jornal Blitz - Planejamento Acadêmico</title>
+    <!-- Open Graph Meta Tags para WhatsApp e Redes Sociais -->
     <meta id="og-title" property="og:title" content="Jornal Blitz - Planejamento Acadêmico">
     <meta id="og-description" property="og:description" content="Acompanhe as últimas notícias e avisos acadêmicos.">
     <meta id="og-image" property="og:image" content="">
@@ -45,30 +45,8 @@
 
         <!-- ARTIGO -->
         <article id="artigo-materia" class="bg-white rounded-2xl shadow-md p-6 md:p-10 border border-gray-200">
-            <div class="text-center py-16 text-gray-400">Carregando conteúdo...</div>
+            <div class="text-center py-16 text-gray-400">Carregando conteúdo da matéria...</div>
         </article>
-
-        <!-- TEASER DA BIBLIOTECA NO FINAL DA MATÉRIA -->
-        <section id="teaser-biblioteca-section" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-base font-bold text-gray-800">📚 Itens da nossa Biblioteca recomendados para você</h3>
-                <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">Ver biblioteca →</a>
-            </div>
-            <div id="teaser-biblioteca-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                <!-- Preenchido via JS -->
-            </div>
-        </section>
-
-        <!-- TEASER DE OUTRAS PUBLICAÇÕES DO JORNAL NO FINAL DA MATÉRIA -->
-        <section id="teaser-jornal-fim-section" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-base font-bold text-gray-800">📰 Leia também no Jornal Blitz</h3>
-                <a href="jornal.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">Ver todas →</a>
-            </div>
-            <div id="teaser-jornal-fim-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                <!-- Preenchido via JS -->
-            </div>
-        </section>
 
     </main>
 
@@ -79,15 +57,24 @@
         let usuarioAtual = null;
 
         async function initMateria() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) usuarioAtual = session.user;
-            renderizarTopoUsuario();
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) usuarioAtual = session.user;
+                renderizarTopoUsuario();
 
-            const id = new URLSearchParams(window.location.search).get('id');
-            if (!id) { document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`; return; }
+                const urlParams = new URLSearchParams(window.location.search);
+                const id = urlParams.get('id');
 
-            await carregarDetalhesPost(id);
-            await carregarTeasersFimMateria(id);
+                if (!id) {
+                    document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`;
+                    return;
+                }
+
+                await carregarDetalhesPost(id);
+            } catch (err) {
+                console.error("Erro ao inicializar matéria:", err);
+                document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Erro ao carregar a publicação.</div>`;
+            }
         }
 
         function renderizarTopoUsuario() {
@@ -119,9 +106,8 @@
         async function carregarDetalhesPost(id) {
             const { data: post, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id).single();
             const art = document.getElementById('artigo-materia');
-            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`; return; }
+            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada ou removida.</div>`; return; }
 
-            // Configura Meta Tags Open Graph (OG) para o WhatsApp e redes sociais
             document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
             if (post.resumo) {
                 document.getElementById('meta-descricao').setAttribute('content', post.resumo);
@@ -134,7 +120,6 @@
 
             const dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
             const autor = post.autor || 'BlitzEAD';
-            const urlAtual = window.location.href;
 
             let tagsHtml = '';
             if (post.tags && post.tags.length > 0) {
@@ -144,21 +129,10 @@
             }
 
             art.innerHTML = `
-                <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
-                    <div>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">${post.categoria}</span>
-                        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2 mb-1 leading-tight">${post.titulo}</h1>
-                        <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>${dataF}</span></div>
-                    </div>
-                    <!-- BOTÃO COMPARTILHAR -->
-                    <div class="flex items-center space-x-2">
-                        <button onclick="compartilharWhatsApp('${encodeURIComponent(post.titulo)}', '${encodeURIComponent(post.resumo || '')}', '${urlAtual}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm">
-                            <span>💬 WhatsApp</span>
-                        </button>
-                        <button onclick="copiarLink('${urlAtual}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-xl text-xs font-bold transition">
-                            📋 Copiar Link
-                        </button>
-                    </div>
+                <div class="mb-6 border-b pb-4">
+                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">${post.categoria}</span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2 mb-1 leading-tight">${post.titulo}</h1>
+                    <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>${dataF}</span></div>
                 </div>
 
                 ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" class="w-full h-full object-cover"></div>` : ''}
@@ -167,83 +141,6 @@
 
                 ${tagsHtml}
             `;
-        }
-
-        function compartilharWhatsApp(titulo, resumo, url) {
-            const texto = `📰 *${titulo}*\n\n${resumo}\n\nLeia completa em: ${url}`;
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
-        }
-
-        function copiarLink(url) {
-            navigator.clipboard.writeText(url);
-            alert("Link copiado para a área de transferência!");
-        }
-
-        async function carregarTeasersFimMateria(postIdAtual) {
-            // 1. TEASER DA BIBLIOTECA
-            let disciplinasPrioritariasIds = [];
-            if (usuarioAtual) {
-                const { data: plano } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, status').eq('user_id', usuarioAtual.id);
-                if (plano) {
-                    disciplinasPrioritariasIds = plano.filter(p => p.status === 'Cursada' || p.status === 'Inscrita').map(p => p.disciplina_id);
-                }
-            }
-
-            const { data: livros } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false }).limit(6);
-            const gridBib = document.getElementById('teaser-biblioteca-grid');
-
-            if (livros && livros.length > 0) {
-                livros.sort((a, b) => {
-                    const aMatch = (a.livro_disciplinas || []).some(d => disciplinasPrioritariasIds.includes(d.id_disciplina));
-                    const bMatch = (b.livro_disciplinas || []).some(d => disciplinasPrioritariasIds.includes(d.id_disciplina));
-                    return bMatch - aMatch;
-                });
-
-                let htmlBib = '';
-                livros.slice(0, 4).forEach(l => {
-                    htmlBib += `
-                        <a href="biblioteca.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[200px] flex-1 max-w-[240px]">
-                            <div>
-                                <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2">
-                                    <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
-                                </div>
-                                <div class="p-2.5">
-                                    <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>
-                                </div>
-                            </div>
-                            <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
-                        </a>
-                    `;
-                });
-                gridBib.innerHTML = htmlBib;
-            }
-
-            // 2. TEASER DO JORNAL (Excluindo a matéria atual)
-            const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
-            const gridJornal = document.getElementById('teaser-jornal-fim-grid');
-
-            if (posts && posts.length > 0) {
-                let htmlJornal = '';
-                posts.forEach(post => {
-                    let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                    htmlJornal += `
-                        <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[200px] flex-1 max-w-[240px]">
-                            <div>
-                                <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
-                                    ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
-                                    <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria}</span>
-                                </div>
-                                <div class="p-2.5">
-                                    <span class="text-[10px] text-gray-400">${dataF}</span>
-                                    <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${post.titulo}</h4>
-                                </div>
-                            </div>
-                            <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
-                        </a>
-                    `;
-                });
-                gridJornal.innerHTML = htmlJornal;
-            }
         }
 
         initMateria();
