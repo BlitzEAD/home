@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invasão Hippie na Lapa - Jornal Blitz</title>
+    
+    <!-- Open Graph (OG) Meta Tags PREENCHIDAS PELO ROBÔ -->
+    <meta property="og:title" content="Invasão Hippie na Lapa - Jornal Blitz">
+    <meta property="og:description" content="Mais uma notícia quentinha">
+    <meta property="og:image" content="https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1785511999816.jpg">
+    <meta property="og:type" content="article">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pt-32">
+
+    <!-- MENU SUPERIOR FIXO -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xs md:text-sm font-extrabold text-blue-600 tracking-tight cursor-pointer" onclick="window.location.href='index.html'">Planejamento Acadêmico</h1>
+                <div id="container-btn-admin"></div>
+            </div>
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
+            </div>
+        </div>
+        <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
+            <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
+                <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
+                <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
+                <a href="jornal.html" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl mx-auto px-6 py-8 flex-1 space-y-12">
+        <div>
+            <a href="jornal.html" class="text-xs font-bold text-gray-600 hover:text-blue-600 transition">← Voltar para o Jornal Blitz</a>
+        </div>
+
+        <article id="artigo-materia" class="bg-white rounded-2xl shadow-md p-6 md:p-10 border border-gray-200">
+            <div class="text-center py-16 text-gray-400">Carregando dados da publicação...</div>
+        </article>
+
+        <section id="teaser-biblioteca-section" class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Biblioteca</span>
+                    <h3 class="text-sm font-bold text-gray-800">Itens recomendados da nossa Biblioteca</h3>
+                </div>
+                <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver biblioteca →</a>
+            </div>
+            <div id="teaser-biblioteca-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none"></div>
+        </section>
+
+        <section id="teaser-jornal-section" class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Jornal Blitz</span>
+                    <h3 class="text-sm font-bold text-gray-800">Outras Publicações</h3>
+                </div>
+                <a href="jornal.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver todas →</a>
+            </div>
+            <div id="teaser-jornal-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none"></div>
+        </section>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let usuarioAtual = null;
+
+        // O ROBÔ INJETA O ID AQUI DURANTE A CRIAÇÃO DO ARQUIVO
+        const POST_ID = 6;
+
+        async function initMateria() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) usuarioAtual = session.user;
+            renderizarTopoUsuario();
+
+            const art = document.getElementById('artigo-materia');
+
+            const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', POST_ID);
+
+            if (error || !data || data.length === 0) {
+                art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`;
+                return;
+            }
+
+            const post = data[0];
+            const dataF = post.criado_em ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+            const autor = post.autor || 'BlitzEAD';
+            const urlAtual = window.location.href;
+
+            let tagsHtml = '';
+            if (post.tags && post.tags.length > 0) {
+                tagsHtml = `<div class="flex flex-wrap gap-2 mt-6 pt-6 border-t">`;
+                post.tags.forEach(t => tagsHtml += `<span class="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">#${t.trim()}</span>`);
+                tagsHtml += `</div>`;
+            }
+
+            art.innerHTML = `
+                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
+                    <div>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">${post.categoria || 'Notícia'}</span>
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2 mb-1 leading-tight">${post.titulo}</h1>
+                        <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>${dataF}</span></div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-semibold text-gray-500 whitespace-nowrap">Compartilhar:</span>
+                        <div class="flex items-center space-x-1.5">
+                            <button onclick="compartilharRede('whatsapp', '${encodeURIComponent(post.titulo)}', '${encodeURIComponent(post.resumo || '')}', '${urlAtual}')" title="Compartilhar no WhatsApp" class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs transition shadow-xs">💬</button>
+                            <button onclick="compartilharRede('facebook', '', '', '${urlAtual}')" title="Compartilhar no Facebook" class="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-xs transition shadow-xs">f</button>
+                            <button onclick="compartilharRede('twitter', '${encodeURIComponent(post.titulo)}', '', '${urlAtual}')" title="Compartilhar no X / Twitter" class="w-8 h-8 rounded-lg bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center text-xs transition shadow-xs">𝕏</button>
+                            <button onclick="copiarLink('${urlAtual}')" title="Copiar Link" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-xs transition border border-gray-300 shadow-xs">🔗</button>
+                        </div>
+                    </div>
+                </div>
+
+                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" class="w-full h-full object-cover"></div>` : ''}
+
+                <div class="prose max-w-none text-gray-700 leading-relaxed space-y-4 whitespace-pre-line text-base">${post.conteudo || ''}</div>
+                ${tagsHtml}
+            `;
+
+            carregarTeasersFimMateria(POST_ID);
+        }
+
+        // --- MANTIVE AS FUNÇÕES DE TEASERS E TOPO EXATAMENTE COMO VOCÊ JÁ TINHA ---
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            const containerBtnAdmin = document.getElementById('container-btn-admin');
+            
+            if (containerBtnAdmin) {
+                const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
+                if (isAdmin) containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">⚙️ Admin</a>`;
+                else containerBtnAdmin.innerHTML = '';
+            }
+
+            if (!bloco) return;
+            if (!usuarioAtual) {
+                bloco.innerHTML = `<button onclick="window.location.href='index.html?abrir_login=1'" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Entrar / Cadastrar</button>`;
+                return;
+            }
+            const nome = usuarioAtual.user_metadata?.nome || usuarioAtual.email || "U";
+            bloco.innerHTML = `
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nome.split(' ')[0]}</span>
+                <div class="relative">
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden">${usuarioAtual.user_metadata?.foto_url ? `<img src="${usuarioAtual.user_metadata.foto_url}" class="w-full h-full object-cover">` : nome.charAt(0).toUpperCase()}</button>
+                    <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50">Sair</a>
+                    </div>
+                </div>
+            `;
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('dropdown-perfil').classList.toggle('hidden'); });
+            window.addEventListener('click', () => { const d = document.getElementById('dropdown-perfil'); if (d && !d.classList.contains('hidden')) d.classList.add('hidden'); });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
+        }
+
+        function compartilharRede(rede, titulo, resumo, url) {
+            let linkShare = "";
+            if (rede === 'whatsapp') {
+                const texto = `📰 *${decodeURIComponent(titulo)}*\n\n${decodeURIComponent(resumo)}\n\nLeia completa em: ${url}`;
+                linkShare = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+            } else if (rede === 'facebook') {
+                linkShare = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            } else if (rede === 'twitter') {
+                linkShare = `https://twitter.com/intent/tweet?text=${titulo}&url=${encodeURIComponent(url)}`;
+            }
+            if (linkShare) window.open(linkShare, '_blank');
+        }
+
+        function copiarLink(url) {
+            navigator.clipboard.writeText(url);
+            alert("Link copiado para a área de transferência!");
+        }
+
+        async function carregarTeasersFimMateria(postIdAtual) {
+            try {
+                const { data: livros } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false }).limit(4);
+                const sectionBib = document.getElementById('teaser-biblioteca-section');
+                const gridBib = document.getElementById('teaser-biblioteca-grid');
+
+                if (livros && livros.length > 0) {
+                    sectionBib.classList.remove('hidden');
+                    let htmlBib = '';
+                    livros.forEach(l => {
+                        htmlBib += `
+                            <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
+                                <div>
+                                    <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2"><img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300"></div>
+                                    <div class="p-2.5"><h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4></div>
+                                </div>
+                                <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
+                            </a>
+                        `;
+                    });
+                    gridBib.innerHTML = htmlBib;
+                }
+
+                const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
+                const sectionJornal = document.getElementById('teaser-jornal-section');
+                const gridJornal = document.getElementById('teaser-jornal-grid');
+
+                if (posts && posts.length > 0) {
+                    sectionJornal.classList.remove('hidden');
+                    let htmlJornal = '';
+                    posts.forEach(post => {
+                        let dataF = post.criado_em ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+                        htmlJornal += `
+                            <a href="materia_${post.id}.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
+                                <div>
+                                    <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
+                                        ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
+                                        <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria || 'Notícia'}</span>
+                                    </div>
+                                    <div class="p-2.5">
+                                        <span class="text-[10px] text-gray-400">${dataF}</span>
+                                        <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${post.titulo}</h4>
+                                    </div>
+                                </div>
+                                <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
+                            </a>
+                        `;
+                    });
+                    gridJornal.innerHTML = htmlJornal;
+                }
+            } catch (err) {
+                console.error("Erro ao carregar teasers:", err);
+            }
+        }
+
+        initMateria();
+    </script>
+</body>
+</html>
