@@ -75,15 +75,28 @@
         let usuarioAtual = null;
 
         async function initMateria() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) usuarioAtual = session.user;
-            renderizarTopoUsuario();
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) usuarioAtual = session.user;
+                renderizarTopoUsuario();
 
-            const id = new URLSearchParams(window.location.search).get('id');
-            if (!id) { document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`; return; }
+                const urlParams = new URLSearchParams(window.location.search);
+                const idParam = urlParams.get('id');
+                
+                if (!idParam) { 
+                    document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`; 
+                    return; 
+                }
 
-            await carregarDetalhesPost(id);
-            await carregarTeasersFimMateria(id);
+                // Converte rigorosamente para número inteiro caso o id da tabela seja numérico
+                const id = parseInt(idParam, 10);
+
+                await carregarDetalhesPost(id);
+                await carregarTeasersFimMateria(id);
+            } catch (err) {
+                console.error("Erro na inicialização:", err);
+                document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Erro ao carregar a publicação.</div>`;
+            }
         }
 
         function renderizarTopoUsuario() {
@@ -113,9 +126,16 @@
         }
 
         async function carregarDetalhesPost(id) {
-            const { data: post, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id).single();
+            // Busca segura utilizando array ao invés de single() para evitar travamentos
+            const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id);
             const art = document.getElementById('artigo-materia');
-            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`; return; }
+            
+            if (error || !data || data.length === 0) { 
+                art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`; 
+                return; 
+            }
+
+            const post = data[0];
 
             // Configura Meta Tags Open Graph (OG) para o WhatsApp e redes sociais
             document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
@@ -176,73 +196,77 @@
         }
 
         async function carregarTeasersFimMateria(postIdAtual) {
-            // 1. TEASER DA BIBLIOTECA
-            let disciplinasPrioritariasIds = [];
-            if (usuarioAtual) {
-                const { data: plano } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, status').eq('user_id', usuarioAtual.id);
-                if (plano) {
-                    disciplinasPrioritariasIds = plano.filter(p => p.status === 'Cursada' || p.status === 'Inscrita').map(p => p.disciplina_id);
+            try {
+                // 1. TEASER DA BIBLIOTECA
+                let disciplinasPrioritariasIds = [];
+                if (usuarioAtual) {
+                    const { data: plano } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, status').eq('user_id', usuarioAtual.id);
+                    if (plano) {
+                        disciplinasPrioritariasIds = plano.filter(p => p.status === 'Cursada' || p.status === 'Inscrita').map(p => p.disciplina_id);
+                    }
                 }
-            }
 
-            const { data: livros } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false }).limit(6);
-            const sectionBib = document.getElementById('teaser-biblioteca-section');
-            const gridBib = document.getElementById('teaser-biblioteca-grid');
+                const { data: livros } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false }).limit(6);
+                const sectionBib = document.getElementById('teaser-biblioteca-section');
+                const gridBib = document.getElementById('teaser-biblioteca-grid');
 
-            if (livros && livros.length > 0) {
-                sectionBib.classList.remove('hidden');
-                livros.sort((a, b) => {
-                    const aMatch = (a.livro_disciplinas || []).some(d => disciplinasPrioritariasIds.includes(d.id_disciplina));
-                    const bMatch = (b.livro_disciplinas || []).some(d => disciplinasPrioritariasIds.includes(d.id_disciplina));
-                    return bMatch - aMatch;
-                });
+                if (livros && livros.length > 0) {
+                    sectionBib.classList.remove('hidden');
+                    livros.sort((a, b) => {
+                        const aMatch = (a.livro_disciplinas || []).some(d => disciplinasPrioritariasIds.includes(d.id_disciplina));
+                        const bMatch = (b.livro_disciplinas || []).some(d => disciplinasPrioritariasIds.includes(d.id_disciplina));
+                        return bMatch - aMatch;
+                    });
 
-                let htmlBib = '';
-                livros.slice(0, 4).forEach(l => {
-                    htmlBib += `
-                        <a href="biblioteca.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[200px] flex-1 max-w-[240px]">
-                            <div>
-                                <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2">
-                                    <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                    let htmlBib = '';
+                    livros.slice(0, 4).forEach(l => {
+                        htmlBib += `
+                            <a href="biblioteca.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[200px] flex-1 max-w-[240px]">
+                                <div>
+                                    <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2">
+                                        <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                                    </div>
+                                    <div class="p-2.5">
+                                        <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>
+                                    </div>
                                 </div>
-                                <div class="p-2.5">
-                                    <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>
-                                </div>
-                            </div>
-                            <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
-                        </a>
-                    `;
-                });
-                gridBib.innerHTML = htmlBib;
-            }
+                                <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
+                            </a>
+                        `;
+                    });
+                    gridBib.innerHTML = htmlBib;
+                }
 
-            // 2. TEASER DO JORNAL (Excluindo a matéria atual)
-            const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
-            const sectionJornal = document.getElementById('teaser-jornal-fim-section');
-            const gridJornal = document.getElementById('teaser-jornal-fim-grid');
+                // 2. TEASER DO JORNAL (Excluindo a matéria atual)
+                const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
+                const sectionJornal = document.getElementById('teaser-jornal-fim-section');
+                const gridJornal = document.getElementById('teaser-jornal-fim-grid');
 
-            if (posts && posts.length > 0) {
-                sectionJornal.classList.remove('hidden');
-                let htmlJornal = '';
-                posts.forEach(post => {
-                    let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                    htmlJornal += `
-                        <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[200px] flex-1 max-w-[240px]">
-                            <div>
-                                <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
-                                    ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
-                                    <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria}</span>
+                if (posts && posts.length > 0) {
+                    sectionJornal.classList.remove('hidden');
+                    let htmlJornal = '';
+                    posts.forEach(post => {
+                        let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        htmlJornal += `
+                            <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[200px] flex-1 max-w-[240px]">
+                                <div>
+                                    <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
+                                        ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
+                                        <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria}</span>
+                                    </div>
+                                    <div class="p-2.5">
+                                        <span class="text-[10px] text-gray-400">${dataF}</span>
+                                        <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${post.titulo}</h4>
+                                    </div>
                                 </div>
-                                <div class="p-2.5">
-                                    <span class="text-[10px] text-gray-400">${dataF}</span>
-                                    <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${post.titulo}</h4>
-                                </div>
-                            </div>
-                            <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
-                        </a>
-                    `;
-                });
-                gridJornal.innerHTML = htmlJornal;
+                                <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
+                            </a>
+                        `;
+                    });
+                    gridJornal.innerHTML = htmlJornal;
+                }
+            } catch (e) {
+                console.error("Erro ao carregar teasers finais:", e);
             }
         }
 
