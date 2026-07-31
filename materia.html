@@ -104,9 +104,16 @@
         }
 
         async function carregarDetalhesPost(id) {
-            const { data: post, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id).single();
+            // Busca segura via array (evita qualquer bloqueio do .single())
+            const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id);
             const art = document.getElementById('artigo-materia');
-            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada ou removida.</div>`; return; }
+
+            if (error || !data || data.length === 0) { 
+                art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada ou removida.</div>`; 
+                return; 
+            }
+
+            const post = data[0];
 
             document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
             if (post.resumo) {
