@@ -10,7 +10,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
-    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
@@ -41,7 +40,6 @@
             </div>
         </div>
 
-        <!-- MENU INFERIOR CORRIGIDO -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="#" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Disciplinas</a>
@@ -60,67 +58,41 @@
     <!-- MODAL AUTH -->
     <div id="modal-auth" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative overflow-hidden">
-            <button onclick="fecharModalAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+            <button onclick="fecharModalAuth()" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
             <div id="form-login-container">
                 <h2 class="text-2xl font-extrabold text-gray-900 mb-1 text-center">Entrar no Sistema</h2>
-                <p class="text-gray-500 text-xs text-center mb-6">Acesse sua conta.</p>
                 <form id="form-login" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label>
-                        <input type="email" id="login-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Senha</label>
-                        <input type="password" id="login-senha" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label><input type="email" id="login-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Senha</label><input type="password" id="login-senha" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>
                     <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition text-sm">Entrar</button>
                 </form>
                 <div id="msg-login" class="mt-3 text-xs text-center"></div>
-                <div class="mt-6 text-center border-t pt-4">
-                    <p class="text-xs text-gray-600">Ainda não tem uma conta?</p>
-                    <button onclick="alternarParaCadastro()" class="mt-1 text-blue-600 hover:underline font-semibold text-xs">Criar Cadastro</button>
-                </div>
+                <div class="mt-6 text-center border-t pt-4"><button onclick="alternarParaCadastro()" class="text-blue-600 hover:underline font-semibold text-xs">Criar Cadastro</button></div>
             </div>
-
             <div id="form-cadastro-container" class="hidden">
                 <h2 class="text-2xl font-extrabold text-gray-900 mb-1 text-center">Criar Nova Conta</h2>
                 <form id="form-cadastro" class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Nome Completo</label>
-                        <input type="text" id="cad-nome" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">E-mail</label>
-                        <input type="email" id="cad-email" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-0.5">Senha (mín. 6 caracteres)</label>
-                        <input type="password" id="cad-senha" required minlength="6" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
-                    </div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-0.5">Nome Completo</label><input type="text" id="cad-nome" required class="w-full px-3 py-1.5 border rounded-lg text-sm"></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-0.5">E-mail</label><input type="email" id="cad-email" required class="w-full px-3 py-1.5 border rounded-lg text-sm"></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-0.5">Senha</label><input type="password" id="cad-senha" required minlength="6" class="w-full px-3 py-1.5 border rounded-lg text-sm"></div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-0.5">Curso</label>
-                        <select id="cad-curso" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
-                            <option value="Administração" selected>Administração</option>
+                        <select id="cad-curso" required class="w-full px-3 py-1.5 border rounded-lg text-xs bg-white">
+                            <option value="Administração">Administração</option>
                             <option value="Administração Pública">Administração Pública</option>
                             <option value="Biblioteconomia">Biblioteconomia</option>
                             <option value="Ciências Contábeis">Ciências Contábeis</option>
                             <option value="Engenharia de Produção">Engenharia de Produção</option>
-                            <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
-                            <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-0.5">Semestre de Ingresso</label>
-                        <select id="cad-semestre" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white">
-                            <option value="">Nenhum</option>
-                        </select>
+                        <select id="cad-semestre" class="w-full px-3 py-1.5 border rounded-lg text-xs bg-white"><option value="">Nenhum</option></select>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition text-sm mt-2">Criar Conta</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg text-sm mt-2">Criar Conta</button>
                 </form>
                 <div id="msg-cadastro" class="mt-2 text-xs text-center"></div>
-                <div class="mt-4 text-center border-t pt-3">
-                    <button onclick="alternarParaLogin()" class="text-blue-600 hover:underline font-semibold text-xs">← Voltar para o Login</button>
-                </div>
+                <div class="mt-4 text-center border-t pt-3"><button onclick="alternarParaLogin()" class="text-blue-600 hover:underline text-xs">← Voltar para o Login</button></div>
             </div>
         </div>
     </div>
@@ -141,7 +113,7 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
         
-        <!-- TEASER DO JORNAL BLITZ (ESTRITAMENTE EM 1 LINHA SEM QUEBRAR) -->
+        <!-- TEASER DO JORNAL BLITZ (1 LINHA COM LARGURA AJUSTADA PARA APARECER QUASE 2 MINIATURAS NO MOBILE) -->
         <section id="teaser-jornal-section" class="mb-8 hidden">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center space-x-2">
@@ -151,7 +123,6 @@
                 <a href="jornal.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver todas →</a>
             </div>
             
-            <!-- Contenedor flexível em linha única que se ajusta perfeitamente sem pular linha -->
             <div id="teaser-jornal-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                 <!-- Preenchido via JS -->
             </div>
@@ -180,10 +151,7 @@
             if (urlParams.get('abrir_login') === '1') abrirModalAuth('login');
             
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                usuarioAtual = session.user;
-                await processarPendenciaCadastro();
-            }
+            if (session) { usuarioAtual = session.user; await processarPendenciaCadastro(); }
 
             renderizarTopoUsuario();
             await carregarTeaserJornal();
@@ -191,38 +159,24 @@
 
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 usuarioAtual = session ? session.user : null;
-                if (usuarioAtual) {
-                    await migrarDadosLocaisParaBanco(usuarioAtual.id);
-                    await processarPendenciaCadastro();
-                }
-                renderizarTopoUsuario();
-                await carregarDadosBanco();
+                if (usuarioAtual) { await migrarDadosLocaisParaBanco(usuarioAtual.id); await processarPendenciaCadastro(); }
+                renderizarTopoUsuario(); await carregarDadosBanco();
             });
         }
 
         async function carregarTeaserJornal() {
-            // Busca até 4 posts para o teaser
-            const { data: posts } = await supabaseClient
-                .from('jornal_posts')
-                .select('*')
-                .order('criado_em', { ascending: false })
-                .limit(4);
-
+            const { data: posts } = await supabaseClient.from('jornal_posts').select('*').order('criado_em', { ascending: false }).limit(4);
             const section = document.getElementById('teaser-jornal-section');
             const grid = document.getElementById('teaser-jornal-grid');
-
-            if (!posts || posts.length === 0) {
-                section.classList.add('hidden');
-                return;
-            }
+            if (!posts || posts.length === 0) { section.classList.add('hidden'); return; }
 
             section.classList.remove('hidden');
             let html = '';
             posts.forEach(post => {
                 let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                // Cada card possui largura fixa mínima para garantir que fiquem em 1 única linha horizontal
+                // min-w ajustado para 1 miniatura inteira e quase metade da segunda no mobile
                 html += `
-                    <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[200px] sm:min-w-[220px] flex-1 max-w-[280px]">
+                    <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
                         <div>
                             <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
                                 ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
@@ -233,9 +187,7 @@
                                 <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2 leading-snug">${post.titulo}</h4>
                             </div>
                         </div>
-                        <div class="px-2.5 pb-2.5 pt-0">
-                            <span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span>
-                        </div>
+                        <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
                     </a>
                 `;
             });
@@ -243,8 +195,7 @@
         }
 
         function gerarOpcoesSemestresCadastro() {
-            const select = document.getElementById('cad-semestre');
-            if (!select) return;
+            const select = document.getElementById('cad-semestre'); if (!select) return;
             let html = '<option value="">Nenhum</option>';
             for (let ano = 2026; ano >= 2019; ano--) {
                 for (let sem = 2; sem >= 1; sem--) {
@@ -259,31 +210,25 @@
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
             const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
-
-            if (isAdmin && containerBtnAdmin) {
-                containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Admin</a>`;
-            } else if (containerBtnAdmin) {
-                containerBtnAdmin.innerHTML = '';
-            }
+            if (isAdmin && containerBtnAdmin) containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">⚙️ Admin</a>`;
+            else if (containerBtnAdmin) containerBtnAdmin.innerHTML = '';
 
             if (!usuarioAtual) {
                 bloco.innerHTML = `<button onclick="abrirModalAuth('login')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition whitespace-nowrap">Entrar / Cadastrar</button>`;
                 return;
             }
-
-            const metadata = usuarioAtual.user_metadata || {};
-            const nome = metadata.nome || usuarioAtual.email || "Usuário";
+            const nome = usuarioAtual.user_metadata?.nome || usuarioAtual.email || "Usuário";
             const primeiraLetra = nome.charAt(0).toUpperCase();
-            const fotoUrl = metadata.foto_url;
+            const fotoUrl = usuarioAtual.user_metadata?.foto_url;
             let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
 
             bloco.innerHTML = `
                 <span class="hidden sm:inline text-xs font-medium text-gray-700">${nome.split(' ')[0]}</span>
                 <div class="relative">
-                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden focus:outline-none">${avatarHtml}</button>
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden">${avatarHtml}</button>
                     <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
-                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Perfil</a>
-                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">Sair</a>
+                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50">Sair</a>
                     </div>
                 </div>
             `;
@@ -292,10 +237,7 @@
             document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.reload(); });
         }
 
-        function abrirModalAuth(tipo = 'login') {
-            document.getElementById('modal-auth').classList.remove('hidden');
-            if (tipo === 'cadastro') alternarParaCadastro(); else alternarParaLogin();
-        }
+        function abrirModalAuth(tipo = 'login') { document.getElementById('modal-auth').classList.remove('hidden'); if (tipo === 'cadastro') alternarParaCadastro(); else alternarParaLogin(); }
         function fecharModalAuth() { document.getElementById('modal-auth').classList.add('hidden'); }
         function alternarParaCadastro() { document.getElementById('form-login-container').classList.add('hidden'); document.getElementById('form-cadastro-container').classList.remove('hidden'); }
         function alternarParaLogin() { document.getElementById('form-cadastro-container').classList.add('hidden'); document.getElementById('form-login-container').classList.remove('hidden'); }
@@ -311,12 +253,11 @@
         document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
             e.preventDefault();
             const { error } = await supabaseClient.auth.signUp({
-                email: document.getElementById('cad-email').value,
-                password: document.getElementById('cad-senha').value,
+                email: document.getElementById('cad-email').value, password: document.getElementById('cad-senha').value,
                 options: { data: { nome: document.getElementById('cad-nome').value, curso: document.getElementById('cad-curso').value, semestre_ingresso: document.getElementById('cad-semestre').value } }
             });
             if (error) { document.getElementById('msg-cadastro').textContent = "Erro: " + error.message; document.getElementById('msg-cadastro').className = "mt-2 text-xs text-center text-red-600"; return; }
-            document.getElementById('msg-cadastro').innerHTML = "✅ Conta criada! Verifique seu e-mail de confirmação.";
+            document.getElementById('msg-cadastro').innerHTML = "✅ Conta criada! Verifique seu e-mail.";
             document.getElementById('msg-cadastro').className = "mt-2 text-xs text-center text-green-600";
         });
 
@@ -439,13 +380,11 @@
                     document.querySelectorAll('.check-disciplina').forEach(cb => cb.checked = false);
                     document.getElementById('mensagem-sucesso-global').classList.remove('hidden');
                     setTimeout(() => document.getElementById('mensagem-sucesso-global').classList.add('hidden'), 4000);
-                    await carregarDadosBanco();
-                    return;
+                    await carregarDadosBanco(); return;
                 } else {
                     sessionStorage.setItem('pendencia_cadastro', JSON.stringify({ semestre, disciplinas: marcados }));
-                    alert("Para adicionar a partir do 2º semestre, é necessário fazer login ou criar conta.");
-                    abrirModalAuth('login');
-                    return;
+                    alert("Para adicionar a partir do 2º semestre, é necessário fazer login.");
+                    abrirModalAuth('login'); return;
                 }
             }
             await executarCadastroNoBanco(usuarioAtual.id, semestre, marcados);
