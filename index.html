@@ -201,6 +201,7 @@
         let estruturaInicializada = false;
         let catalogoRecolhido = false;
         let semestreIcsPendente = null;
+        let semestreEmCursoAtual = "";
 
         async function init() {
             gerarOpcoesSemestresCadastro();
@@ -477,6 +478,9 @@
                 promessas.push(
                     supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id)
                 );
+                semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
+            } else {
+                semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
             }
 
             const resultados = await Promise.all(promessas);
@@ -495,6 +499,31 @@
                 renderizarTabelaCatalogo();
                 renderizarSemestresAlocados();
             }
+        }
+
+        async function atualizarSemestreEmCurso(novoValor) {
+            semestreEmCursoAtual = novoValor;
+            if (!usuarioAtual) {
+                if (novoValor) {
+                    localStorage.setItem('semestre_em_curso_visitante', novoValor);
+                } else {
+                    localStorage.removeItem('semestre_em_curso_visitante');
+                }
+                renderizarSemestresAlocados();
+                return;
+            }
+
+            const metadataAtual = usuarioAtual.user_metadata || {};
+            metadataAtual.semestre_em_curso = novoValor;
+
+            const { data, error } = await supabaseClient.auth.updateUser({
+                data: metadataAtual
+            });
+
+            if (!error && data.user) {
+                usuarioAtual = data.user;
+            }
+            renderizarSemestresAlocados();
         }
 
         function formatarDataHoraCell(textoDataHora) {
@@ -543,9 +572,29 @@
                 </div>
 
                 <div id="secao-grade-disciplinar">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
-                        <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h2 class="text-2xl font-bold text-gray-800">Disciplinas Alocadas por Semestre</h2>
+                            
+                            <!-- SELETOR DE SEMESTRE EM CURSO (SEM CHECKBOX, APENAS DROPDOWN) -->
+                            <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl shadow-xs">
+                                <select id="select-semestre-curso" class="text-xs font-semibold text-blue-900 bg-transparent border-0 focus:ring-0 cursor-pointer">
+                                    <option value="">Selecionar o Semestre em Curso</option>
+                                    <option value="1º Semestre" ${semestreEmCursoAtual === '1º Semestre' ? 'selected' : ''}>Cursando o 1º Semestre</option>
+                                    <option value="2º Semestre" ${semestreEmCursoAtual === '2º Semestre' ? 'selected' : ''}>Cursando o 2º Semestre</option>
+                                    <option value="3º Semestre" ${semestreEmCursoAtual === '3º Semestre' ? 'selected' : ''}>Cursando o 3º Semestre</option>
+                                    <option value="4º Semestre" ${semestreEmCursoAtual === '4º Semestre' ? 'selected' : ''}>Cursando o 4º Semestre</option>
+                                    <option value="5º Semestre" ${semestreEmCursoAtual === '5º Semestre' ? 'selected' : ''}>Cursando o 5º Semestre</option>
+                                    <option value="6º Semestre" ${semestreEmCursoAtual === '6º Semestre' ? 'selected' : ''}>Cursando o 6º Semestre</option>
+                                    <option value="7º Semestre" ${semestreEmCursoAtual === '7º Semestre' ? 'selected' : ''}>Cursando o 7º Semestre</option>
+                                    <option value="8º Semestre" ${semestreEmCursoAtual === '8º Semestre' ? 'selected' : ''}>Cursando o 8º Semestre</option>
+                                    <option value="9º Semestre" ${semestreEmCursoAtual === '9º Semestre' ? 'selected' : ''}>Cursando o 9º Semestre</option>
+                                    <option value="10º Semestre" ${semestreEmCursoAtual === '10º Semestre' ? 'selected' : ''}>Cursando o 10º Semestre</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="exportarGradeCompletaPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center space-x-1.5 self-start md:self-auto">
                             <span>📥 Exportar Planejamento (PDF)</span>
                         </button>
                     </div>
@@ -554,6 +603,11 @@
             `;
 
             document.getElementById('btn-cadastrar-semestre').addEventListener('click', cadastrarSelecionadasNoSemestre);
+
+            const selectSemestreCurso = document.getElementById('select-semestre-curso');
+            selectSemestreCurso.addEventListener('change', async (e) => {
+                await atualizarSemestreEmCurso(e.target.value);
+            });
 
             const btnToggle = document.getElementById('btn-toggle-catalogo');
             const wrapperCatalogo = document.getElementById('wrapper-catalogo');
@@ -802,8 +856,10 @@
                         return indexA - indexB;
                     });
 
+                const isCursando = (semestreEmCursoAtual === sem);
+
                 const card = document.createElement('div');
-                card.className = "bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col";
+                card.className = `bg-white border rounded-xl p-5 shadow-sm flex flex-col ${isCursando ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200'}`;
                 
                 let htmlItens = '';
                 if (registrosNesseSemestre.length === 0) {
@@ -895,10 +951,13 @@
                     ` 
                     : '';
 
+                const badgeCursandoHtml = isCursando ? `<span class="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Cursando</span>` : '';
+
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-3 border-b pb-2">
                         <div class="flex items-center space-x-2">
                             <h3 class="font-bold text-gray-800">${sem}</h3>
+                            ${badgeCursandoHtml}
                             <span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full">${registrosNesseSemestre.length} matérias</span>
                         </div>
                         ${botaoLimparHtml}

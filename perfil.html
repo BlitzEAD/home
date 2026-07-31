@@ -33,55 +33,109 @@
     </header>
 
     <main class="w-full max-w-2xl mx-auto px-6 py-8 flex-1">
-        <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+        <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 mb-8">
             <h2 class="text-2xl font-bold text-gray-900 mb-1">Configurações de Perfil</h2>
-            <p class="text-gray-500 text-xs mb-6">Atualize suas informações cadastrais e foto de perfil.</p>
+            <p class="text-gray-500 text-xs mb-6">Visualize suas informações e clique em "Editar" no campo que deseja alterar.</p>
 
-            <form id="form-perfil" class="space-y-4">
-                <div class="flex items-center space-x-4 pb-4 border-b">
-                    <div id="preview-avatar" class="w-16 h-16 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xl overflow-hidden shadow-sm border-2 border-gray-100"></div>
+            <form id="form-perfil" class="space-y-5">
+                <!-- FOTO DE PERFIL -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="flex items-center space-x-4">
+                        <div id="preview-avatar" class="w-16 h-16 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xl overflow-hidden shadow-sm border-2 border-gray-100 flex-shrink-0"></div>
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-700 mb-0.5">Foto de Perfil</span>
+                            <span id="txt-status-foto" class="text-[11px] text-gray-500">Personalize sua identidade visual.</span>
+                        </div>
+                    </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Foto de Perfil (Opcional)</label>
-                        <input type="file" id="input-foto-perfil" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                        <button type="button" id="btn-editar-foto" onclick="ativarEdicaoFoto()" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs">Editar</button>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nome Completo</label>
-                    <input type="text" id="perfil-nome" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <!-- CAMPO FOTO (OCULTO ATÉ CLICAR EM EDITAR) -->
+                <div id="container-input-foto" class="hidden p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-900 mb-1">Escolher nova imagem</label>
+                        <input type="file" id="input-foto-perfil" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white cursor-pointer">
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-blue-100">
+                        <button type="button" onclick="removerFotoPerfil()" class="text-xs text-red-600 hover:underline font-semibold">Remover foto atual</button>
+                        <button type="button" onclick="cancelarEdicaoFoto()" class="text-xs text-gray-600 font-semibold">Cancelar</button>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail de Acesso</label>
-                    <input type="email" id="perfil-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <!-- NOME COMPLETO -->
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+                    <div class="flex-1 pr-4">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Nome Completo</label>
+                        <input type="text" id="perfil-nome" disabled required class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed">
+                    </div>
+                    <button type="button" onclick="ativarEdicaoCampo('perfil-nome')" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0">Editar</button>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Curso</label>
-                    <select id="perfil-curso" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
-                        <option value="Administração">Administração</option>
-                        <option value="Administração Pública">Administração Pública</option>
-                        <option value="Biblioteconomia">Biblioteconomia</option>
-                        <option value="Ciências Contábeis">Ciências Contábeis</option>
-                        <option value="Engenharia de Produção">Engenharia de Produção</option>
-                        <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
-                        <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
-                    </select>
+                <!-- E-MAIL DE ACESSO -->
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 pr-4">
+                            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">E-mail de Acesso</label>
+                            <input type="email" id="perfil-email" disabled required class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed">
+                        </div>
+                        <button type="button" onclick="ativarEdicaoCampo('perfil-email')" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0">Editar</button>
+                    </div>
+                    <div id="aviso-email" class="hidden mt-2 text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                        ⚠️ <strong>Atenção:</strong> Alterar o e-mail exigirá confirmação em duas etapas (um link será enviado tanto para o seu e-mail antigo quanto para o novo).
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Semestre de Ingresso</label>
-                    <select id="perfil-semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
-                        <option value="">Nenhum</option>
-                    </select>
+                <!-- CURSO -->
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+                    <div class="flex-1 pr-4">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Curso</label>
+                        <select id="perfil-curso" disabled required class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed cursor-pointer">
+                            <option value="Administração">Administração</option>
+                            <option value="Administração Pública">Administração Pública</option>
+                            <option value="Biblioteconomia">Biblioteconomia</option>
+                            <option value="Ciências Contábeis">Ciências Contábeis</option>
+                            <option value="Engenharia de Produção">Engenharia de Produção</option>
+                            <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
+                            <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="ativarEdicaoCampo('perfil-curso')" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0">Editar</button>
                 </div>
 
-                <div class="pt-4 border-t flex items-center justify-between">
+                <!-- SEMESTRE DE INGRESSO -->
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+                    <div class="flex-1 pr-4">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Semestre de Ingresso</label>
+                        <select id="perfil-semestre" disabled class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed cursor-pointer">
+                            <option value="">Nenhum</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="ativarEdicaoCampo('perfil-semestre')" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0">Editar</button>
+                </div>
+
+                <!-- BOTÃO SALVAR (OCULTO ATÉ QUE HAJA MUDANÇAS) -->
+                <div id="container-salvar" class="hidden pt-4 border-t flex items-center justify-between animate-fadeIn">
                     <a href="index.html" class="text-xs text-gray-600 hover:underline font-semibold">← Voltar ao Planejamento</a>
                     <button type="submit" id="btn-salvar-perfil" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Salvar Alterações</button>
                 </div>
             </form>
             <div id="msg-perfil" class="mt-4 text-xs text-center font-medium"></div>
+        </div>
+
+        <!-- SEÇÃO: DISCIPLINAS DO SEMESTRE EM CURSO -->
+        <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Semestre em Curso</h3>
+                    <p id="subtitulo-semestre-curso" class="text-xs text-gray-500">Nenhum semestre selecionado como "Cursando" no painel principal.</p>
+                </div>
+                <span id="badge-semestre-ativo" class="hidden text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wide"></span>
+            </div>
+            <div id="lista-disciplinas-cursando" class="space-y-3">
+                <!-- Preenchido via JS -->
+            </div>
         </div>
     </main>
 
@@ -89,7 +143,10 @@
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         let usuarioAtual = null;
+        let dadosOriginais = {};
+        let flagRemoverFoto = false;
 
         async function initPerfil() {
             gerarOpcoesSemestres();
@@ -98,6 +155,7 @@
             usuarioAtual = session.user;
             renderizarTopoUsuario();
             preencherDadosPerfil();
+            await carregarDisciplinasCursando();
         }
 
         function gerarOpcoesSemestres() {
@@ -122,7 +180,7 @@
             const nome = metadata.nome || usuarioAtual.email || "Usuário";
             const primeiraLetra = nome.charAt(0).toUpperCase();
             const fotoUrl = metadata.foto_url;
-            let avatarHtml = fotoUrl ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
+            let avatarHtml = (fotoUrl && !flagRemoverFoto) ? `<img src="${fotoUrl}" class="w-full h-full object-cover">` : primeiraLetra;
 
             document.getElementById('preview-avatar').innerHTML = avatarHtml;
             bloco.innerHTML = `
@@ -142,11 +200,92 @@
 
         function preencherDadosPerfil() {
             if (!usuarioAtual) return;
-            document.getElementById('perfil-email').value = usuarioAtual.email || '';
             const md = usuarioAtual.user_metadata || {};
-            document.getElementById('perfil-nome').value = md.nome || '';
-            document.getElementById('perfil-curso').value = md.curso || 'Administração';
-            document.getElementById('perfil-semestre').value = md.semestre_ingresso || '';
+            dadosOriginais = {
+                email: usuarioAtual.email || '',
+                nome: md.nome || '',
+                curso: md.curso || 'Administração',
+                semestre: md.semestre_ingresso || '',
+                foto_url: md.foto_url || ''
+            };
+            document.getElementById('perfil-email').value = dadosOriginais.email;
+            document.getElementById('perfil-nome').value = dadosOriginais.nome;
+            document.getElementById('perfil-curso').value = dadosOriginais.curso;
+            document.getElementById('perfil-semestre').value = dadosOriginais.semestre;
+        }
+
+        function ativarEdicaoCampo(idCampo) {
+            const campo = document.getElementById(idCampo);
+            campo.disabled = false;
+            campo.focus();
+            if (idCampo === 'perfil-email') {
+                document.getElementById('aviso-email').classList.remove('hidden');
+            }
+            verificarMudancas();
+        }
+
+        function ativarEdicaoFoto() {
+            document.getElementById('container-input-foto').classList.remove('hidden');
+            document.getElementById('btn-editar-foto').classList.add('hidden');
+        }
+
+        function cancelarEdicaoFoto() {
+            document.getElementById('container-input-foto').classList.add('hidden');
+            document.getElementById('btn-editar-foto').classList.remove('hidden');
+            document.getElementById('input-foto-perfil').value = '';
+            flagRemoverFoto = false;
+            renderizarTopoUsuario();
+            verificarMudancas();
+        }
+
+        function removerFotoPerfil() {
+            flagRemoverFoto = true;
+            document.getElementById('preview-avatar').innerHTML = (dadosOriginais.nome || "U").charAt(0).toUpperCase();
+            document.getElementById('container-input-foto').classList.add('hidden');
+            document.getElementById('btn-editar-foto').classList.remove('hidden');
+            verificarMudancas();
+        }
+
+        document.getElementById('input-foto-perfil').addEventListener('change', () => {
+            flagRemoverFoto = false;
+            const file = document.getElementById('input-foto-perfil').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('preview-avatar').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+            verificarMudancas();
+        });
+
+        ['perfil-nome', 'perfil-email', 'perfil-curso', 'perfil-semestre'].forEach(id => {
+            document.getElementById(id).addEventListener('input', verificarMudancas);
+            document.getElementById(id).addEventListener('change', verificarMudancas);
+        });
+
+        function verificarMudancas() {
+            const nomeAtual = document.getElementById('perfil-nome').value;
+            const emailAtual = document.getElementById('perfil-email').value.trim();
+            const cursoAtual = document.getElementById('perfil-curso').value;
+            const semestreAtual = document.getElementById('perfil-semestre').value;
+            const temNovaFoto = document.getElementById('input-foto-perfil').files.length > 0;
+
+            const houveAlteracao = (
+                nomeAtual !== dadosOriginais.nome ||
+                emailAtual !== dadosOriginais.email ||
+                cursoAtual !== dadosOriginais.curso ||
+                semestreAtual !== dadosOriginais.semestre ||
+                temNovaFoto ||
+                flagRemoverFoto
+            );
+
+            const containerSalvar = document.getElementById('container-salvar');
+            if (houveAlteracao) {
+                containerSalvar.classList.remove('hidden');
+            } else {
+                containerSalvar.classList.add('hidden');
+            }
         }
 
         async function redimensionarImagem(file, larguraMax = 300, qualidade = 0.8) {
@@ -173,8 +312,10 @@
             btn.disabled = true; btn.textContent = "Salvando...";
 
             try {
-                let fotoUrl = usuarioAtual.user_metadata?.foto_url || null;
-                if (fotoFile) {
+                let fotoUrl = dadosOriginais.foto_url;
+                if (flagRemoverFoto) {
+                    fotoUrl = null;
+                } else if (fotoFile) {
                     const otimizada = await redimensionarImagem(fotoFile, 250, 0.75);
                     const nomeArq = `avatar_${usuarioAtual.id}_${Date.now()}.jpg`;
                     await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada, { upsert: true });
@@ -182,16 +323,91 @@
                     fotoUrl = pub.publicUrl;
                 }
 
-                let alterouEmail = email !== usuarioAtual.email;
-                const { data, error } = await supabaseClient.auth.updateUser({ email: alterouEmail ? email : undefined, data: { nome, curso, semestre_ingresso: semestre, foto_url: fotoUrl } });
+                let alterouEmail = email !== dadosOriginais.email;
+                const { data, error } = await supabaseClient.auth.updateUser({ 
+                    email: alterouEmail ? email : undefined, 
+                    data: { nome, curso, semestre_ingresso: semestre, foto_url: fotoUrl } 
+                });
                 if (error) throw error;
-                usuarioAtual = data.user; renderizarTopoUsuario(); preencherDadosPerfil();
-                msg.textContent = alterouEmail ? "✅ Salvo! Verifique o e-mail de confirmação." : "✅ Perfil atualizado com sucesso!";
+                
+                usuarioAtual = data.user; 
+                flagRemoverFoto = false;
+                renderizarTopoUsuario(); 
+                preencherDadosPerfil();
+                
+                // Rebloquear campos após salvar
+                ['perfil-nome', 'perfil-email', 'perfil-curso', 'perfil-semestre'].forEach(id => {
+                    document.getElementById(id).disabled = true;
+                });
+                document.getElementById('container-input-foto').classList.add('hidden');
+                document.getElementById('btn-editar-foto').classList.remove('hidden');
+                document.getElementById('container-salvar').classList.add('hidden');
+                document.getElementById('aviso-email').classList.add('hidden');
+
+                msg.textContent = alterouEmail ? "✅ Salvo! Verifique os e-mails de confirmação enviados para o endereço antigo e novo." : "✅ Perfil atualizado com sucesso!";
                 msg.className = "mt-4 text-xs text-center font-medium text-green-600";
             } catch (err) {
                 msg.textContent = "❌ " + err.message; msg.className = "mt-4 text-xs text-center font-medium text-red-600";
             } finally { btn.disabled = false; btn.textContent = "Salvar Alterações"; }
         });
+
+        async function carregarDisciplinasCursando() {
+            const semestreCursando = usuarioAtual.user_metadata?.semestre_em_curso;
+            const subtitulo = document.getElementById('subtitulo-semestre-curso');
+            const badge = document.getElementById('badge-semestre-ativo');
+            const containerLista = document.getElementById('lista-disciplinas-cursando');
+
+            if (!semestreCursando) {
+                subtitulo.textContent = "Você ainda não definiu um semestre em curso. Selecione no painel principal (index.html).";
+                containerLista.innerHTML = `<p class="text-xs text-gray-400 italic">Nenhuma disciplina para exibir.</p>`;
+                return;
+            }
+
+            subtitulo.textContent = `Exibindo a grade e horários de provas do ${semestreCursando}`;
+            badge.textContent = `Cursando ${semestreCursando}`;
+            badge.classList.remove('hidden');
+
+            // Buscar disciplinas cadastradas e planejamento do usuário
+            const [resDisc, resPlan] = await Promise.all([
+                supabaseClient.from('disciplinas').select('*'),
+                supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id).eq('semestre', semestreCursando)
+            ]);
+
+            const todasDisciplinas = resDisc.data || [];
+            const planejamentoUser = resPlan.data || [];
+
+            if (planejamentoUser.length === 0) {
+                containerLista.innerHTML = `<p class="text-xs text-gray-500 italic">Não há disciplinas alocadas no ${semestreCursando} no momento.</p>`;
+                return;
+            }
+
+            let html = '<div class="divide-y divide-gray-100">';
+            planejamentoUser.forEach(p => {
+                const disc = todasDisciplinas.find(d => d.id === p.disciplina_id);
+                if (!disc) return;
+
+                html += `
+                    <div class="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-mono text-xs font-bold text-blue-600">${disc.codigo || '-'}</span>
+                                <span class="text-sm font-semibold text-gray-800">${disc.nome}</span>
+                            </div>
+                            <div class="text-[11px] text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                <span><strong>AP1:</strong> ${disc.data_ap1 || '-'}</span>
+                                <span><strong>AP2:</strong> ${disc.data_ap2 || '-'}</span>
+                                <span><strong>AP3:</strong> ${disc.data_ap3 || '-'}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${p.status === 'Cursada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${p.status || 'Inscrita'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            containerLista.innerHTML = html;
+        }
 
         initPerfil();
     </script>
