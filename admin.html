@@ -9,6 +9,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24">
 
+    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
@@ -302,28 +303,41 @@
                     capaUrl = pubCapa.publicUrl;
                 }
 
+                // Captura as disciplinas selecionadas nos checkboxes
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
                 const idsValidos = checkboxes.map(cb => cb.value).filter(v => v !== 'GERAL').map(v => parseInt(v));
 
                 if (idEdicao) {
-                    await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
+                    // Atualiza dados do livro
+                    const { error: errUp } = await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
+                    if (errUp) throw errUp;
+
+                    // Remove vínculos antigos e insere os novos
                     await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', idEdicao);
                     if (idsValidos.length > 0) {
-                        const vinculos = idsValidos.map(id_disc => ({ id_livro: idEdicao, id_disciplina: id_disc }));
-                        await supabaseClient.from('livro_disciplinas').insert(vinculos);
+                        const vinculos = idsValidos.map(id_disc => ({ id_livro: parseInt(idEdicao), id_disciplina: id_disc }));
+                        const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
+                        if (errIns) throw errIns;
                     }
                     alert("Livro atualizado com sucesso!");
                 } else {
+                    // Cria o livro novo
                     const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }]).select().single();
                     if (error) throw error;
+
+                    // Insere os vínculos de disciplina, se houver
                     if (idsValidos.length > 0) {
                         const vinculos = idsValidos.map(id_disc => ({ id_livro: novoLivro.id, id_disciplina: id_disc }));
-                        await supabaseClient.from('livro_disciplinas').insert(vinculos);
+                        const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
+                        if (errIns) throw errIns;
                     }
                     alert("Livro cadastrado com sucesso!");
                 }
-                cancelarEdicaoLivro(); await carregarAdminLivros();
-            } catch (err) { alert("Erro: " + err.message); }
+                cancelarEdicaoLivro(); 
+                await carregarAdminLivros();
+            } catch (err) { 
+                alert("Erro ao salvar livro: " + err.message); 
+            }
         });
 
         async function editarLivro(livro) {
@@ -337,7 +351,7 @@
             document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.remove('hidden');
 
-            // Mapeia corretamente os IDs vinculados para marcar os checkboxes
+            // Mapeia os IDs já vinculados na tabela de relação para marcar os checkboxes
             const idsVinculados = (livro.livro_disciplinas || []).map(v => Number(v.id_disciplina));
             const ehGeral = idsVinculados.length === 0;
 
