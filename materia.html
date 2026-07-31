@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="meta-titulo">Jornal Blitz - Planejamento Acadêmico</title>
-    <!-- Open Graph Meta Tags para WhatsApp e Redes Sociais -->
     <meta id="og-title" property="og:title" content="Jornal Blitz - Planejamento Acadêmico">
     <meta id="og-description" property="og:description" content="Acompanhe as últimas notícias e avisos acadêmicos.">
     <meta id="og-image" property="og:image" content="">
@@ -38,7 +37,6 @@
     </header>
 
     <main class="w-full max-w-4xl mx-auto px-6 py-8 flex-1 space-y-12">
-        
         <div>
             <a href="jornal.html" class="text-xs font-bold text-gray-600 hover:text-blue-600 transition">← Voltar para o Jornal Blitz</a>
         </div>
@@ -65,7 +63,6 @@
             </div>
             <div id="teaser-jornal-fim-grid" class="flex gap-3 overflow-x-auto pb-2"></div>
         </section>
-
     </main>
 
     <script>
@@ -91,8 +88,7 @@
                 await carregarDetalhesPost(id);
                 await carregarTeasersFimMateria(id);
             } catch (err) {
-                console.error("Erro ao inicializar matéria:", err);
-                document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Erro ao carregar a publicação.</div>`;
+                console.error("Erro geral na inicialização da matéria:", err);
             }
         }
 
@@ -123,9 +119,16 @@
         }
 
         async function carregarDetalhesPost(id) {
-            const { data: post, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id).single();
+            // Busca segura via array (evita quebra por single())
+            const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id);
             const art = document.getElementById('artigo-materia');
-            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada ou removida.</div>`; return; }
+
+            if (error || !data || data.length === 0) {
+                art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada ou removida.</div>`;
+                return;
+            }
+
+            const post = data[0];
 
             document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
             if (post.resumo) {

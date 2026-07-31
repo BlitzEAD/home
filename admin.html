@@ -176,7 +176,6 @@
                 </div>
             </div>
         </div>
-
     </main>
 
     <script>
@@ -238,7 +237,7 @@
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) { container.innerHTML = 'Nenhuma disciplina encontrada.'; return; }
 
-            // Inclui a opção "Geral" na mesma lista sem alfinete ou diferenciação visual
+            // Inclui a opção "Geral" alinhada na lista
             let html = `
                 <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
                     <input type="checkbox" value="GERAL" class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
@@ -306,12 +305,11 @@
                 }
 
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
-                const disciplinasSelecionadas = checkboxes.map(cb => cb.value);
+                const idsValidos = checkboxes.map(cb => cb.value).filter(v => v !== 'GERAL').map(v => parseInt(v));
 
                 if (idEdicao) {
                     await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
                     await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', idEdicao);
-                    const idsValidos = disciplinasSelecionadas.filter(v => v !== 'GERAL').map(v => parseInt(v));
                     if (idsValidos.length > 0) {
                         const vinculos = idsValidos.map(id_disc => ({ id_livro: idEdicao, id_disciplina: id_disc }));
                         await supabaseClient.from('livro_disciplinas').insert(vinculos);
@@ -320,7 +318,6 @@
                 } else {
                     const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }]).select().single();
                     if (error) throw error;
-                    const idsValidos = disciplinasSelecionadas.filter(v => v !== 'GERAL').map(v => parseInt(v));
                     if (idsValidos.length > 0) {
                         const vinculos = idsValidos.map(id_disc => ({ id_livro: novoLivro.id, id_disciplina: id_disc }));
                         await supabaseClient.from('livro_disciplinas').insert(vinculos);
@@ -345,7 +342,7 @@
             const { data: vinculos } = await supabaseClient.from('livro_disciplinas').select('id_disciplina').eq('id_livro', livro.id);
             const idsVinculados = (vinculos || []).map(v => v.id_disciplina);
             document.querySelectorAll('.check-disc-livro').forEach(cb => {
-                cb.checked = idsVinculados.includes(parseInt(cb.value));
+                if (cb.value !== 'GERAL') cb.checked = idsVinculados.includes(parseInt(cb.value));
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
