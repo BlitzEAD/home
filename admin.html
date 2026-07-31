@@ -33,7 +33,7 @@
         <div id="secao-admin-livros" class="space-y-8">
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h2 id="titulo-form-livro" class="text-xl font-bold text-gray-900 mb-1">Cadastrar Novo Livro / Material</h2>
-                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital (com envio de PDF ou link externo).</p>
+                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital. Se nenhuma disciplina for marcada, o livro será considerado "Geral".</p>
 
                 <form id="form-livro" class="space-y-4">
                     <input type="hidden" id="livro-id-edicao">
@@ -67,7 +67,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-2">Vincular às Disciplinas / Temas</label>
+                        <label class="block text-xs font-semibold text-gray-700 mb-2">Vincular às Disciplinas (Deixe tudo desmarcado para livro "Geral")</label>
                         <div id="container-checkboxes-disciplinas" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border rounded-xl bg-gray-50 text-xs">
                             <span class="text-gray-400">Carregando disciplinas...</span>
                         </div>
@@ -237,12 +237,7 @@
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) { container.innerHTML = 'Nenhuma disciplina encontrada.'; return; }
 
-            let html = `
-                <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                    <input type="checkbox" value="GERAL" class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
-                    <span>Geral</span>
-                </label>
-            `;
+            let html = '';
             data.forEach(d => {
                 html += `
                     <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
@@ -303,19 +298,19 @@
                     capaUrl = pubCapa.publicUrl;
                 }
 
-                // Captura as disciplinas selecionadas nos checkboxes
+                // Captura os IDs das disciplinas marcadas nos checkboxes
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
-                const idsValidos = checkboxes.map(cb => cb.value).filter(v => v !== 'GERAL').map(v => parseInt(v));
+                const idsValidos = checkboxes.map(cb => parseInt(cb.value));
 
                 if (idEdicao) {
                     // Atualiza dados do livro
                     const { error: errUp } = await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
                     if (errUp) throw errUp;
 
-                    // Remove vínculos antigos e insere os novos
-                    await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', idEdicao);
+                    // Remove vínculos antigos e insere os novos (se houver)
+                    await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', idEdicao);
                     if (idsValidos.length > 0) {
-                        const vinculos = idsValidos.map(id_disc => ({ id_livro: parseInt(idEdicao), id_disciplina: id_disc }));
+                        const vinculos = idsValidos.map(id_disc => ({ livro_id: parseInt(idEdicao), id_disciplina: id_disc }));
                         const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
                         if (errIns) throw errIns;
                     }
@@ -327,7 +322,7 @@
 
                     // Insere os vínculos de disciplina, se houver
                     if (idsValidos.length > 0) {
-                        const vinculos = idsValidos.map(id_disc => ({ id_livro: novoLivro.id, id_disciplina: id_disc }));
+                        const vinculos = idsValidos.map(id_disc => ({ livro_id: novoLivro.id, id_disciplina: id_disc }));
                         const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
                         if (errIns) throw errIns;
                     }
@@ -351,16 +346,10 @@
             document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.remove('hidden');
 
-            // Mapeia os IDs já vinculados na tabela de relação para marcar os checkboxes
+            // Marca os checkboxes correspondentes às disciplinas já vinculadas
             const idsVinculados = (livro.livro_disciplinas || []).map(v => Number(v.id_disciplina));
-            const ehGeral = idsVinculados.length === 0;
-
             document.querySelectorAll('.check-disc-livro').forEach(cb => {
-                if (cb.value === 'GERAL') {
-                    cb.checked = ehGeral;
-                } else {
-                    cb.checked = idsVinculados.includes(Number(cb.value));
-                }
+                cb.checked = idsVinculados.includes(Number(cb.value));
             });
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -377,7 +366,7 @@
 
         async function deletarLivro(id) {
             if (!confirm("Excluir este livro?")) return;
-            await supabaseClient.from('livro_disciplinas').delete().eq('id_livro', id);
+            await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', id);
             await supabaseClient.from('livros').delete().eq('id', id);
             await carregarAdminLivros();
         }
