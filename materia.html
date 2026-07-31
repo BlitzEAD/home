@@ -171,33 +171,48 @@
                 // 1. SISTEMA DE PRIORIZAÇÃO DE LIVROS POR DISCIPLINA
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 const user = session?.user;
-                const semestreCursando = user?.user_metadata?.semestre_em_curso;
                 
                 let prioridadeLivroIds = new Set();
+                let discIds = [];
 
-                // Se houver um semestre em curso e usuário ativo, busca os vínculos
-                if (user && semestreCursando) {
-                    const { data: plan } = await supabaseClient
-                        .from('planejamento_usuarios')
-                        .select('disciplina_id')
-                        .eq('user_id', user.id)
-                        .eq('semestre', semestreCursando);
-                        
-                    if (plan && plan.length > 0) {
-                        const discIds = plan.map(p => p.disciplina_id);
-                        
-                        const { data: relacoes } = await supabaseClient
-                            .from('livro_disciplinas')
-                            .select('livro_id')
-                            .in('disciplina_id', discIds);
+                // A. Tenta pegar as disciplinas do usuário LOGADO
+                if (user) {
+                    const semestreCursando = user.user_metadata?.semestre_em_curso;
+                    if (semestreCursando) {
+                        const { data: plan } = await supabaseClient
+                            .from('planejamento_usuarios')
+                            .select('disciplina_id')
+                            .eq('user_id', user.id)
+                            .eq('semestre', semestreCursando);
                             
-                        if (relacoes) {
-                            relacoes.forEach(r => prioridadeLivroIds.add(r.livro_id));
+                        if (plan) {
+                            discIds = plan.map(p => p.disciplina_id);
                         }
+                    }
+                } else {
+                    // B. Tenta pegar as disciplinas do VISITANTE (Salvo no navegador)
+                    const semestreCursandoVisitante = localStorage.getItem('semestre_em_curso_visitante');
+                    if (semestreCursandoVisitante) {
+                        const planVisitante = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                        const registros = planVisitante.filter(p => p.semestre === semestreCursandoVisitante);
+                        discIds = registros.map(p => p.disciplina_id);
                     }
                 }
 
-                // Busca livros padrão (cronológico)
+                // Se encontrou disciplinas no semestre em curso, busca os livros relacionados
+                if (discIds.length > 0) {
+                    const { data: relacoes } = await supabaseClient
+                        .from('livro_disciplinas')
+                        .select('livro_id')
+                        .in('disciplina_id', discIds);
+                        
+                    if (relacoes) {
+                        // Converte para String para garantir que o cruzamento de dados não falhe
+                        relacoes.forEach(r => prioridadeLivroIds.add(String(r.livro_id)));
+                    }
+                }
+
+                // Busca todos os livros ordenados do mais novo pro mais antigo
                 const { data: livros_data } = await supabaseClient
                     .from('livros')
                     .select('*')
@@ -205,16 +220,16 @@
 
                 let livros = livros_data || [];
 
-                // Reordena o array priorizando os livros encontrados acima
+                // Reordena o array colocando os prioritários no início
                 if (prioridadeLivroIds.size > 0) {
                     livros.sort((a, b) => {
-                        const aPrio = prioridadeLivroIds.has(a.id) ? 1 : 0;
-                        const bPrio = prioridadeLivroIds.has(b.id) ? 1 : 0;
+                        const aPrio = prioridadeLivroIds.has(String(a.id)) ? 1 : 0;
+                        const bPrio = prioridadeLivroIds.has(String(b.id)) ? 1 : 0;
                         return bPrio - aPrio; 
                     });
                 }
 
-                // Separa apenas os 4 primeiros para exibir no teaser
+                // Corta apenas os 4 primeiros para exibir no Teaser
                 livros = livros.slice(0, 4);
 
                 const sectionBib = document.getElementById('teaser-biblioteca-section');
