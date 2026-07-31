@@ -45,10 +45,10 @@
 
         <!-- ARTIGO -->
         <article id="artigo-materia" class="bg-white rounded-2xl shadow-md p-6 md:p-10 border border-gray-200">
-            <div class="text-center py-16 text-gray-400">Carregando conteúdo da matéria...</div>
+            <div class="text-center py-16 text-gray-400">Carregando conteúdo...</div>
         </article>
 
-        <!-- TEASER DA BIBLIOTECA -->
+        <!-- TEASER DA BIBLIOTECA NO FINAL DA MATÉRIA -->
         <section id="teaser-biblioteca-section" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hidden">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-base font-bold text-gray-800">📚 Itens da nossa Biblioteca recomendados para você</h3>
@@ -57,7 +57,7 @@
             <div id="teaser-biblioteca-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none"></div>
         </section>
 
-        <!-- TEASER DO JORNAL -->
+        <!-- TEASER DE OUTRAS PUBLICAÇÕES DO JORNAL NO FINAL DA MATÉRIA -->
         <section id="teaser-jornal-fim-section" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hidden">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-base font-bold text-gray-800">📰 Leia também no Jornal Blitz</h3>
@@ -79,13 +79,8 @@
             if (session) usuarioAtual = session.user;
             renderizarTopoUsuario();
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-
-            if (!id) {
-                document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não especificada.</div>`;
-                return;
-            }
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (!id) { document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`; return; }
 
             await carregarDetalhesPost(id);
             await carregarTeasersFimMateria(id);
@@ -120,12 +115,9 @@
         async function carregarDetalhesPost(id) {
             const { data: post, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id).single();
             const art = document.getElementById('artigo-materia');
+            if (error || !post) { art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`; return; }
 
-            if (error || !post) {
-                art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`;
-                return;
-            }
-
+            // Configura Meta Tags Open Graph (OG) para o WhatsApp e redes sociais
             document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
             if (post.resumo) {
                 document.getElementById('meta-descricao').setAttribute('content', post.resumo);
@@ -154,6 +146,7 @@
                         <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2 mb-1 leading-tight">${post.titulo}</h1>
                         <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>${dataF}</span></div>
                     </div>
+                    <!-- BOTÃO COMPARTILHAR -->
                     <div class="flex items-center space-x-2">
                         <button onclick="compartilharWhatsApp('${encodeURIComponent(post.titulo)}', '${encodeURIComponent(post.resumo || '')}', '${urlAtual}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm">
                             <span>💬 WhatsApp</span>
