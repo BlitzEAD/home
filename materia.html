@@ -14,7 +14,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
-    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
@@ -78,13 +77,14 @@
                 renderizarTopoUsuario();
 
                 const urlParams = new URLSearchParams(window.location.search);
-                const id = urlParams.get('id');
+                const idStr = urlParams.get('id');
 
-                if (!id) {
+                if (!idStr) {
                     document.getElementById('artigo-materia').innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Matéria não encontrada.</div>`;
                     return;
                 }
 
+                const id = parseInt(idStr);
                 await carregarDetalhesPost(id);
                 await carregarTeasersFimMateria(id);
             } catch (err) {
@@ -119,7 +119,6 @@
         }
 
         async function carregarDetalhesPost(id) {
-            // Busca segura via array (evita quebra por single())
             const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', id);
             const art = document.getElementById('artigo-materia');
 
@@ -188,7 +187,6 @@
 
         async function carregarTeasersFimMateria(postIdAtual) {
             try {
-                // 1. TEASER DA BIBLIOTECA
                 let disciplinasPrioritariasIds = [];
                 if (usuarioAtual) {
                     const { data: plano } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, status').eq('user_id', usuarioAtual.id);
@@ -228,7 +226,6 @@
                     gridBib.innerHTML = htmlBib;
                 }
 
-                // 2. TEASER DO JORNAL
                 const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
                 const sectionJornal = document.getElementById('teaser-jornal-fim-section');
                 const gridJornal = document.getElementById('teaser-jornal-fim-grid');

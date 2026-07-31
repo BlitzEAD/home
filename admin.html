@@ -9,7 +9,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24">
 
-    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
@@ -237,7 +236,6 @@
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) { container.innerHTML = 'Nenhuma disciplina encontrada.'; return; }
 
-            // Inclui a opção "Geral" alinhada na lista
             let html = `
                 <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
                     <input type="checkbox" value="GERAL" class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
@@ -256,7 +254,7 @@
         }
 
         async function carregarAdminLivros() {
-            const { data } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false });
+            const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
             const tbody = document.getElementById('tabela-admin-livros');
             if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum livro cadastrado.</td></tr>`; return; }
 
@@ -339,11 +337,18 @@
             document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.remove('hidden');
 
-            const { data: vinculos } = await supabaseClient.from('livro_disciplinas').select('id_disciplina').eq('id_livro', livro.id);
-            const idsVinculados = (vinculos || []).map(v => v.id_disciplina);
+            // Mapeia corretamente os IDs vinculados para marcar os checkboxes
+            const idsVinculados = (livro.livro_disciplinas || []).map(v => Number(v.id_disciplina));
+            const ehGeral = idsVinculados.length === 0;
+
             document.querySelectorAll('.check-disc-livro').forEach(cb => {
-                if (cb.value !== 'GERAL') cb.checked = idsVinculados.includes(parseInt(cb.value));
+                if (cb.value === 'GERAL') {
+                    cb.checked = ehGeral;
+                } else {
+                    cb.checked = idsVinculados.includes(Number(cb.value));
+                }
             });
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
