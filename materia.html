@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
-    <!-- MENU SUPERIOR FIXO (IGUAL AO JORNAL E INDEX) -->
+    <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
@@ -27,12 +27,12 @@
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
             </div>
         </div>
-        <!-- MENU INFERIOR CORRIGIDO -->
+        <!-- MENU INFERIOR -->
         <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="jornal.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="jornal.html" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
                 <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
@@ -82,14 +82,10 @@
         let usuarioAtual = null;
 
         async function initMateria() {
-            // Autenticação para preencher o Menu
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                usuarioAtual = session.user;
-            }
+            if (session) usuarioAtual = session.user;
             renderizarTopoUsuario();
 
-            // Carregamento da Matéria
             const art = document.getElementById('artigo-materia');
             const urlParams = new URLSearchParams(window.location.search);
             const idParam = urlParams.get('id');
@@ -113,14 +109,16 @@
 
             const post = data[0];
 
-            // Configuração das Meta Tags
-            document.getElementById('meta-titulo').textContent = `${post.titulo} - Jornal Blitz`;
-            if (post.resumo) {
-                document.getElementById('og-description').setAttribute('content', post.resumo);
-            }
-            document.getElementById('og-title').setAttribute('content', `${post.titulo} - Jornal Blitz`);
-            if (post.capa_url) {
-                document.getElementById('og-image').setAttribute('content', post.capa_url);
+            // Configuração dinâmica correta das Meta Tags (OG Tags) para Redes Sociais e WhatsApp
+            const tituloCompleto = `Jornal Blitz - ${post.titulo}`;
+            const descricaoPost = post.resumo || 'Acompanhe as últimas notícias e avisos acadêmicos.';
+            const imagemPost = post.capa_url || '';
+
+            document.getElementById('meta-titulo').textContent = tituloCompleto;
+            document.getElementById('og-title').setAttribute('content', tituloCompleto);
+            document.getElementById('og-description').setAttribute('content', descricaoPost);
+            if (imagemPost) {
+                document.getElementById('og-image').setAttribute('content', imagemPost);
             }
 
             const dataF = post.criado_em ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -142,20 +140,23 @@
                         <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>${dataF}</span></div>
                     </div>
                     
-                    <!-- BOTÕES DE COMPARTILHAMENTO -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="compartilharRede('whatsapp', '${encodeURIComponent(post.titulo)}', '${encodeURIComponent(post.resumo || '')}', '${urlAtual}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-sm">
-                            <span>💬 WhatsApp</span>
-                        </button>
-                        <button onclick="compartilharRede('facebook', '', '', '${urlAtual}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-sm">
-                            <span>📘 Facebook</span>
-                        </button>
-                        <button onclick="compartilharRede('twitter', '${encodeURIComponent(post.titulo)}', '', '${urlAtual}')" class="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-sm">
-                            <span>🐦 X / Twitter</span>
-                        </button>
-                        <button onclick="copiarLink('${urlAtual}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">
-                            📋 Copiar Link
-                        </button>
+                    <!-- BOTÕES DE COMPARTILHAMENTO COMPACTOS -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-semibold text-gray-500 whitespace-nowrap">Compartilhar:</span>
+                        <div class="flex items-center space-x-1.5">
+                            <button onclick="compartilharRede('whatsapp', '${encodeURIComponent(post.titulo)}', '${encodeURIComponent(post.resumo || '')}', '${urlAtual}')" title="Compartilhar no WhatsApp" class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs transition shadow-xs">
+                                💬
+                            </button>
+                            <button onclick="compartilharRede('facebook', '', '', '${urlAtual}')" title="Compartilhar no Facebook" class="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-xs transition shadow-xs">
+                                f
+                            </button>
+                            <button onclick="compartilharRede('twitter', '${encodeURIComponent(post.titulo)}', '', '${urlAtual}')" title="Compartilhar no X / Twitter" class="w-8 h-8 rounded-lg bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center text-xs transition shadow-xs">
+                                𝕏
+                            </button>
+                            <button onclick="copiarLink('${urlAtual}')" title="Copiar Link" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-xs transition border border-gray-300 shadow-xs">
+                                🔗
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -169,7 +170,6 @@
             carregarTeasersFimMateria(queryId);
         }
 
-        // FUNÇÃO DE RENDERIZAR O TOPO DO MENU (Trazido do jornal.html)
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
@@ -222,7 +222,7 @@
 
         async function carregarTeasersFimMateria(postIdAtual) {
             try {
-                // 1. TEASER DA BIBLIOTECA (Apontando para o ID específico do livro na URL)
+                // 1. TEASER DA BIBLIOTECA
                 const { data: livros } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false }).limit(4);
                 const sectionBib = document.getElementById('teaser-biblioteca-section');
                 const gridBib = document.getElementById('teaser-biblioteca-grid');
