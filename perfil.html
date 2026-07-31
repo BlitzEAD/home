@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Perfil - Planejamento Acadêmico</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- jsPDF para exportação de PDFs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
 
@@ -34,19 +31,6 @@
             </nav>
         </div>
     </header>
-
-    <!-- MODAL DE GUIA E DOWNLOAD DO .ICS -->
-    <div id="modal-ics-guia" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative overflow-hidden">
-            <button onclick="fecharModalIcsGuia()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-            <h3 id="ics-guia-titulo" class="text-xl font-extrabold text-gray-900 mb-2">Adicionar Provas à Agenda</h3>
-            <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6"></div>
-            <div class="flex justify-end space-x-3 mt-4 border-t pt-4">
-                <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition">Cancelar</button>
-                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Fazer Download (.ics)</button>
-            </div>
-        </div>
-    </div>
 
     <main class="w-full max-w-2xl mx-auto px-6 py-8 flex-1">
         <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 mb-8">
@@ -149,19 +133,8 @@
                 </div>
                 <span id="badge-semestre-ativo" class="hidden text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wide"></span>
             </div>
-            
-            <div id="lista-disciplinas-cursando" class="space-y-3 mb-4">
+            <div id="lista-disciplinas-cursando" class="space-y-3">
                 <!-- Preenchido via JS -->
-            </div>
-
-            <!-- BOTÕES DE AÇÃO (EXPORTAR E ICS) IGUAIS AO INDEX -->
-            <div id="container-botoes-acoes-cursando" class="hidden flex flex-wrap justify-center items-center pt-4 border-t gap-2">
-                <button id="btn-exportar-pdf-perfil" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                    <span>🖨️ Exportar Grade do Semestre</span>
-                </button>
-                <button id="btn-exportar-ics-perfil" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                    <span>📅 Adicionar Agenda de Provas</span>
-                </button>
             </div>
         </div>
     </main>
@@ -174,9 +147,6 @@
         let usuarioAtual = null;
         let dadosOriginais = {};
         let flagRemoverFoto = false;
-        let disciplinasGlobaisPerfil = [];
-        let planejamentoGlobalPerfil = [];
-        let semestreIcsPendente = null;
 
         async function initPerfil() {
             gerarOpcoesSemestres();
@@ -365,6 +335,7 @@
                 renderizarTopoUsuario(); 
                 preencherDadosPerfil();
                 
+                // Rebloquear campos após salvar
                 ['perfil-nome', 'perfil-email', 'perfil-curso', 'perfil-semestre'].forEach(id => {
                     document.getElementById(id).disabled = true;
                 });
@@ -385,12 +356,10 @@
             const subtitulo = document.getElementById('subtitulo-semestre-curso');
             const badge = document.getElementById('badge-semestre-ativo');
             const containerLista = document.getElementById('lista-disciplinas-cursando');
-            const containerBotoesAcoes = document.getElementById('container-botoes-acoes-cursando');
 
             if (!semestreCursando) {
                 subtitulo.textContent = "Você ainda não definiu um semestre em curso. Selecione no painel principal (index.html).";
                 containerLista.innerHTML = `<p class="text-xs text-gray-400 italic">Nenhuma disciplina para exibir.</p>`;
-                containerBotoesAcoes.classList.add('hidden');
                 return;
             }
 
@@ -398,23 +367,23 @@
             badge.textContent = `Cursando ${semestreCursando}`;
             badge.classList.remove('hidden');
 
+            // Buscar disciplinas cadastradas e planejamento do usuário
             const [resDisc, resPlan] = await Promise.all([
                 supabaseClient.from('disciplinas').select('*'),
                 supabaseClient.from('planejamento_usuarios').select('*').eq('user_id', usuarioAtual.id).eq('semestre', semestreCursando)
             ]);
 
-            disciplinasGlobaisPerfil = resDisc.data || [];
-            planejamentoGlobalPerfil = resPlan.data || [];
+            const todasDisciplinas = resDisc.data || [];
+            const planejamentoUser = resPlan.data || [];
 
-            if (planejamentoGlobalPerfil.length === 0) {
+            if (planejamentoUser.length === 0) {
                 containerLista.innerHTML = `<p class="text-xs text-gray-500 italic">Não há disciplinas alocadas no ${semestreCursando} no momento.</p>`;
-                containerBotoesAcoes.classList.add('hidden');
                 return;
             }
 
             let html = '<div class="divide-y divide-gray-100">';
-            planejamentoGlobalPerfil.forEach(p => {
-                const disc = disciplinasGlobaisPerfil.find(d => d.id === p.disciplina_id);
+            planejamentoUser.forEach(p => {
+                const disc = todasDisciplinas.find(d => d.id === p.disciplina_id);
                 if (!disc) return;
 
                 html += `
@@ -438,300 +407,6 @@
             });
             html += '</div>';
             containerLista.innerHTML = html;
-            containerBotoesAcoes.classList.remove('hidden');
-
-            // Conectar eventos dos botões
-            document.getElementById('btn-exportar-pdf-perfil').onclick = () => exportarSemestrePDF(semestreCursando);
-            document.getElementById('btn-exportar-ics-perfil').onclick = () => iniciarExportacaoICS(semestreCursando);
-        }
-
-        // --- FUNÇÕES DE EXPORTAÇÃO (IDÊNTICAS AO INDEX) ---
-        function exportarSemestrePDF(semestreNome) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' });
-
-            const registros = planejamentoGlobalPerfil
-                .filter(p => p.semestre === semestreNome)
-                .sort((a, b) => {
-                    const indexA = disciplinasGlobaisPerfil.findIndex(d => d.id === a.disciplina_id);
-                    const indexB = disciplinasGlobaisPerfil.findIndex(d => d.id === b.disciplina_id);
-                    return indexA - indexB;
-                });
-
-            if (registros.length === 0) return;
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Grade de Disciplinas - " + semestreNome, 14, 15);
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 21);
-
-            let y = 30;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(9);
-            doc.setFillColor(235, 240, 245);
-            doc.rect(14, y - 4, 269, 7, "F");
-
-            doc.text("Código", 16, y);
-            doc.text("Nome da Disciplina", 42, y);
-            doc.text("Data AP1", 130, y);
-            doc.text("Data AP2", 175, y);
-            doc.text("Data AP3", 220, y);
-            doc.text("Status", 283, y, { align: "right" });
-
-            y += 7;
-            doc.setFont("helvetica", "normal");
-
-            registros.forEach(reg => {
-                const d = disciplinasGlobaisPerfil.find(item => item.id === reg.disciplina_id);
-                if (!d) return;
-
-                if (y > 185) {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                doc.text(d.codigo || '-', 16, y);
-                const nomeDisc = (d.nome || '-').length > 41 ? (d.nome || '-').substring(0, 38) + '...' : (d.nome || '-');
-                doc.text(nomeDisc, 42, y);
-                
-                if (d.controle === 0 || d.controle === '0') {
-                    doc.text("Não disponível", 130, y);
-                    doc.text("-", 175, y);
-                    doc.text("-", 220, y);
-                } else {
-                    doc.text(d.data_ap1 || '-', 130, y);
-                    doc.text(d.data_ap2 || '-', 175, y);
-                    doc.text(d.data_ap3 || '-', 220, y);
-                }
-                doc.text(reg.status || 'Inscrita', 283, y, { align: "right" });
-
-                y += 8;
-            });
-
-            doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
-        }
-
-        function parseDataHoraStrICS(str) {
-            if (!str) return null;
-            const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2}):(\d{2})\s*(?:às|as)\s*(\d{1,2}):(\d{2})$/i;
-            const match = str.trim().match(regex);
-            
-            if (match) {
-                const dia = parseInt(match[1], 10);
-                const mes = parseInt(match[2], 10) - 1; 
-                const ano = parseInt(match[3], 10);
-                const horaInicio = parseInt(match[4], 10);
-                const minInicio = parseInt(match[5], 10);
-                const horaFim = parseInt(match[6], 10);
-                const minFim = parseInt(match[7], 10);
-                
-                const dataObjDate = new Date(Date.UTC(ano, mes, dia, horaInicio + 3, minInicio, 0));
-
-                function formatarUTC(h, m) {
-                    let d = new Date(Date.UTC(ano, mes, dia, h + 3, m, 0));
-                    const yyyy = d.getUTCFullYear();
-                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getUTCDate()).padStart(2, '0');
-                    const hh = String(d.getUTCHours()).padStart(2, '0');
-                    const mmm = String(d.getUTCMinutes()).padStart(2, '0');
-                    return `${yyyy}${mm}${dd}T${hh}${mmm}00Z`;
-                }
-
-                return {
-                    dateObj: dataObjDate,
-                    diaStr: String(dia).padStart(2, '0'),
-                    mesStr: String(mes + 1).padStart(2, '0'),
-                    anoStr: String(ano),
-                    horarioInicioCompleto: `${String(horaInicio).padStart(2, '0')}h${minInicio > 0 ? String(minInicio).padStart(2, '0') : ''}`,
-                    horarioFimCompleto: `${String(horaFim).padStart(2, '0')}h${minFim > 0 ? String(minFim).padStart(2, '0') : ''}`,
-                    dtstart: formatarUTC(horaInicio, minInicio),
-                    dtend: formatarUTC(horaFim, minFim)
-                };
-            }
-            return null;
-        }
-
-        function formatarDataHoraAtualZ() {
-            const dateObj = new Date();
-            const ano = dateObj.getUTCFullYear();
-            const mes = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-            const dia = String(dateObj.getUTCDate()).padStart(2, '0');
-            const hora = String(dateObj.getUTCHours()).padStart(2, '0');
-            const min = String(dateObj.getUTCMinutes()).padStart(2, '0');
-            const seg = String(dateObj.getUTCSeconds()).padStart(2, '0');
-            return `${ano}${mes}${dia}T${hora}${min}${seg}Z`;
-        }
-
-        function detectarDevice() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            if (/android/i.test(ua)) return 'android';
-            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'ios';
-            if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(ua)) return 'mac';
-            return 'pc';
-        }
-
-        function iniciarExportacaoICS(semestreNome) {
-            const registros = planejamentoGlobalPerfil.filter(p => p.semestre === semestreNome);
-            if (registros.length === 0) {
-                alert("Não há disciplinas neste semestre para gerar o calendário.");
-                return;
-            }
-
-            semestreIcsPendente = semestreNome;
-            const device = detectarDevice();
-            const tituloEl = document.getElementById('ics-guia-titulo');
-            const conteudoEl = document.getElementById('ics-guia-conteudo');
-            
-            tituloEl.textContent = `Como adicionar à Agenda (Apenas AP1 e AP2)`;
-
-            let instrucoesHtml = '';
-            if (device === 'android') {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">📱 Instruções para Android (Google Agenda):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li><li>Abra o arquivo baixado para adicionar automaticamente ao Google Agenda.</li></ol>`;
-            } else if (device === 'ios') {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">📱 Instruções para iPhone / iPad (iOS):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Clique em <strong>Fazer Download (.ics)</strong> e toque no arquivo para adicionar ao seu Calendário.</li></ol>`;
-            } else if (device === 'mac') {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">💻 Instruções para macOS (Apple Calendar):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Dê um duplo clique no arquivo baixado para abrir o aplicativo Calendário.</li></ol>`;
-            } else {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">💻 Instruções para Computador (Google Agenda / Outlook):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>, vá em <em>Configurações > Importar e exportar</em> e selecione o arquivo.</li></ol>`;
-            }
-
-            conteudoEl.innerHTML = instrucoesHtml;
-            document.getElementById('modal-ics-guia').classList.remove('hidden');
-        }
-
-        function fecharModalIcsGuia() {
-            document.getElementById('modal-ics-guia').classList.add('hidden');
-            semestreIcsPendente = null;
-        }
-
-        document.getElementById('btn-confirmar-download-ics').addEventListener('click', async () => {
-            if (!semestreIcsPendente) return;
-            const semestreNome = semestreIcsPendente;
-            fecharModalIcsGuia();
-
-            const registros = planejamentoGlobalPerfil.filter(p => p.semestre === semestreNome);
-            const now = new Date();
-            const anoVigente = now.getFullYear();
-            const semestreVigenteNum = (now.getMonth() + 1) >= 6 ? 2 : 1;
-            const codigoSemestreFormatado = `${anoVigente}${semestreVigenteNum}`;
-
-            let eventosIcs = [];
-            let atualizacoesSequenciais = [];
-            const tiposAvaliacao = ['AP1', 'AP2'];
-
-            tiposAvaliacao.forEach(tipoAP => {
-                let provasDoTipo = [];
-
-                registros.forEach(reg => {
-                    const disc = disciplinasGlobaisPerfil.find(item => item.id === reg.disciplina_id);
-                    if (!disc) return;
-                    if (disc.controle === 0 || disc.controle === '0') return;
-
-                    const campoData = tipoAP === 'AP1' ? disc.data_ap1 : disc.data_ap2;
-                    const parsed = parseDataHoraStrICS(campoData);
-                    if (parsed) {
-                        provasDoTipo.push({ reg, disc, parsed, timestamp: parsed.dateObj.getTime() });
-                    }
-                });
-
-                if (provasDoTipo.length === 0) return;
-                provasDoTipo.sort((a, b) => a.timestamp - b.timestamp);
-
-                let finsDeSemana = [];
-                let currentFds = [provasDoTipo[0]];
-
-                for (let i = 1; i < provasDoTipo.length; i++) {
-                    const diffDias = (provasDoTipo[i].timestamp - provasDoTipo[i-1].timestamp) / (1000 * 60 * 60 * 24);
-                    if (diffDias <= 3) {
-                        currentFds.push(provasDoTipo[i]);
-                    } else {
-                        finsDeSemana.push(currentFds);
-                        currentFds = [provasDoTipo[i]];
-                    }
-                }
-                finsDeSemana.push(currentFds);
-
-                finsDeSemana.forEach((fdsProvas, fdsIndex) => {
-                    const primeiraProvaTimestamp = fdsProvas[0].timestamp;
-                    const primeiraProvaDate = new Date(primeiraProvaTimestamp);
-
-                    const dataAlerta = new Date(primeiraProvaDate);
-                    const diaSemanaPrimeiraProva = primeiraProvaDate.getUTCDay();
-                    let diasAteSegunda = diaSemanaPrimeiraProva === 0 ? 6 : diaSemanaPrimeiraProva - 1;
-                    dataAlerta.setUTCDate(dataAlerta.getUTCDate() - diasAteSegunda + 1);
-
-                    const yyyyA = dataAlerta.getUTCFullYear();
-                    const mmA = String(dataAlerta.getUTCMonth() + 1).padStart(2, '0');
-                    const ddA = String(dataAlerta.getUTCDate()).padStart(2, '0');
-                    const dtAlertaStart = `${yyyyA}${mmA}${ddA}T120000Z`;
-                    const dtAlertaEnd = `${yyyyA}${mmA}${ddA}T130000Z`;
-
-                    const nomeFdsOrdem = fdsIndex === 0 ? 'Primeiro' : (fdsIndex === 1 ? 'Segundo' : `${fdsIndex + 1}º`);
-                    const summaryAlerta = `Provas ${tipoAP} chegando! ${nomeFdsOrdem} fim de semana!`;
-
-                    let descAlertaLinhas = [];
-                    fdsProvas.forEach(p => {
-                        const diaSemanaStr = p.parsed.dateObj.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        descAlertaLinhas.push(`${diaSemanaStr.charAt(0).toUpperCase() + diaSemanaStr.slice(1)}, ${p.parsed.diaStr}/${p.parsed.mesStr} - ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}: ${p.disc.nome}`);
-                    });
-                    const descriptionAlerta = `Cronograma de provas deste fim de semana: ` + descAlertaLinhas.join(' | ');
-                    const uidAlerta = `ALERTA-${tipoAP}-FDS${fdsIndex+1}-${codigoSemestreFormatado}@eadblitz.com.br`;
-                    const dtstampStr = formatarDataHoraAtualZ();
-
-                    eventosIcs.push('BEGIN:VEVENT', `UID:${uidAlerta}`, `DTSTAMP:${dtstampStr}`, `DTSTART:${dtAlertaStart}`, `DTEND:${dtAlertaEnd}`, `SUMMARY:${summaryAlerta}`, `DESCRIPTION:${descriptionAlerta}`, 'URL:https://www.eadblitz.com.br', 'CATEGORIES:Provas', 'STATUS:CONFIRMED', 'TRANSP:TRANSPARENT', 'END:VEVENT');
-
-                    fdsProvas.forEach(p => {
-                        const provaDate = p.parsed.dateObj;
-                        const diaSemanaProva = provaDate.getUTCDay();
-                        let diasASubtrair = diaSemanaProva === 6 ? 1 : (diaSemanaProva === 0 ? 2 : (diaSemanaProva + 2) % 7);
-
-                        const sextaVespers = new Date(provaDate);
-                        sextaVespers.setUTCDate(sextaVespers.getUTCDate() - diasASubtrair);
-
-                        const yyyyS = sextaVespers.getUTCFullYear();
-                        const mmS = String(sextaVespers.getUTCMonth() + 1).padStart(2, '0');
-                        const ddS = String(sextaVespers.getUTCDate()).padStart(2, '0');
-                        const dtSextaStart = `${yyyyS}${mmS}${ddS}T180000Z`;
-                        const dtSextaEnd = `${yyyyS}${mmS}${ddS}T190000Z`;
-
-                        const diaSemanaProvaNome = provaDate.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        const summaryVespers = `Prova de ${p.disc.nome} no ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, dia ${p.parsed.diaStr}/${p.parsed.mesStr}, de ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}`;
-                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome} - Horário: ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}`;
-                        const codigoDisc = p.disc.codigo || 'GERAL';
-                        const uidVespers = `${codigoDisc}-${p.disc.id}-${tipoAP}-VESP-${codigoSemestreFormatado}@eadblitz.com.br`;
-
-                        const novaSequence = (p.reg.sequence || 0) + 1;
-                        atualizacoesSequenciais.push({ disciplina_id: p.reg.disciplina_id, semestre: p.reg.semestre, sequence: novaSequence });
-
-                        eventosIcs.push('BEGIN:VEVENT', `UID:${uidVespers}`, `DTSTAMP:${dtstampStr}`, `SEQUENCE:${novaSequence}`, `DTSTART:${dtSextaStart}`, `DTEND:${dtSextaEnd}`, `SUMMARY:${summaryVespers}`, `DESCRIPTION:${descriptionVespers}`, 'URL:https://www.eadblitz.com.br', 'CATEGORIES:Provas', 'STATUS:CONFIRMED', 'TRANSP:TRANSPARENT', 'END:VEVENT');
-                    });
-                });
-            });
-
-            if (eventosIcs.length === 0) {
-                alert("Nenhuma data válida encontrada para exportação.");
-                return;
-            }
-
-            for (let att of atualizacoesSequenciais) {
-                await supabaseClient.from('planejamento_usuarios').update({ sequence: att.sequence }).eq('user_id', usuarioAtual.id).eq('disciplina_id', att.disciplina_id).eq('semestre', att.semestre);
-            }
-
-            const conteudoIcs = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//BlitzEAD//Planejamento Academico//PT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Provas - ' + semestreNome, ...eventosIcs, 'END:VCALENDAR'].join('\r\n');
-            const blob = new Blob([conteudoIcs], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `provas_${semestreNome.toLowerCase().replace(' ', '_')}.ics`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            await carregarDisciplinasCursando();
         }
 
         initPerfil();
