@@ -335,51 +335,13 @@
             const tbody = document.getElementById('tabela-disciplinas');
             if (!tbody || listaDisciplinasGlobal.length === 0) return;
             const checkboxes = Array.from(document.querySelectorAll('.check-disciplina:checked')).map(cb => parseInt(cb.value));
-            
-            // Função auxiliar para validar se o horário é real (ignora vazio, nulo e o caractere "-")
-            const ehHorarioValido = (str) => {
-                if (!str) return false;
-                const limpo = str.trim();
-                return limpo !== "" && limpo !== "-";
-            };
-
             const horariosOcupados = new Set();
             listaDisciplinasGlobal.forEach(d => {
                 if (checkboxes.includes(d.id)) {
-                    if (ehHorarioValido(d.data_ap1)) horariosOcupados.add(d.data_ap1.trim());
-                    if (ehHorarioValido(d.data_ap2)) horariosOcupados.add(d.data_ap2.trim());
-                    if (ehHorarioValido(d.data_ap3)) horariosOcupados.add(d.data_ap3.trim());
+                    if (d.data_ap1?.trim()) horariosOcupados.add(d.data_ap1.trim());
+                    if (d.data_ap2?.trim()) horariosOcupados.add(d.data_ap2.trim());
+                    if (d.data_ap3?.trim()) horariosOcupados.add(d.data_ap3.trim());
                 }
-            });
-
-            const statusMap = {}; planejamentoGlobal.forEach(p => { statusMap[p.disciplina_id] = p; });
-            let html = '';
-            listaDisciplinasGlobal.forEach(disc => {
-                const jaSalvo = statusMap[disc.id]; const estaMarcada = checkboxes.includes(disc.id); const indisponivel = (disc.controle === 0 || disc.controle === '0');
-                
-                // Conflito só é verdadeiro se o horário da disciplina for válido E estiver no Set de horários ocupados
-                let temConflito = !estaMarcada && horariosOcupados.size > 0 && (
-                    (ehHorarioValido(disc.data_ap1) && horariosOcupados.has(disc.data_ap1.trim())) || 
-                    (ehHorarioValido(disc.data_ap2) && horariosOcupados.has(disc.data_ap2.trim())) || 
-                    (ehHorarioValido(disc.data_ap3) && horariosOcupados.has(disc.data_ap3.trim()))
-                );
-
-                let badge = jaSalvo ? `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${jaSalvo.status === 'Cursada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${jaSalvo.status} (${jaSalvo.semestre})</span>` : '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Não alocada</span>';
-                
-                html += `
-                    <tr class="border-b hover:bg-gray-50 transition text-sm ${temConflito ? 'bg-amber-50 border-l-4 border-l-amber-500' : ''}">
-                        <td class="p-3 text-center align-middle"><input type="checkbox" value="${disc.id}" class="check-disciplina w-4 h-4 text-blue-600 rounded border-gray-300 ${jaSalvo ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${estaMarcada ? 'checked' : ''} ${jaSalvo ? 'disabled' : ''}></td>
-                        <td class="p-3 font-mono align-middle">${disc.codigo || '-'}</td>
-                        <td class="p-3 font-medium align-middle"><div>${disc.nome}</div>${temConflito ? '<span class="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-semibold inline-block mt-1">⚠️ Conflito de Horário</span>' : ''}</td>
-                        ${indisponivel ? '<td colspan="3" class="p-3 text-center text-xs font-semibold text-gray-500 italic align-middle">Não disponível</td>' : `<td class="p-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap1)}</td><td class="p-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap2)}</td><td class="p-3 text-gray-600 align-middle">${formatarDataHoraCell(disc.data_ap3)}</td>`}
-                        <td class="p-3 text-center align-middle">${disc.periodo || '-'}</td>
-                        <td class="p-3 text-center align-middle">${badge}</td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-            tbody.querySelectorAll('.check-disciplina:not(:disabled)').forEach(cb => cb.addEventListener('change', renderizarTabelaCatalogo));
-        }
             });
             const statusMap = {}; planejamentoGlobal.forEach(p => { statusMap[p.disciplina_id] = p; });
             let html = '';
