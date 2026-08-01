@@ -63,10 +63,10 @@
         </div>
     </main>
 
-    <!-- MODAL LIVRO -->
-    <div id="modal-livro" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] flex flex-col">
-            <button onclick="fecharModalLivro()" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
+    <!-- MODAL LIVRO (Com suporte a clique no fundo escuro) -->
+    <div id="modal-livro" onclick="fecharClicandoFora(event)" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <button onclick="fecharModalLivroPorBotao()" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
             <div class="overflow-y-auto pr-1 space-y-4">
                 <div class="w-full h-64 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border"><img id="modal-capa" src="" alt="Capa do material" class="h-full object-contain"></div>
                 <div><h3 id="modal-titulo" class="text-xl font-extrabold text-gray-900 mb-1"></h3><div id="modal-preco" class="text-lg font-bold text-blue-600"></div></div>
@@ -109,6 +109,25 @@
 
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
             document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
+
+            // Escuta o botão "Voltar" / "Avançar" do navegador
+            window.addEventListener('popstate', (event) => {
+                const path = window.location.pathname;
+                if (path.includes('livro_')) {
+                    const match = path.match(/livro_(\d+)\.html/);
+                    if (match && match[1]) {
+                        const livroEncontrado = listaLivrosGlobal.find(l => String(l.id) === String(match[1]));
+                        if (livroEncontrado && usuarioAtual) {
+                            abrirModalLivro(livroEncontrado, false); // false para não duplicar history.pushState
+                        } else if (!usuarioAtual) {
+                            document.getElementById('modal-aviso-login').classList.remove('hidden');
+                        }
+                    }
+                } else {
+                    // Se voltou para biblioteca.html puro, fecha o modal
+                    document.getElementById('modal-livro').classList.add('hidden');
+                }
+            });
 
             verificarLivroUrl();
         }
@@ -165,12 +184,9 @@
             if (!data) return;
             
             let html = '<option value="">Todas as Disciplinas</option>';
-            
-            // Adiciona a opção de filtro por semestre apenas se o usuário tiver um semestre definido
             if (semestreEmCursoAtual) {
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
-            
             html += '<option value="GERAL">Geral</option>';
             data.forEach(d => html += `<option value="${d.id}">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</option>`);
             
@@ -189,7 +205,6 @@
             let geral = [];
             let outros = [];
 
-            // Separa os livros nos 3 grupos de prioridade
             livrosParaOrdernar.forEach(l => {
                 const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
                 const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
@@ -200,8 +215,6 @@
             });
 
             let resultado = [];
-            
-            // Intercala os itens extraindo blocos na proporção: 3 Cursando, 2 Geral, 1 Outros
             while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
                 for (let i = 0; i < 3 && cursando.length > 0; i++) resultado.push(cursando.shift());
                 for (let i = 0; i < 2 && geral.length > 0; i++) resultado.push(geral.shift());
@@ -214,7 +227,6 @@
             const texto = document.getElementById('input-busca').value.toLowerCase().trim();
             const filtroDisc = document.getElementById('select-filtro-disciplina').value;
             
-            // 1. Aplica a busca por texto em todos os livros primeiro
             let baseFiltrados = listaLivrosGlobal;
             if (texto !== "") {
                 baseFiltrados = baseFiltrados.filter(l => 
@@ -223,11 +235,9 @@
             }
 
             if (filtroDisc === "") {
-                // Cenário Padrão: Sem filtro de categoria específico. Mostra tudo usando a lógica de intercalação.
                 const intercalados = ordenarLivrosIntercalados(baseFiltrados);
                 renderizarGrid(intercalados);
             } else {
-                // Cenário Específico: O usuário filtrou uma categoria/disciplina no dropdown.
                 let matchesFiltro = [];
                 let outros = [];
 
@@ -245,7 +255,6 @@
                     else outros.push(l);
                 });
 
-                // Renderiza as correspondências exatas acima, e o resto (intercalado) abaixo do separador
                 renderizarGrid(matchesFiltro, ordenarLivrosIntercalados(outros));
             }
         }
@@ -259,15 +268,12 @@
             }
 
             let html = '';
-            
-            // Renderiza o grupo principal
             if (principais.length === 0 && secundarios && secundarios.length > 0) {
                 html += `<div class="col-span-full text-center py-8 text-gray-500 font-medium">Nenhum material exato para este filtro. Veja outras opções abaixo:</div>`;
             } else {
                 principais.forEach(l => html += gerarHtmlCardLivro(l));
             }
 
-            // Renderiza o separador e o grupo secundário, se existir
             if (secundarios && secundarios.length > 0) {
                 html += `
                     <div class="col-span-full flex items-center justify-center mt-8 mb-4">
@@ -284,15 +290,10 @@
 
         function gerarHtmlCardLivro(l) {
             const precoF = l.preco === 0 || l.preco === "0.00" ? '<span class="text-emerald-600 font-bold">Gratuito</span>' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
-            
-            // Adiciona um selo visual caso o livro faça parte do semestre atual do aluno
             const isCursando = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
             const badgeHtml = isCursando ? `<span class="absolute top-3 right-3 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
 
-            // Stringify seguro para o onClick HTML
             const livroStr = JSON.stringify(l).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-            
-            // Escapa aspas no título para usar no atributo alt de forma segura
             const tituloSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
 
             return `
@@ -317,10 +318,10 @@
                 document.getElementById('modal-aviso-login').classList.remove('hidden'); 
                 return; 
             } 
-            abrirModalLivro(l); 
+            abrirModalLivro(l, true); // true para atualizar o history.pushState
         }
 
-        function abrirModalLivro(l) {
+        function abrirModalLivro(l, pushState = false) {
             document.getElementById('modal-capa').src = l.capa_url;
             document.getElementById('modal-capa').alt = "Capa expandida do livro: " + (l.titulo ? l.titulo : ''); 
             document.getElementById('modal-titulo').textContent = l.titulo;
@@ -330,23 +331,43 @@
             const btn = document.getElementById('modal-btn-acao');
             btn.textContent = gratuito ? "📥 Download (PDF)" : "🛒 Comprar"; 
             btn.href = l.link_destino;
+            
             document.getElementById('modal-livro').classList.remove('hidden');
+
+            if (pushState) {
+                const novaUrl = `livro_${l.id}.html`;
+                window.history.pushState({ livroId: l.id }, l.titulo, novaUrl);
+            }
         }
 
-        function fecharModalLivro() { 
-            document.getElementById('modal-livro').classList.add('hidden'); 
-            const url = new URL(window.location);
-            url.searchParams.delete('livro_id');
-            window.history.replaceState({}, '', url);
+        // Fechar clicando no X do modal
+        function fecharModalLivroPorBotao() {
+            document.getElementById('modal-livro').classList.add('hidden');
+            window.history.pushState({}, '', 'biblioteca.html');
+        }
+
+        // Fechar clicando no fundo escuro (backdrop)
+        function fecharClicandoFora(event) {
+            const modalFundo = document.getElementById('modal-livro');
+            if (event.target === modalFundo) {
+                modalFundo.classList.add('hidden');
+                window.history.pushState({}, '', 'biblioteca.html');
+            }
         }
 
         function verificarLivroUrl() {
+            const path = window.location.pathname;
             const urlParams = new URLSearchParams(window.location.search);
-            const livroIdUrl = urlParams.get('livro_id');
+            const livroIdUrl = urlParams.get('livro_id') || path.match(/livro_(\d+)\.html/)?.[1];
+
             if (livroIdUrl && listaLivrosGlobal.length > 0) {
                 const livroEncontrado = listaLivrosGlobal.find(l => String(l.id) === String(livroIdUrl));
                 if (livroEncontrado) {
-                    clicarLivro(livroEncontrado);
+                    if (usuarioAtual) {
+                        abrirModalLivro(livroEncontrado, false);
+                    } else {
+                        document.getElementById('modal-aviso-login').classList.remove('hidden');
+                    }
                 }
             }
         }
