@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planejamento Acadêmico</title>
+    
+    <!-- SEO On-Page Básica -->
+    <meta name="description" content="Plataforma completa de planejamento acadêmico. Organize suas disciplinas, acompanhe sua grade, acesse a biblioteca digital e fique por dentro das últimas notícias.">
+    <link rel="canonical" href="https://www.eadblitz.com.br/">
+
+    <!-- Otimização de Performance: Antecipa conexões -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS -->
@@ -242,12 +253,11 @@
             let html = '';
             posts.forEach(post => {
                 let dataF = new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                // CORREÇÃO: Apontando para o arquivo HTML dinâmico
                 html += `
                     <a href="materia_${post.id}.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
                         <div>
                             <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
-                                ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
+                                ${post.capa_url ? `<img src="${post.capa_url}" alt="Capa da notícia: ${post.titulo.replace(/"/g, '&quot;')}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
                                 <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria}</span>
                             </div>
                             <div class="p-2.5">
@@ -311,7 +321,7 @@
                         ${badgeHtml}
                         <div>
                             <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b">
-                                <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                                <img src="${l.capa_url}" alt="Capa do material: ${l.titulo.replace(/"/g, '&quot;')}" class="h-full object-contain group-hover:scale-105 transition duration-300">
                             </div>
                             <div class="p-2.5">
                                 <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>

@@ -11,6 +11,11 @@
     <meta id="og-image" property="og:image" content="">
     <meta property="og:type" content="article">
 
+    <!-- Otimização de Performance: Antecipa conexões -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -132,6 +137,9 @@
                 tagsHtml += `</div>`;
             }
 
+            // Escapa aspas no título da matéria para usar no atributo alt de forma segura
+            const tituloArtigoSeguro = post.titulo ? post.titulo.replace(/"/g, '&quot;') : 'Capa da notícia';
+
             art.innerHTML = `
                 <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
                     <div>
@@ -160,7 +168,7 @@
                     </div>
                 </div>
 
-                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" class="w-full h-full object-cover"></div>` : ''}
+                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" alt="${tituloArtigoSeguro}" class="w-full h-full object-cover"></div>` : ''}
 
                 <div class="prose max-w-none text-gray-700 leading-relaxed space-y-4 whitespace-pre-line text-base">${post.conteudo || ''}</div>
 
@@ -231,11 +239,12 @@
                     sectionBib.classList.remove('hidden');
                     let htmlBib = '';
                     livros.forEach(l => {
+                        const tituloLivroSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
                         htmlBib += `
                             <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
                                 <div>
                                     <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2">
-                                        <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                                        <img src="${l.capa_url}" alt="${tituloLivroSeguro}" class="h-full object-contain group-hover:scale-105 transition duration-300">
                                     </div>
                                     <div class="p-2.5">
                                         <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>
@@ -258,11 +267,12 @@
                     let htmlJornal = '';
                     posts.forEach(post => {
                         let dataF = post.criado_em ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+                        const tituloPostSeguro = post.titulo ? post.titulo.replace(/"/g, '&quot;') : 'Capa da notícia';
                         htmlJornal += `
                             <a href="materia.html?id=${post.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
                                 <div>
                                     <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
-                                        ${post.capa_url ? `<img src="${post.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
+                                        ${post.capa_url ? `<img src="${post.capa_url}" alt="${tituloPostSeguro}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
                                         <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria || 'Notícia'}</span>
                                     </div>
                                     <div class="p-2.5">

@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jornal Blitz - Planejamento Acadêmico</title>
+    
+    <!-- SEO On-Page -->
+    <meta name="description" content="Acompanhe o Jornal Blitz e fique por dentro das últimas notícias, avisos acadêmicos, dicas e novidades para o seu planejamento de estudos.">
+    <link rel="canonical" href="https://www.eadblitz.com.br/jornal.html">
+
+    <!-- Otimização de Performance: Antecipa conexões -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -104,12 +114,15 @@
             const destaque = posts[0]; const secundarios = posts.slice(1);
             const dataD = new Date(destaque.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
             const autorD = destaque.autor || 'BlitzEAD';
+            
+            // Escapa aspas no título da matéria em destaque para o atributo alt
+            const tituloDestaqueSeguro = destaque.titulo ? destaque.titulo.replace(/"/g, '&quot;') : 'Capa da notícia';
 
             let html = `
                 <a href="materia_${destaque.id}.html" class="block bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition group">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
                         <div class="lg:col-span-7 h-72 lg:h-96 bg-gray-100 overflow-hidden relative">
-                            ${destaque.capa_url ? `<img src="${destaque.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">Sem Capa</div>'}
+                            ${destaque.capa_url ? `<img src="${destaque.capa_url}" alt="${tituloDestaqueSeguro}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">Sem Capa</div>'}
                             <span class="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg uppercase">${destaque.categoria}</span>
                         </div>
                         <div class="lg:col-span-5 p-6 lg:p-8 flex flex-col justify-between">
@@ -129,11 +142,15 @@
                 secundarios.forEach(p => {
                     const dataF = new Date(p.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                     const autorP = p.autor || 'BlitzEAD';
+                    
+                    // Escapa aspas no título da matéria secundária para o atributo alt
+                    const tituloSeguro = p.titulo ? p.titulo.replace(/"/g, '&quot;') : 'Capa da notícia';
+                    
                     html += `
                         <a href="materia_${p.id}.html" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition flex flex-col justify-between group">
                             <div>
                                 <div class="w-full h-48 bg-gray-100 overflow-hidden relative">
-                                    ${p.capa_url ? `<img src="${p.capa_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">Sem Capa</div>'}
+                                    ${p.capa_url ? `<img src="${p.capa_url}" alt="${tituloSeguro}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">Sem Capa</div>'}
                                     <span class="absolute top-3 left-3 bg-gray-900/80 text-white text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">${p.categoria}</span>
                                 </div>
                                 <div class="p-5">

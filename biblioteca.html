@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca - Planejamento Acadêmico</title>
+    
+    <!-- SEO On-Page -->
+    <meta name="description" content="Explore a Biblioteca Digital do Planejamento Acadêmico. Encontre livros, PDFs e materiais complementares gratuitos e pagos para turbinar os seus estudos universitários.">
+    <link rel="canonical" href="https://www.eadblitz.com.br/biblioteca.html">
+
+    <!-- Otimização de Performance: Antecipa conexões -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -58,7 +68,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] flex flex-col">
             <button onclick="fecharModalLivro()" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
             <div class="overflow-y-auto pr-1 space-y-4">
-                <div class="w-full h-64 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border"><img id="modal-capa" src="" class="h-full object-contain"></div>
+                <div class="w-full h-64 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border"><img id="modal-capa" src="" alt="Capa do material" class="h-full object-contain"></div>
                 <div><h3 id="modal-titulo" class="text-xl font-extrabold text-gray-900 mb-1"></h3><div id="modal-preco" class="text-lg font-bold text-blue-600"></div></div>
                 <div><h4 class="text-xs font-bold text-gray-500 uppercase mb-1">Sinopse</h4><p id="modal-descricao" class="text-sm text-gray-600 whitespace-pre-line leading-relaxed"></p></div>
             </div>
@@ -281,13 +291,16 @@
 
             // Stringify seguro para o onClick HTML
             const livroStr = JSON.stringify(l).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+            
+            // Escapa aspas no título para usar no atributo alt de forma segura
+            const tituloSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
 
             return `
                 <div onclick="clicarLivro(${livroStr})" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between group relative">
                     ${badgeHtml}
                     <div>
                         <div class="w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-3 flex items-center justify-center border relative">
-                            <img src="${l.capa_url}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                            <img src="${l.capa_url}" alt="Capa do livro: ${tituloSeguro}" class="h-full object-contain group-hover:scale-105 transition duration-300">
                         </div>
                         <h3 class="font-bold text-gray-800 text-sm line-clamp-2 mb-1">${l.titulo}</h3>
                     </div>
@@ -308,7 +321,8 @@
         }
 
         function abrirModalLivro(l) {
-            document.getElementById('modal-capa').src = l.capa_url; 
+            document.getElementById('modal-capa').src = l.capa_url;
+            document.getElementById('modal-capa').alt = "Capa expandida do livro: " + (l.titulo ? l.titulo : ''); 
             document.getElementById('modal-titulo').textContent = l.titulo;
             document.getElementById('modal-descricao').textContent = l.descricao || "Sem descrição.";
             const gratuito = l.preco === 0 || l.preco === "0.00";
