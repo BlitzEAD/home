@@ -258,6 +258,17 @@
             container.innerHTML = html;
         }
 
+        // Função auxiliar que aciona o webhook/build automático caso seu painel utilize
+        async function dispararBuildAutomatico() {
+            try {
+                // Se o seu servidor backend/webhook para o build for disparado por fetch, insira a URL aqui.
+                // Exemplo genérico se houver uma API de build:
+                // await fetch(' SUA_URL_DE_TRIGGER_DE_BUILD_AQUI ', { method: 'POST' });
+            } catch (err) {
+                console.error("Aviso ao tentar atualizar build automático:", err);
+            }
+        }
+
         async function carregarAdminLivros() {
             const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
             const tbody = document.getElementById('tabela-admin-livros');
@@ -337,6 +348,10 @@
                     }
                     alert("Livro cadastrado com sucesso!");
                 }
+
+                // Dispara a rotina de build para atualizar as páginas e o sitemap
+                await dispararBuildAutomatico();
+
                 cancelarEdicaoLivro(); 
                 await carregarAdminLivros();
             } catch (err) { 
@@ -377,6 +392,7 @@
             if (!confirm("Excluir este livro?")) return;
             await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', id);
             await supabaseClient.from('livros').delete().eq('id', id);
+            await dispararBuildAutomatico();
             await carregarAdminLivros();
         }
 
@@ -432,7 +448,10 @@
                     if (error) throw error;
                     alert("Publicado com sucesso!");
                 }
-                cancelarEdicaoPost(); await carregarAdminPosts();
+                
+                await dispararBuildAutomatico();
+                cancelarEdicaoPost(); 
+                await carregarAdminPosts();
             } catch (err) { alert("Erro: " + err.message); }
         });
 
@@ -462,6 +481,7 @@
         async function deletarPost(id) {
             if (!confirm("Excluir publicação?")) return;
             await supabaseClient.from('jornal_posts').delete().eq('id', id);
+            await dispararBuildAutomatico();
             await carregarAdminPosts();
         }
 
