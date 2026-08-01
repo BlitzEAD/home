@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novidade é testar - Jornal Blitz</title>
+    <title>Boteco é o novo escritório - dizem especialistas - Jornal Blitz</title>
     
     <!-- Open Graph (OG) Meta Tags PREENCHIDAS PELO ROBÔ -->
-    <meta property="og:title" content="Novidade é testar - Jornal Blitz">
-    <meta property="og:description" content="A calçada da fama não se deixar levar pela modernidade">
-    <meta property="og:image" content="https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1785453370258.jpg">
+    <meta property="og:title" content="Boteco é o novo escritório - dizem especialistas - Jornal Blitz">
+    <meta property="og:description" content="botequim é o novo escritório, indeed.">
+    <meta property="og:image" content="https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1785608835432.jpg">
     <meta property="og:type" content="article">
 
     <!-- Otimização de Performance: Antecipa conexões -->
@@ -21,11 +21,11 @@
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      "headline": "Novidade é testar",
-      "image": "https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1785453370258.jpg",
-      "datePublished": "2026-07-30T23:16:11.498Z",
-      "url": "https://www.eadblitz.com.br/materia_3.html",
-      "description": "A calçada da fama não se deixar levar pela modernidade",
+      "headline": "Boteco é o novo escritório - dizem especialistas",
+      "image": "https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1785608835432.jpg",
+      "datePublished": "2026-08-01T18:27:16.316Z",
+      "url": "https://www.eadblitz.com.br/materia_9.html",
+      "description": "botequim é o novo escritório, indeed.",
       "author": {
         "@type": "Organization",
         "name": "Jornal Blitz"
@@ -108,7 +108,7 @@
         let usuarioAtual = null;
 
         // O ROBÔ INJETA O ID AQUI DURANTE A CRIAÇÃO DO ARQUIVO
-        const POST_ID = 3;
+        const POST_ID = 9;
 
         async function initMateria() {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -159,7 +159,7 @@
                     </div>
                 </div>
 
-                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" alt="Novidade é testar" class="w-full h-full object-cover"></div>` : ''}
+                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" alt="Boteco é o novo escritório - dizem especialistas" class="w-full h-full object-cover"></div>` : ''}
 
                 <div class="prose max-w-none text-gray-700 leading-relaxed space-y-4 whitespace-pre-line text-base">${post.conteudo || ''}</div>
                 ${tagsHtml}
