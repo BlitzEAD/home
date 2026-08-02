@@ -89,9 +89,42 @@
                 </form>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Livros Cadastrados no Acervo</h3>
-                <div class="overflow-x-auto">
+            <!-- PAINEL DE BUSCA E FILTROS DE LIVROS -->
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-4">
+                <h3 class="text-lg font-bold text-gray-900">Livros Cadastrados no Acervo</h3>
+                
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <!-- Busca textual -->
+                    <div class="w-full md:w-1/2 relative">
+                        <input type="text" id="input-busca-admin-livros" placeholder="Pesquisar por título ou descrição..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+
+                    <!-- Dropdown customizado com checkboxes de disciplinas -->
+                    <div class="w-full md:w-1/3 relative">
+                        <button type="button" id="btn-dropdown-filtros-livros" onclick="toggleDropdownFiltrosLivros(event)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500">
+                            <span id="label-dropdown-filtros">Filtrar por Disciplinas / Geral</span>
+                            <span class="text-gray-400 text-xs">▼</span>
+                        </button>
+                        <div id="dropdown-filtros-livros" class="hidden absolute left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-xl z-30 p-3 max-h-60 overflow-y-auto space-y-2 text-xs">
+                            <div class="font-semibold text-gray-500 border-b pb-1 mb-1">Selecione os filtros:</div>
+                            <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded font-medium text-blue-600">
+                                <input type="checkbox" value="GERAL" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 rounded">
+                                <span>📚 Geral (Sem disciplina)</span>
+                            </label>
+                            <div id="container-filtros-disciplinas-dropdown" class="space-y-1">
+                                <!-- Inserido via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de tags de filtros selecionados -->
+                <div id="tags-filtros-livros-ativos" class="flex flex-wrap gap-2 pt-1">
+                    <!-- Tags aparecem aqui -->
+                </div>
+
+                <div class="overflow-x-auto pt-2">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
@@ -166,20 +199,53 @@
                 </form>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Publicações do Jornal Blitz</h3>
-                <div class="overflow-x-auto">
+            <!-- PAINEL DE BUSCA E FILTROS DE POSTS -->
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-4">
+                <h3 class="text-lg font-bold text-gray-900">Publicações do Jornal Blitz</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- Busca textual -->
+                    <div class="relative">
+                        <input type="text" id="input-busca-admin-posts" placeholder="Buscar título/resumo..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                    <!-- Filtro por Categoria -->
+                    <div>
+                        <select id="select-filtro-admin-cat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todas as Categorias</option>
+                            <option value="Aviso">Aviso</option>
+                            <option value="Notícia">Notícia</option>
+                            <option value="Dica de Estudo">Dica de Estudo</option>
+                            <option value="Institucional">Institucional</option>
+                        </select>
+                    </div>
+                    <!-- Filtro por Autor -->
+                    <div>
+                        <select id="select-filtro-admin-autor" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos os Autores</option>
+                        </select>
+                    </div>
+                    <!-- Filtro por Período (Data Início / Fim) -->
+                    <div class="flex items-center space-x-1">
+                        <input type="date" id="input-data-inicio" title="Data Inicial" class="w-1/2 px-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-400 text-xs">até</span>
+                        <input type="date" id="input-data-fim" title="Data Final" class="w-1/2 px-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto pt-2">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
                                 <th class="p-3 border-b">Título</th>
                                 <th class="p-3 border-b">Autor</th>
                                 <th class="p-3 border-b">Categoria</th>
+                                <th class="p-3 border-b">Data</th>
                                 <th class="p-3 border-b text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-admin-posts">
-                            <tr><td colspan="4" class="p-6 text-center text-gray-400">Carregando...</td></tr>
+                            <tr><td colspan="5" class="p-6 text-center text-gray-400">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -193,6 +259,10 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let usuarioAtual = null;
 
+        let listaLivrosAdminGlobal = [];
+        let listaPostsAdminGlobal = [];
+        let disciplinasGlobalMap = {}; // id -> nome da disciplina
+
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session || session.user.user_metadata?.is_admin !== true) {
@@ -203,6 +273,25 @@
             await carregarCheckboxesDisciplinas();
             await carregarAdminLivros();
             await carregarAdminPosts();
+
+            // Event Listeners para busca e filtros de livros
+            document.getElementById('input-busca-admin-livros').addEventListener('input', renderizarTabelaLivrosFiltrados);
+
+            // Event Listeners para busca e filtros de posts
+            document.getElementById('input-busca-admin-posts').addEventListener('input', renderizarTabelaPostsFiltrados);
+            document.getElementById('select-filtro-admin-cat').addEventListener('change', renderizarTabelaPostsFiltrados);
+            document.getElementById('select-filtro-admin-autor').addEventListener('change', renderizarTabelaPostsFiltrados);
+            document.getElementById('input-data-inicio').addEventListener('change', renderizarTabelaPostsFiltrados);
+            document.getElementById('input-data-fim').addEventListener('change', renderizarTabelaPostsFiltrados);
+
+            // Fecha dropdown de filtros ao clicar fora
+            window.addEventListener('click', (e) => {
+                const drop = document.getElementById('dropdown-filtros-livros');
+                const btn = document.getElementById('btn-dropdown-filtros-livros');
+                if (drop && !drop.contains(e.target) && !btn.contains(e.target)) {
+                    drop.classList.add('hidden');
+                }
+            });
         }
 
         function mudarAbaAdmin(aba) {
@@ -242,28 +331,78 @@
         }
 
         async function carregarCheckboxesDisciplinas() {
-            const container = document.getElementById('container-checkboxes-disciplinas');
+            const containerForm = document.getElementById('container-checkboxes-disciplinas');
+            const containerDropdown = document.getElementById('container-filtros-disciplinas-dropdown');
+            
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
-            if (!data) { container.innerHTML = 'Nenhuma disciplina encontrada.'; return; }
+            if (!data) { 
+                containerForm.innerHTML = 'Nenhuma disciplina encontrada.'; 
+                containerDropdown.innerHTML = 'Nenhuma disciplina encontrada.'; 
+                return; 
+            }
 
-            let html = '';
+            disciplinasGlobalMap = {};
             data.forEach(d => {
-                html += `
+                disciplinasGlobalMap[d.id] = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
+            });
+
+            let htmlForm = '';
+            let htmlDropdown = '';
+            data.forEach(d => {
+                const nomeFormatado = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
+                htmlForm += `
                     <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
                         <input type="checkbox" value="${d.id}" class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
-                        <span class="truncate">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</span>
+                        <span class="truncate">${nomeFormatado}</span>
+                    </label>
+                `;
+                htmlDropdown += `
+                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                        <input type="checkbox" value="${d.id}" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 text-blue-600 rounded">
+                        <span class="truncate">${nomeFormatado}</span>
                     </label>
                 `;
             });
-            container.innerHTML = html;
+            containerForm.innerHTML = htmlForm;
+            containerDropdown.innerHTML = htmlDropdown;
         }
 
-        // Função auxiliar que aciona o webhook/build automático caso seu painel utilize
+        function toggleDropdownFiltrosLivros(e) {
+            e.stopPropagation();
+            const drop = document.getElementById('dropdown-filtros-livros');
+            drop.classList.toggle('hidden');
+        }
+
+        function atualizarFiltrosLivros() {
+            const checkboxes = document.querySelectorAll('.check-filtro-livro:checked');
+            const tagsContainer = document.getElementById('tags-filtros-livros-ativos');
+            
+            let tagsHtml = '';
+            checkboxes.forEach(cb => {
+                let nomeFiltro = cb.value === 'GERAL' ? 'Geral' : (disciplinasGlobalMap[cb.value] || `Disc. ${cb.value}`);
+                tagsHtml += `
+                    <span class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium">
+                        ${nomeFiltro}
+                        <button type="button" onclick="removerFiltroLivro('${cb.value}')" class="ml-1.5 text-blue-400 hover:text-blue-700 font-bold">×</button>
+                    </span>
+                `;
+            });
+
+            tagsContainer.innerHTML = tagsHtml;
+            renderizarTabelaLivrosFiltrados();
+        }
+
+        function removerFiltroLivro(valor) {
+            const cb = document.querySelector(`.check-filtro-livro[value="${valor}"]`);
+            if (cb) {
+                cb.checked = false;
+                atualizarFiltrosLivros();
+            }
+        }
+
         async function dispararBuildAutomatico() {
             try {
-                // Se o seu servidor backend/webhook para o build for disparado por fetch, insira a URL aqui.
-                // Exemplo genérico se houver uma API de build:
-                // await fetch(' SUA_URL_DE_TRIGGER_DE_BUILD_AQUI ', { method: 'POST' });
+                // Trigger webhook se houver
             } catch (err) {
                 console.error("Aviso ao tentar atualizar build automático:", err);
             }
@@ -271,11 +410,48 @@
 
         async function carregarAdminLivros() {
             const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
+            listaLivrosAdminGlobal = data || [];
+            renderizarTabelaLivrosFiltrados();
+        }
+
+        function renderizarTabelaLivrosFiltrados() {
             const tbody = document.getElementById('tabela-admin-livros');
-            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum livro cadastrado.</td></tr>`; return; }
+            const textoBusca = document.getElementById('input-busca-admin-livros').value.toLowerCase().trim();
+            const checkboxesAtivos = Array.from(document.querySelectorAll('.check-filtro-livro:checked')).map(cb => cb.value);
+
+            let filtrados = listaLivrosAdminGlobal;
+
+            // 1. Filtro por texto
+            if (textoBusca !== "") {
+                filtrados = filtrados.filter(l => 
+                    l.titulo.toLowerCase().includes(textoBusca) || (l.descricao && l.descricao.toLowerCase().includes(textoBusca))
+                );
+            }
+
+            // 2. Filtro por disciplinas ou GERAL selecionados
+            if (checkboxesAtivos.length > 0) {
+                filtrados = filtrados.filter(l => {
+                    const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
+                    const idsLivro = (l.livro_disciplinas || []).map(v => String(v.id_disciplina));
+
+                    // Verifica se atende a pelo menos uma das condições selecionadas
+                    let match = false;
+                    if (checkboxesAtivos.includes('GERAL') && isGeral) match = true;
+                    
+                    const discMatch = idsLivro.some(idDisc => checkboxesAtivos.includes(idDisc));
+                    if (discMatch) match = true;
+
+                    return match;
+                });
+            }
+
+            if (filtrados.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum livro encontrado com esses filtros.</td></tr>`; 
+                return; 
+            }
 
             let html = '';
-            data.forEach(l => {
+            filtrados.forEach(l => {
                 const precoFormatado = l.preco === 0 || l.preco === "0.00" ? 'Gratuito' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
                 html += `
                     <tr class="border-b hover:bg-gray-50 text-sm">
@@ -318,16 +494,13 @@
                     capaUrl = pubCapa.publicUrl;
                 }
 
-                // Captura os IDs das disciplinas marcadas nos checkboxes
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
                 const idsValidos = checkboxes.map(cb => parseInt(cb.value));
 
                 if (idEdicao) {
-                    // Atualiza dados do livro
                     const { error: errUp } = await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
                     if (errUp) throw errUp;
 
-                    // Remove vínculos antigos e insere os novos (se houver)
                     await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', idEdicao);
                     if (idsValidos.length > 0) {
                         const vinculos = idsValidos.map(id_disc => ({ livro_id: parseInt(idEdicao), id_disciplina: id_disc }));
@@ -336,11 +509,9 @@
                     }
                     alert("Livro atualizado com sucesso!");
                 } else {
-                    // Cria o livro novo
                     const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }]).select().single();
                     if (error) throw error;
 
-                    // Insere os vínculos de disciplina, se houver
                     if (idsValidos.length > 0) {
                         const vinculos = idsValidos.map(id_disc => ({ livro_id: novoLivro.id, id_disciplina: id_disc }));
                         const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
@@ -349,9 +520,7 @@
                     alert("Livro cadastrado com sucesso!");
                 }
 
-                // Dispara a rotina de build para atualizar as páginas e o sitemap
                 await dispararBuildAutomatico();
-
                 cancelarEdicaoLivro(); 
                 await carregarAdminLivros();
             } catch (err) { 
@@ -370,7 +539,6 @@
             document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.remove('hidden');
 
-            // Marca os checkboxes correspondentes às disciplinas já vinculadas
             const idsVinculados = (livro.livro_disciplinas || []).map(v => Number(v.id_disciplina));
             document.querySelectorAll('.check-disc-livro').forEach(cb => {
                 cb.checked = idsVinculados.includes(Number(cb.value));
@@ -398,15 +566,71 @@
 
         async function carregarAdminPosts() {
             const { data } = await supabaseClient.from('jornal_posts').select('*').order('criado_em', { ascending: false });
+            listaPostsAdminGlobal = data || [];
+            
+            // Popular select de autores únicos
+            const selectAutor = document.getElementById('select-filtro-admin-autor');
+            const autoresUnicos = [...new Set(listaPostsAdminGlobal.map(p => p.autor || 'BlitzEAD'))];
+            let autorHtml = '<option value="">Todos os Autores</option>';
+            autoresUnicos.forEach(aut => {
+                autorHtml += `<option value="${aut}">${aut}</option>`;
+            });
+            selectAutor.innerHTML = autorHtml;
+
+            renderizarTabelaPostsFiltrados();
+        }
+
+        function renderizarTabelaPostsFiltrados() {
             const tbody = document.getElementById('tabela-admin-posts');
-            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhuma publicação.</td></tr>`; return; }
+            const textoBusca = document.getElementById('input-busca-admin-posts').value.toLowerCase().trim();
+            const catFiltro = document.getElementById('select-filtro-admin-cat').value;
+            const autorFiltro = document.getElementById('select-filtro-admin-autor').value;
+            const dataInicio = document.getElementById('input-data-inicio').value;
+            const dataFim = document.getElementById('input-data-fim').value;
+
+            let filtrados = listaPostsAdminGlobal;
+
+            // 1. Busca textual (título ou resumo)
+            if (textoBusca !== "") {
+                filtrados = filtrados.filter(p => 
+                    p.titulo.toLowerCase().includes(textoBusca) || (p.resumo && p.resumo.toLowerCase().includes(textoBusca))
+                );
+            }
+
+            // 2. Filtro Categoria
+            if (catFiltro !== "") {
+                filtrados = filtrados.filter(p => p.categoria === catFiltro);
+            }
+
+            // 3. Filtro Autor
+            if (autorFiltro !== "") {
+                filtrados = filtrados.filter(p => (p.autor || 'BlitzEAD') === autorFiltro);
+            }
+
+            // 4. Filtro Período (Data)
+            if (dataInicio) {
+                const dInicio = new Date(dataInicio + "T00:00:00");
+                filtrados = filtrados.filter(p => new Date(p.criado_em) >= dInicio);
+            }
+            if (dataFim) {
+                const dFim = new Date(dataFim + "T23:59:59");
+                filtrados = filtrados.filter(p => new Date(p.criado_em) <= dFim);
+            }
+
+            if (filtrados.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">Nenhuma publicação encontrada.</td></tr>`; 
+                return; 
+            }
+
             let html = '';
-            data.forEach(p => {
+            filtrados.forEach(p => {
+                const dataFormatada = p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '-';
                 html += `
                     <tr class="border-b hover:bg-gray-50 text-sm">
                         <td class="p-3 font-medium text-gray-800">${p.titulo}</td>
                         <td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td>
+                        <td class="p-3 text-gray-500 text-xs">${dataFormatada}</td>
                         <td class="p-3 text-center space-x-2">
                             <button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button>
                             <button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button>
