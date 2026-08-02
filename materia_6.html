@@ -61,7 +61,7 @@
             <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
                 <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
                 <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
-                <a href="jornal.html" class="hover:text-blue-600 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="jornal.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Jornal Blitz</a>
                 <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
                 <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
             </nav>
@@ -77,13 +77,14 @@
             <div class="text-center py-16 text-gray-400">Carregando dados da publicação...</div>
         </article>
 
+        <!-- TEASER DA BIBLIOTECA INTELIGENTE (Prioriza disciplinas cursadas) -->
         <section id="teaser-biblioteca-section" class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 hidden">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center space-x-2">
                     <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Biblioteca</span>
-                    <h3 class="text-sm font-bold text-gray-800">Itens recomendados da nossa Biblioteca</h3>
+                    <h3 class="text-sm font-bold text-gray-800">Materiais Recomendados para seus Estudos</h3>
                 </div>
-                <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver biblioteca →</a>
+                <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver acervo completo →</a>
             </div>
             <div id="teaser-biblioteca-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none"></div>
         </section>
@@ -106,6 +107,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let usuarioAtual = null;
+        let semestreEmCursoAtual = "";
 
         // O ROBÔ INJETA O ID AQUI DURANTE A CRIAÇÃO DO ARQUIVO
         const POST_ID = 6;
@@ -113,10 +115,17 @@
         async function initMateria() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
+            
+            // Carrega o semestre em curso (igual na index.html)
+            if (usuarioAtual) {
+                semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
+            } else {
+                semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
+            }
+
             renderizarTopoUsuario();
 
             const art = document.getElementById('artigo-materia');
-
             const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', POST_ID);
 
             if (error || !data || data.length === 0) {
@@ -168,7 +177,6 @@
             carregarTeasersFimMateria(POST_ID);
         }
 
-        // --- MANTIVE AS FUNÇÕES DE TEASERS E TOPO EXATAMENTE COMO VOCÊ JÁ TINHA ---
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
@@ -210,22 +218,17 @@
             } else if (rede === 'twitter') {
                 linkShare = `https://twitter.com/intent/tweet?text=${tituloTwitter}&url=${encodeURIComponent(url)}`;
             }
-            
-            // Adicionado 'noopener,noreferrer' para evitar bloqueios severos no Mac/Safari e afins
             if (linkShare) window.open(linkShare, '_blank', 'noopener,noreferrer');
         }
 
         async function copiarLink(url) {
             try {
-                // Tenta usar a forma moderna e segura (padrão em navegadores novos)
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(url);
                     alert("Link copiado para a área de transferência!");
                 } else {
-                    // Plano B (Fallback) para Android e navegadores mais antigos
                     const textArea = document.createElement("textarea");
                     textArea.value = url;
-                    // Move a caixa de texto para fora da tela para não bugar a interface
                     textArea.style.position = "absolute";
                     textArea.style.left = "-999999px";
                     document.body.prepend(textArea);
@@ -236,34 +239,76 @@
                 }
             } catch (err) {
                 console.error("Erro ao copiar o link:", err);
-                alert("Não foi possível copiar o link automaticamente. Copie-o direto da barra de endereços.");
+                alert("Não foi possível copiar o link automaticamente.");
             }
         }
 
         async function carregarTeasersFimMateria(postIdAtual) {
             try {
-                const { data: livros } = await supabaseClient.from('livros').select('*').order('criado_em', { ascending: false }).limit(4);
+                // --- TEASER DA BIBLIOTECA COM ORDENAÇÃO INTELIGENTE (IGUAL INDEX.HTML) ---
+                const { data: livros } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
                 const sectionBib = document.getElementById('teaser-biblioteca-section');
                 const gridBib = document.getElementById('teaser-biblioteca-grid');
 
                 if (livros && livros.length > 0) {
-                    sectionBib.classList.remove('hidden');
-                    let htmlBib = '';
+                    let disciplinasCursadasIds = [];
+                    if (semestreEmCursoAtual) {
+                        if (usuarioAtual) {
+                            const { data: planData } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, semestre').eq('user_id', usuarioAtual.id);
+                            const plan = planData || [];
+                            disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+                        } else {
+                            const plan = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                            disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+                        }
+                    }
+
+                    let cursando = [];
+                    let geral = [];
+                    let outros = [];
+
                     livros.forEach(l => {
-                        const tituloLivroSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
-                        htmlBib += `
-                            <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
-                                <div>
-                                    <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2"><img src="${l.capa_url}" alt="${tituloLivroSeguro}" class="h-full object-contain group-hover:scale-105 transition duration-300"></div>
-                                    <div class="p-2.5"><h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4></div>
-                                </div>
-                                <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
-                            </a>
-                        `;
+                        const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
+                        const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+
+                        if (isCursando) cursando.push(l);
+                        else if (isGeral) geral.push(l);
+                        else outros.push(l);
                     });
-                    gridBib.innerHTML = htmlBib;
+
+                    let intercalados = [];
+                    while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
+                        for (let i = 0; i < 3 && cursando.length > 0; i++) intercalados.push(cursando.shift());
+                        for (let i = 0; i < 2 && geral.length > 0; i++) intercalados.push(geral.shift());
+                        for (let i = 0; i < 1 && outros.length > 0; i++) intercalados.push(outros.shift());
+                    }
+
+                    const livrosTeaser = intercalados.slice(0, 4);
+
+                    if (livrosTeaser.length > 0) {
+                        sectionBib.classList.remove('hidden');
+                        let htmlBib = '';
+                        livrosTeaser.forEach(l => {
+                            const isCursandoBadge = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                            const badgeHtml = isCursandoBadge ? `<span class="absolute top-2 right-2 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
+                            const tituloLivroSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
+                            
+                            htmlBib += `
+                                <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px] relative">
+                                    ${badgeHtml}
+                                    <div>
+                                        <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b"><img src="${l.capa_url}" alt="${tituloLivroSeguro}" class="h-full object-contain group-hover:scale-105 transition duration-300"></div>
+                                        <div class="p-2.5"><h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4></div>
+                                    </div>
+                                    <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
+                                </a>
+                            `;
+                        });
+                        gridBib.innerHTML = htmlBib;
+                    }
                 }
 
+                // --- TEASER DO JORNAL ---
                 const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
                 const sectionJornal = document.getElementById('teaser-jornal-section');
                 const gridJornal = document.getElementById('teaser-jornal-grid');
