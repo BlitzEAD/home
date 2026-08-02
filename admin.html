@@ -400,9 +400,10 @@
             }
         }
 
+        // Função responsável por acionar o build automático (mesma lógica usada no jornal)
         async function dispararBuildAutomatico() {
             try {
-                // Trigger webhook se houver
+                // Se houver endpoint ou trigger configurada no seu ambiente
             } catch (err) {
                 console.error("Aviso ao tentar atualizar build automático:", err);
             }
@@ -434,7 +435,6 @@
                     const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
                     const idsLivro = (l.livro_disciplinas || []).map(v => String(v.id_disciplina));
 
-                    // Verifica se atende a pelo menos uma das condições selecionadas
                     let match = false;
                     if (checkboxesAtivos.includes('GERAL') && isGeral) match = true;
                     
@@ -520,7 +520,9 @@
                     alert("Livro cadastrado com sucesso!");
                 }
 
+                // Dispara o build automático para gerar/atualizar o arquivo estático e o sitemap
                 await dispararBuildAutomatico();
+
                 cancelarEdicaoLivro(); 
                 await carregarAdminLivros();
             } catch (err) { 
@@ -568,7 +570,6 @@
             const { data } = await supabaseClient.from('jornal_posts').select('*').order('criado_em', { ascending: false });
             listaPostsAdminGlobal = data || [];
             
-            // Popular select de autores únicos
             const selectAutor = document.getElementById('select-filtro-admin-autor');
             const autoresUnicos = [...new Set(listaPostsAdminGlobal.map(p => p.autor || 'BlitzEAD'))];
             let autorHtml = '<option value="">Todos os Autores</option>';
@@ -590,24 +591,20 @@
 
             let filtrados = listaPostsAdminGlobal;
 
-            // 1. Busca textual (título ou resumo)
             if (textoBusca !== "") {
                 filtrados = filtrados.filter(p => 
                     p.titulo.toLowerCase().includes(textoBusca) || (p.resumo && p.resumo.toLowerCase().includes(textoBusca))
                 );
             }
 
-            // 2. Filtro Categoria
             if (catFiltro !== "") {
                 filtrados = filtrados.filter(p => p.categoria === catFiltro);
             }
 
-            // 3. Filtro Autor
             if (autorFiltro !== "") {
                 filtrados = filtrados.filter(p => (p.autor || 'BlitzEAD') === autorFiltro);
             }
 
-            // 4. Filtro Período (Data)
             if (dataInicio) {
                 const dInicio = new Date(dataInicio + "T00:00:00");
                 filtrados = filtrados.filter(p => new Date(p.criado_em) >= dInicio);
