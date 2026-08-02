@@ -22,15 +22,15 @@
     <!-- jsPDF para exportação de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col pt-32">
+<body class="bg-gray-50 min-h-screen flex flex-col pt-36 sm:pt-32">
 
     <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <!-- LINHA SUPERIOR -->
-        <div class="w-full px-4 md:px-6 py-3 flex flex-col sm:flex-row items-center justify-between border-b border-gray-100 gap-3">
+        <div class="w-full px-4 md:px-6 py-3 flex flex-wrap items-center justify-between border-b border-gray-100 gap-y-2">
             
-            <!-- Bloco do Logo e Admin -->
-            <div class="flex items-center justify-between w-full sm:w-auto space-x-4">
+            <!-- Esquerda: Logo e Botão Admin -->
+            <div class="flex items-center space-x-4">
                 <a href="#" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;" class="flex items-center">
                     <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
                 </a>
@@ -38,8 +38,15 @@
                 <div id="container-btn-admin"></div>
             </div>
 
-            <!-- Bloco dos Seletores e Botões do Topo -->
-            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end overflow-x-auto pb-1 sm:pb-0">
+            <!-- Direita (Topo no Mobile): Perfil / Login -->
+            <div class="flex items-center space-x-2 pl-2 relative sm:order-last">
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2">
+                    <!-- Preenchido dinamicamente via JS -->
+                </div>
+            </div>
+
+            <!-- Centro / Baixo (Mobile): Seletor de Semestre e Botão Cadastrar -->
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-start sm:justify-center overflow-x-auto pt-1 sm:pt-0">
                 <select id="select-semestre-destino" class="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
                     <option value="">Escolha o Semestre</option>
                     <option value="1º Semestre">1º Semestre</option>
@@ -57,12 +64,8 @@
                 <button id="btn-cadastrar-semestre" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">
                     Cadastrar Disciplinas
                 </button>
-
-                <!-- Área do Usuário / Login no Topo -->
-                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l border-gray-200 relative">
-                    <!-- Preenchido dinamicamente via JS -->
-                </div>
             </div>
+
         </div>
 
         <!-- LINHA INFERIOR (COMPLETA) -->
