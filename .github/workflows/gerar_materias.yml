@@ -3,7 +3,7 @@ name: Gerador de Páginas do Jornal
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [atualizar_jornal]
+    types: [atualizar_jornal, atualizar_livro]
 
 jobs:
   build-paginas:
