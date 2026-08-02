@@ -80,7 +80,7 @@
     <div id="modal-aviso-login" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
             <h3 class="text-lg font-bold text-gray-900 mb-2">🔒 Acesso Restrito</h3>
-            <p class="text-xs text-gray-600 mb-6">Para visualizar e baixar os materiais, você precisa estar logado.</p>
+            <p class="text-xs text-gray-600 mb-6">Para visualizar e baixar os materiais gratuitos, você precisa estar logado.</p>
             <div class="flex space-x-3">
                 <button onclick="document.getElementById('modal-aviso-login').classList.add('hidden')" class="w-1/2 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg text-xs">Cancelar</button>
                 <button onclick="window.location.href='index.html?abrir_login=1'" class="w-1/2 py-2.5 bg-blue-600 text-white font-semibold rounded-lg text-xs">Fazer Login</button>
@@ -117,10 +117,13 @@
                     const match = path.match(/livro_(\d+)\.html/);
                     if (match && match[1]) {
                         const livroEncontrado = listaLivrosGlobal.find(l => String(l.id) === String(match[1]));
-                        if (livroEncontrado && usuarioAtual) {
-                            abrirModalLivro(livroEncontrado, false); // false para não duplicar history.pushState
-                        } else if (!usuarioAtual) {
-                            document.getElementById('modal-aviso-login').classList.remove('hidden');
+                        if (livroEncontrado) {
+                            const gratuito = livroEncontrado.preco === 0 || livroEncontrado.preco === "0.00";
+                            if (!gratuito || usuarioAtual) {
+                                abrirModalLivro(livroEncontrado, false); 
+                            } else {
+                                document.getElementById('modal-aviso-login').classList.remove('hidden');
+                            }
                         }
                     }
                 } else {
@@ -314,11 +317,14 @@
         }
 
         function clicarLivro(l) { 
-            if (!usuarioAtual) { 
+            const gratuito = l.preco === 0 || l.preco === "0.00";
+            // Se for gratuito e o usuário NÃO estiver logado, bloqueia e abre aviso de login
+            if (gratuito && !usuarioAtual) { 
                 document.getElementById('modal-aviso-login').classList.remove('hidden'); 
                 return; 
             } 
-            abrirModalLivro(l, true); // true para atualizar o history.pushState
+            // Se for pago OU se estiver logado, abre o modal livremente
+            abrirModalLivro(l, true); 
         }
 
         function abrirModalLivro(l, pushState = false) {
@@ -363,7 +369,8 @@
             if (livroIdUrl && listaLivrosGlobal.length > 0) {
                 const livroEncontrado = listaLivrosGlobal.find(l => String(l.id) === String(livroIdUrl));
                 if (livroEncontrado) {
-                    if (usuarioAtual) {
+                    const gratuito = livroEncontrado.preco === 0 || livroEncontrado.preco === "0.00";
+                    if (!gratuito || usuarioAtual) {
                         abrirModalLivro(livroEncontrado, false);
                     } else {
                         document.getElementById('modal-aviso-login').classList.remove('hidden');
