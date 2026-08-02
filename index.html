@@ -38,15 +38,15 @@
                 <div id="container-btn-admin"></div>
             </div>
 
-            <!-- Direita (Topo no Mobile): Perfil / Login -->
-            <div class="flex items-center space-x-2 pl-2 relative sm:order-last">
+            <!-- Direita (Topo): Perfil / Login (Sempre isolado na extrema direita) -->
+            <div class="flex items-center space-x-2 pl-2 relative order-2 sm:order-last">
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2">
                     <!-- Preenchido dinamicamente via JS -->
                 </div>
             </div>
 
-            <!-- Centro / Baixo (Mobile): Seletor de Semestre e Botão Cadastrar -->
-            <div class="flex items-center space-x-2 w-full sm:w-auto justify-start sm:justify-end overflow-x-auto pt-1 sm:pt-0">
+            <!-- Centro / Baixo (Mobile) e Alinhado à Direita (Desktop): Escolha o Semestre e Cadastrar -->
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-start sm:justify-end overflow-x-auto pt-1 sm:pt-0 order-3 sm:order-2">
                 <select id="select-semestre-destino" class="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
                     <option value="">Escolha o Semestre</option>
                     <option value="1º Semestre">1º Semestre</option>
@@ -293,7 +293,6 @@
             let geral = [];
             let outros = [];
 
-            // Separa conforme as prioridades de navegação
             data.forEach(l => {
                 const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
                 const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
@@ -303,7 +302,6 @@
                 else outros.push(l);
             });
 
-            // Intercala 3 cursando, 2 gerais e 1 outros
             let intercalados = [];
             while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
                 for (let i = 0; i < 3 && cursando.length > 0; i++) intercalados.push(cursando.shift());
@@ -464,26 +462,21 @@
             }
         }
 
-        // Função de Animação (Piscar da Esquerda para a Direita)
         function piscarControlesCadastro() {
             const select = document.getElementById('select-semestre-destino');
             const btn = document.getElementById('btn-cadastrar-semestre');
             if(!select || !btn) return;
 
-            // Pisca o Select primeiro
             select.classList.add('ring-4', 'ring-amber-300', 'bg-amber-50', 'transition-all', 'duration-300');
             
-            // 100ms depois, pisca o Botão (Cria o efeito esquerda -> direita)
             setTimeout(() => {
                 btn.classList.add('ring-4', 'ring-amber-300', 'bg-blue-500', 'scale-[1.03]', 'transition-all', 'duration-300');
             }, 100);
 
-            // Apaga o Select suavemente
             setTimeout(() => {
                 select.classList.remove('ring-4', 'ring-amber-300', 'bg-amber-50');
             }, 600);
 
-            // Apaga o Botão suavemente
             setTimeout(() => {
                 btn.classList.remove('ring-4', 'ring-amber-300', 'bg-blue-500', 'scale-[1.03]');
             }, 700);
@@ -606,7 +599,6 @@
                 renderizarSemestresAlocados();
             }
             
-            // Carrega a biblioteca por último para garantir que temos o semestre atual do usuário
             await carregarTeaserBiblioteca();
         }
 
@@ -842,7 +834,6 @@
             tbody.innerHTML = '';
             tbody.appendChild(fragment);
 
-            // CORREÇÃO: Dispara a animação (piscar) caso o usuário tenha marcado um checkbox
             tbody.querySelectorAll('.check-disciplina:not(:disabled)').forEach(chk => {
                 chk.addEventListener('change', (e) => {
                     if (e.target.checked) piscarControlesCadastro();
@@ -1567,83 +1558,6 @@
             window.scrollTo({ top: scrollSalvo });
         });
 
-        function exportarGradeCompletaPDF() {
-            if (!usuarioAtual) {
-                alert("Para exportar a grade completa em PDF, é necessário estar logado.");
-                abrirModalAuth('login');
-                return;
-            }
-
-            const scrollSalvo = window.scrollY;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            const semestresPossiveis = [
-                '1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre', '5º Semestre',
-                '6º Semestre', '7º Semestre', '8º Semestre', '9º Semestre', '10º Semestre'
-            ];
-
-            const semestresComDados = semestresPossiveis.map(sem => {
-                const registros = planejamentoGlobal
-                    .filter(p => p.semestre === sem)
-                    .sort((a, b) => {
-                        const indexA = listaDisciplinasGlobal.findIndex(d => d.id === a.disciplina_id);
-                        const indexB = listaDisciplinasGlobal.findIndex(d => d.id === b.disciplina_id);
-                        return indexA - indexB;
-                    });
-                return { semestre: sem, registros };
-            }).filter(s => s.registros.length > 0);
-
-            if (semestresComDados.length === 0) {
-                alert("Não há disciplinas alocadas em nenhum semestre para exportar.");
-                return;
-            }
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Planejamento Acadêmico - Lista de Disciplinas", 14, 20);
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR'), 14, 26);
-
-            let y = 36;
-
-            semestresComDados.forEach(grupo => {
-                const alturaBlocoSemestre = 16 + (grupo.registros.length * 6);
-
-                if (y + alturaBlocoSemestre > 280) {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text(grupo.semestre, 14, y);
-                y += 5;
-
-                doc.setFontSize(8);
-                doc.setFillColor(245, 247, 250);
-                doc.rect(14, y - 4, 182, 6, "F");
-                doc.text("Código", 16, y);
-                doc.text("Nome da Disciplina", 42, y);
-                doc.text("Período", 145, y);
-                doc.text("Status", 170, y);
-
-                y += 6;
-                doc.setFont("helvetica", "bold");
-
-                grupo.registros.forEach(reg => {
-                    const d = listaDisciplinasConfiguradas || listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                    // (mantém a lógica original segura de busca da disciplina)
-                });
-                // ... (continua a lógica normal da função)
-            });
-
-            // Mantido o restante inalterado conforme o seu script funcional original.
-        }
-
-        // Garante a integridade da função original de exportação completa sem suprimir trechos
         function exportarGradeCompletaPDF() {
             if (!usuarioAtual) {
                 alert("Para exportar a grade completa em PDF, é necessário estar logado.");
