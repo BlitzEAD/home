@@ -91,8 +91,9 @@
                         <p class="text-sm text-gray-600 whitespace-pre-line leading-relaxed">__DESCRICAO__</p>
                     </div>
                     <div class="pt-4 border-t">
-                        <a id="btn-acao-livro" href="__LINK_DESTINO__" target="_blank" onclick="tratarCliqueBotaoAcao(event)" class="block w-full text-center py-3 px-4 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition text-sm shadow-sm">
-                            Acessar / Baixar Material
+                        <!-- O link foi removido daqui e será injetado de forma totalmente segura pelo JavaScript -->
+                        <a id="btn-acao-livro" href="#" onclick="tratarCliqueBotaoAcao(event)" class="block w-full text-center py-3 px-4 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition text-sm shadow-sm">
+                            ⏳ Carregando...
                         </a>
                     </div>
                 </div>
@@ -117,24 +118,53 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
+        const LIVRO_ID_ATUAL = __ID__;
         let usuarioAtual = null;
 
         async function initLivroTemplate() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
             renderizarTopoUsuario();
-            ajustarTextoBotaoAcao();
+            await configurarBotaoSeguro();
         }
 
-        function ajustarTextoBotaoAcao() {
+        async function configurarBotaoSeguro() {
             const precoTexto = document.getElementById('preco-livro-tag').textContent.trim().toLowerCase();
             const btn = document.getElementById('btn-acao-livro');
             const isGratuito = precoTexto.includes('gratuito') || precoTexto.includes('r$ 0') || precoTexto.includes('0,00');
             
+            // Define o texto visual do botão
             if (isGratuito) {
                 btn.textContent = "📥 Download (PDF)";
             } else {
                 btn.textContent = "🛒 Comprar";
+            }
+
+            // SEGURANÇA MÁXIMA: Se for gratuito e o usuário NÃO estiver logado, 
+            // o link não é buscado e o botão continua sem URL ("#").
+            if (isGratuito && !usuarioAtual) {
+                btn.href = "#";
+                return;
+            }
+
+            // Se for pago ou se o usuário estiver logado em um material gratuito, 
+    // buscamos o link de forma segura direto do banco de dados
+            try {
+                const { data, error } = await supabaseClient
+                    .from('livros')
+                    .select('link_destino')
+                    .eq('id', LIVRO_ID_ATUAL)
+                    .single();
+                    
+                if (data && data.link_destino) {
+                    btn.href = data.link_destino;
+                    btn.target = "_blank";
+                } else {
+                    btn.href = "#";
+                }
+            } catch (err) {
+                console.error("Erro ao carregar link protegido:", err);
+                btn.href = "#";
             }
         }
 
@@ -142,7 +172,7 @@
             const precoTexto = document.getElementById('preco-livro-tag').textContent.trim().toLowerCase();
             const isGratuito = precoTexto.includes('gratuito') || precoTexto.includes('r$ 0') || precoTexto.includes('0,00');
 
-            // Se for gratuito e o usuário NÃO estiver logado, bloqueia a navegação e mostra o modal de login
+            // Se for gratuito e o usuário não estiver logado, bloqueia a ação e exibe o modal de login
             if (isGratuito && !usuarioAtual) {
                 event.preventDefault();
                 document.getElementById('modal-aviso-login').classList.remove('hidden');
