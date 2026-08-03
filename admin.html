@@ -415,9 +415,9 @@
                 );
             }
 
-            // Filtro por Curso
+            // Filtro por Curso corrigido para abranger corretamente os livros sem curso ID ou nulos
             if (cursoFiltroId === "") {
-                filtrados = filtrados.filter(l => !l.curso_id);
+                filtrados = filtrados.filter(l => !l.curso_id || l.curso_id === null || l.curso_id === "");
             } else {
                 const cursoIdNum = parseInt(cursoFiltroId);
                 const discIdsDoCurso = gradeDisciplinasPorCurso[cursoIdNum] || [];
