@@ -315,24 +315,48 @@
                 disciplinasCursadasIds = planejamentoGlobal.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
             }
 
+            // Define o curso atual para isolamento acadêmico nos teasers
+            let nomeCursoPadrao = "Administração";
+            if (usuarioAtual) {
+                nomeCursoPadrao = usuarioAtual.user_metadata?.curso || localStorage.getItem('curso_selecionado') || "Administração";
+            } else {
+                nomeCursoPadrao = localStorage.getItem('curso_selecionado') || "Administração";
+            }
+
+            const cursoObj = listaCursosGlobal.find(c => c.nome === nomeCursoPadrao);
+            const cursoIdAtual = cursoObj ? cursoObj.id : cursoAtivoId;
+
+            // Filtro acadêmico inicial por curso
+            let baseLivros = data.filter(l => {
+                const isGeralPlataforma = !l.curso_id;
+                const isDoCurso = l.curso_id === cursoIdAtual;
+                return isGeralPlataforma || isDoCurso;
+            });
+
             let cursando = [];
-            let geral = [];
-            let outros = [];
+            let doCurso = [];
+            let geralPlataforma = [];
 
-            data.forEach(l => {
-                const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
-                const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+            baseLivros.forEach(l => {
+                const isGeralPlataforma = !l.curso_id;
+                const isCursando = !isGeralPlataforma && 
+                                   (cursoIdAtual === cursoAtivoId) && 
+                                   (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
 
-                if (isCursando) cursando.push(l);
-                else if (isGeral) geral.push(l);
-                else outros.push(l);
+                if (isCursando) {
+                    cursando.push(l);
+                } else if (isGeralPlataforma) {
+                    geralPlataforma.push(l);
+                } else {
+                    doCurso.push(l);
+                }
             });
 
             let intercalados = [];
-            while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
+            while (cursando.length > 0 || doCurso.length > 0 || geralPlataforma.length > 0) {
                 for (let i = 0; i < 3 && cursando.length > 0; i++) intercalados.push(cursando.shift());
-                for (let i = 0; i < 2 && geral.length > 0; i++) intercalados.push(geral.shift());
-                for (let i = 0; i < 1 && outros.length > 0; i++) intercalados.push(outros.shift());
+                for (let i = 0; i < 2 && doCurso.length > 0; i++) intercalados.push(doCurso.shift());
+                for (let i = 0; i < 1 && geralPlataforma.length > 0; i++) intercalados.push(geralPlataforma.shift());
             }
 
             const livrosTeaser = intercalados.slice(0, 4);
@@ -345,7 +369,7 @@
             let html = '';
             
             livrosTeaser.forEach(l => {
-                const isCursandoBadge = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                const isCursandoBadge = (cursoIdAtual === cursoAtivoId) && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
                 const badgeHtml = isCursandoBadge ? `<span class="absolute top-2 right-2 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
 
                 html += `
