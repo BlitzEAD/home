@@ -100,6 +100,7 @@
         let disciplinasCursadasIds = [];
         let semestreEmCursoAtual = "";
         let cursoUsuarioId = null;
+        let nomeCursoUsuarioAtual = "Administração"; // Padrão caso não haja perfil ou index
         let gradeDisciplinasCursoUsuario = [];
 
         async function initBiblioteca() {
@@ -141,10 +142,10 @@
             try {
                 if (usuarioAtual) {
                     semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
-                    const nomeCursoUsuario = usuarioAtual.user_metadata?.curso || "";
+                    nomeCursoUsuarioAtual = usuarioAtual.user_metadata?.curso || localStorage.getItem('curso_selecionado') || "Administração";
 
-                    if (nomeCursoUsuario) {
-                        const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoUsuario).single();
+                    if (nomeCursoUsuarioAtual) {
+                        const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoUsuarioAtual).single();
                         if (cursoData) {
                             cursoUsuarioId = cursoData.id;
                             const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('disciplina_id').eq('curso_id', cursoUsuarioId);
@@ -161,6 +162,19 @@
                     }
                 } else {
                     semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
+                    nomeCursoUsuarioAtual = localStorage.getItem('curso_selecionado') || "Administração";
+
+                    if (nomeCursoUsuarioAtual) {
+                        const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoUsuarioAtual).single();
+                        if (cursoData) {
+                            cursoUsuarioId = cursoData.id;
+                            const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('disciplina_id').eq('curso_id', cursoUsuarioId);
+                            if (relacoes) {
+                                gradeDisciplinasCursoUsuario = relacoes.map(r => r.disciplina_id);
+                            }
+                        }
+                    }
+
                     if (semestreEmCursoAtual) {
                         const plan = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
                         disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
@@ -205,12 +219,13 @@
             if (semestreEmCursoAtual) {
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
-            html += '<option value="GERAL_PLATAFORMA">Geral da Plataforma (Sem curso)</option>';
+            
+            // Opções renomeadas conforme solicitado
+            html += '<option value="GERAL_PLATAFORMA">Livros sem Curso Definido</option>';
             if (cursoUsuarioId) {
-                html += '<option value="GERAL_CURSO">📚 Geral do Meu Curso (Sem disciplina específica)</option>';
+                html += `<option value="GERAL_CURSO">Livros do curso ${nomeCursoUsuarioAtual}</option>`;
             }
             
-            // Exibe apenas as disciplinas pertencentes à grade do curso do aluno (se houver curso definido)
             data.forEach(d => {
                 if (!cursoUsuarioId || gradeDisciplinasCursoUsuario.includes(d.id)) {
                     html += `<option value="${d.id}">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</option>`;
@@ -256,7 +271,6 @@
             
             let baseFiltrados = listaLivrosGlobal;
 
-            // Restrição Acadêmica Inicial: Se o aluno tem curso, oculta livros que pertencem estritamente a OUTROS cursos
             if (cursoUsuarioId) {
                 baseFiltrados = baseFiltrados.filter(l => {
                     const isGeralPlataforma = !l.curso_id;
