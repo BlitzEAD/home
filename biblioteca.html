@@ -24,8 +24,8 @@
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
                 <a href="index.html" class="flex items-center">
-    <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
-</a>
+                    <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
+                </a>
                 <div id="container-btn-admin"></div>
             </div>
             <div class="flex items-center space-x-2 md:space-x-3">
@@ -54,7 +54,7 @@
                 </div>
                 <div class="w-full md:w-1/3">
                     <select id="select-filtro-disciplina" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
-                        <option value="">Todas as Disciplinas</option>
+                        <option value="">Todas as Disciplinas / Geral</option>
                     </select>
                 </div>
             </div>
@@ -65,7 +65,7 @@
         </div>
     </main>
 
-    <!-- MODAL LIVRO (Com suporte a clique no fundo escuro) -->
+    <!-- MODAL LIVRO -->
     <div id="modal-livro" onclick="fecharClicandoFora(event)" class="hidden fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
             <button onclick="fecharModalLivroPorBotao()" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
@@ -99,20 +99,21 @@
         let usuarioAtual = null;
         let disciplinasCursadasIds = [];
         let semestreEmCursoAtual = "";
+        let cursoUsuarioId = null;
+        let gradeDisciplinasCursoUsuario = [];
 
         async function initBiblioteca() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
             
             renderizarTopoUsuario(); 
-            await carregarDadosUsuario(); // Descobre o semestre e as disciplinas atuais do aluno
+            await carregarDadosUsuario(); 
             await carregarDisciplinasSelect(); 
             await carregarLivros();
 
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
             document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
 
-            // Escuta o botão "Voltar" / "Avançar" do navegador
             window.addEventListener('popstate', (event) => {
                 const path = window.location.pathname;
                 if (path.includes('livro_')) {
@@ -129,7 +130,6 @@
                         }
                     }
                 } else {
-                    // Se voltou para biblioteca.html puro, fecha o modal
                     document.getElementById('modal-livro').classList.add('hidden');
                 }
             });
@@ -141,6 +141,19 @@
             try {
                 if (usuarioAtual) {
                     semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
+                    const nomeCursoUsuario = usuarioAtual.user_metadata?.curso || "";
+
+                    if (nomeCursoUsuario) {
+                        const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoUsuario).single();
+                        if (cursoData) {
+                            cursoUsuarioId = cursoData.id;
+                            const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('disciplina_id').eq('curso_id', cursoUsuarioId);
+                            if (relacoes) {
+                                gradeDisciplinasCursoUsuario = relacoes.map(r => r.disciplina_id);
+                            }
+                        }
+                    }
+
                     if (semestreEmCursoAtual) {
                         const { data } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, semestre').eq('user_id', usuarioAtual.id);
                         const plan = data || [];
@@ -188,12 +201,21 @@
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) return;
             
-            let html = '<option value="">Todas as Disciplinas</option>';
+            let html = '<option value="">Todas as Disciplinas / Geral</option>';
             if (semestreEmCursoAtual) {
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
-            html += '<option value="GERAL">Geral</option>';
-            data.forEach(d => html += `<option value="${d.id}">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</option>`);
+            html += '<option value="GERAL_PLATAFORMA">Geral da Plataforma (Sem curso)</option>';
+            if (cursoUsuarioId) {
+                html += '<option value="GERAL_CURSO">📚 Geral do Meu Curso (Sem disciplina específica)</option>';
+            }
+            
+            // Exibe apenas as disciplinas pertencentes à grade do curso do aluno (se houver curso definido)
+            data.forEach(d => {
+                if (!cursoUsuarioId || gradeDisciplinasCursoUsuario.includes(d.id)) {
+                    html += `<option value="${d.id}">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</option>`;
+                }
+            });
             
             document.getElementById('select-filtro-disciplina').innerHTML = html;
         }
@@ -211,7 +233,7 @@
             let outros = [];
 
             livrosParaOrdernar.forEach(l => {
-                const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
+                const isGeral = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                 const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
 
                 if (isCursando) cursando.push(l);
@@ -233,6 +255,16 @@
             const filtroDisc = document.getElementById('select-filtro-disciplina').value;
             
             let baseFiltrados = listaLivrosGlobal;
+
+            // Restrição Acadêmica Inicial: Se o aluno tem curso, oculta livros que pertencem estritamente a OUTROS cursos
+            if (cursoUsuarioId) {
+                baseFiltrados = baseFiltrados.filter(l => {
+                    const isGeralPlataforma = !l.curso_id;
+                    const isDoCurso = l.curso_id === cursoUsuarioId;
+                    return isGeralPlataforma || isDoCurso;
+                });
+            }
+
             if (texto !== "") {
                 baseFiltrados = baseFiltrados.filter(l => 
                     l.titulo.toLowerCase().includes(texto) || (l.descricao && l.descricao.toLowerCase().includes(texto))
@@ -248,8 +280,10 @@
 
                 baseFiltrados.forEach(l => {
                     let matchDisc = false;
-                    if (filtroDisc === "GERAL") {
-                        matchDisc = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    if (filtroDisc === "GERAL_PLATAFORMA") {
+                        matchDisc = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    } else if (filtroDisc === "GERAL_CURSO") {
+                        matchDisc = l.curso_id === cursoUsuarioId && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     } else if (filtroDisc === "CURSANDO") {
                         matchDisc = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
                     } else {
@@ -320,12 +354,10 @@
 
         function clicarLivro(l) { 
             const gratuito = l.preco === 0 || l.preco === "0.00";
-            // Se for gratuito e o usuário NÃO estiver logado, bloqueia e abre aviso de login
             if (gratuito && !usuarioAtual) { 
                 document.getElementById('modal-aviso-login').classList.remove('hidden'); 
                 return; 
             } 
-            // Se for pago OU se estiver logado, abre o modal livremente
             abrirModalLivro(l, true); 
         }
 
@@ -348,13 +380,11 @@
             }
         }
 
-        // Fechar clicando no X do modal
         function fecharModalLivroPorBotao() {
             document.getElementById('modal-livro').classList.add('hidden');
             window.history.pushState({}, '', 'biblioteca.html');
         }
 
-        // Fechar clicando no fundo escuro (backdrop)
         function fecharClicandoFora(event) {
             const modalFundo = document.getElementById('modal-livro');
             if (event.target === modalFundo) {
@@ -375,7 +405,7 @@
                     if (!gratuito || usuarioAtual) {
                         abrirModalLivro(livroEncontrado, false);
                     } else {
-                        document.getElementById('modal-aviso-login').classList.remove('hidden');
+                        document.getElementById('modal-aviso-login').classList.add('hidden');
                     }
                 }
             }
