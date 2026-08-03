@@ -320,10 +320,10 @@
                             const tituloLivroSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
                             
                             htmlBib += `
-                                <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px] relative">
+                                <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[140px] sm:min-w-[160px] flex-1 max-w-[180px] relative">
                                     ${badgeHtml}
                                     <div>
-                                        <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b"><img src="${l.capa_url}" alt="${tituloLivroSeguro}" class="h-full object-contain group-hover:scale-105 transition duration-300"></div>
+                                        <div class="w-full h-36 sm:h-40 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b"><img src="${l.capa_url}" alt="${tituloLivroSeguro}" class="h-full w-full object-contain group-hover:scale-105 transition duration-300"></div>
                                         <div class="p-2.5"><h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4></div>
                                     </div>
                                     <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
