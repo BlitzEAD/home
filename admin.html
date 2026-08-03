@@ -1029,9 +1029,11 @@
                     const data_ap3 = linha.querySelector('.input-ap3-disc').value.trim();
                     const controle = parseInt(linha.querySelector('.input-controle-disc').value);
 
-                    await supabaseClient.from('disciplinas').update({
+                    const { error } = await supabaseClient.from('disciplinas').update({
                         codigo, nome, periodo, data_ap1, data_ap2, data_ap3, controle
                     }).eq('id', idDisc);
+
+                    if (error) throw error;
 
                     window.disciplinasCompletasMap[idDisc] = { ...window.disciplinasCompletasMap[idDisc], codigo, nome, periodo, data_ap1, data_ap2, data_ap3, controle };
                     disciplinasGlobalMap[idDisc] = `${codigo ? codigo + ' - ' : ''}${nome}`;
@@ -1120,20 +1122,30 @@
             try {
                 // Insere as novas disciplinas e atualiza o relacionamento com o curso
                 for (let r of dadosCsvTemporarios) {
-                    // Verifica se a disciplina já existe por código ou nome para atualizar ou criar
-                    const { data: existente } = await supabaseClient.from('disciplinas').select('id').eq('nome', r.nome).maybeSingle();
+                    // Tenta localizar a disciplina pelo código ou pelo nome para evitar duplicatas desnecessárias, ou cria uma nova
+                    let existente = null;
+                    if (r.codigo) {
+                        const { data: porCodigo } = await supabaseClient.from('disciplinas').select('id').eq('codigo', r.codigo).maybeSingle();
+                        existente = porCodigo;
+                    }
+                    if (!existente && r.nome) {
+                        const { data: porNome } = await supabaseClient.from('disciplinas').select('id').eq('nome', r.nome).maybeSingle();
+                        existente = porNome;
+                    }
                     
                     let discId;
                     if (existente) {
                         discId = existente.id;
-                        await supabaseClient.from('disciplinas').update({
+                        const { error: errUp } = await supabaseClient.from('disciplinas').update({
                             codigo: r.codigo,
+                            nome: r.nome,
                             periodo: r.periodo,
                             data_ap1: r.data_ap1,
                             data_ap2: r.data_ap2,
                             data_ap3: r.data_ap3,
                             controle: r.controle
                         }).eq('id', discId);
+                        if (errUp) throw errUp;
                     } else {
                         const { data: nova, error: errIns } = await supabaseClient.from('disciplinas').insert([{
                             codigo: r.codigo,
@@ -1151,7 +1163,8 @@
                     // Garante o vínculo na tabela curso_disciplinas
                     const { data: relExiste } = await supabaseClient.from('curso_disciplinas').select('*').eq('curso_id', cursoId).eq('id_disciplina', discId).maybeSingle();
                     if (!relExiste) {
-                        await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, id_disciplina: discId }]);
+                        const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, id_disciplina: discId }]);
+                        if (errRel) throw errRel;
                     }
                 }
 
