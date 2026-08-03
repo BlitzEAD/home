@@ -373,11 +373,12 @@
                 const badgeHtml = isCursandoBadge ? `<span class="absolute top-2 right-2 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
 
                 html += `
-                    <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px] relative">
+                    <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[140px] sm:min-w-[160px] flex-1 max-w-[180px] relative">
                         ${badgeHtml}
                         <div>
-                            <div class="w-full h-24 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b">
-                                <img src="${l.capa_url}" alt="Capa do material: ${l.titulo.replace(/"/g, '&quot;')}" class="h-full object-contain group-hover:scale-105 transition duration-300">
+                            <!-- Capa em formato retrato (vertical) -->
+                            <div class="w-full h-36 sm:h-40 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b">
+                                <img src="${l.capa_url}" alt="Capa do material: ${l.titulo.replace(/"/g, '&quot;')}" class="h-full w-full object-contain group-hover:scale-105 transition duration-300">
                             </div>
                             <div class="p-2.5">
                                 <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4>
