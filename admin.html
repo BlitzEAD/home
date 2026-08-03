@@ -32,9 +32,10 @@
                 <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l relative"></div>
             </div>
         </div>
-        <div class="w-full bg-gray-100 px-4 md:px-6 py-2 flex space-x-4">
-            <button onclick="mudarAbaAdmin('livros')" id="tab-btn-livros" class="text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm">📚 Gerenciar Livros</button>
-            <button onclick="mudarAbaAdmin('jornal')" id="tab-btn-jornal" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition">📰 Gerenciar Jornal Blitz</button>
+        <div class="w-full bg-gray-100 px-4 md:px-6 py-2 flex space-x-4 overflow-x-auto">
+            <button onclick="mudarAbaAdmin('livros')" id="tab-btn-livros" class="text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap">📚 Gerenciar Livros</button>
+            <button onclick="mudarAbaAdmin('jornal')" id="tab-btn-jornal" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap">📰 Gerenciar Jornal Blitz</button>
+            <button onclick="mudarAbaAdmin('disciplinas')" id="tab-btn-disciplinas" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap">🏛️ Cursos e Disciplinas</button>
         </div>
     </header>
 
@@ -269,6 +270,82 @@
                 </div>
             </div>
         </div>
+
+        <!-- ABA CURSOS E DISCIPLINAS -->
+        <div id="secao-admin-disciplinas" class="space-y-8 hidden">
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-1">Gerenciamento de Cursos e Disciplinas</h2>
+                        <p class="text-gray-500 text-xs">Selecione um curso para gerenciar sua grade curricular, alterar horários de APs ou importar atualizações via CSV.</p>
+                    </div>
+                    <div class="w-full md:w-72">
+                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">Curso Ativo:</label>
+                        <select id="select-curso-admin-gerenciamento" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 font-semibold text-blue-900">
+                            <option value="">Carregando cursos...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Painel de Importação CSV e Ações Gerais -->
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-800">📥 Importação em Lote via Arquivo CSV</h3>
+                            <p class="text-xs text-gray-500">O arquivo CSV deve conter colunas para Código, Nome, Data AP1, Data AP2, Data AP3, Período e Controle (Ativo/Inativo).</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="file" id="input-arquivo-csv-grade" accept=".csv" class="hidden" onchange="processarArquivoCsvGrade(event)">
+                            <button type="button" onclick="document.getElementById('input-arquivo-csv-grade').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition shadow-sm">Selecionar Arquivo CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Área de Pré-visualização do CSV antes de salvar -->
+                    <div id="container-preview-csv" class="hidden border border-amber-300 bg-amber-50 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-amber-900">⚠️ Pré-visualização dos dados carregados do CSV. Revise antes de confirmar a substituição oficial.</span>
+                            <div class="space-x-2">
+                                <button type="button" onclick="cancelarPreviewCsv()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition">Cancelar</button>
+                                <button type="button" id="btn-confirmar-csv" onclick="salvarGradeImportadaCsv()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition shadow-sm">Confirmar e Salvar Grade</button>
+                            </div>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto bg-white border rounded-lg text-xs">
+                            <table class="w-full text-left border-collapse">
+                                <thead id="preview-csv-head" class="bg-gray-100 text-gray-700 uppercase"></thead>
+                                <tbody id="preview-csv-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Edição Manual da Grade do Curso -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-md font-bold text-gray-900">Matriz Curricular do Curso Selecionado</h3>
+                        <button type="button" id="btn-salvar-grade-manual" onclick="salvarEdicoesManuaisGrade()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition shadow-sm">Salvar Alterações Manuais</button>
+                    </div>
+
+                    <div class="overflow-x-auto border rounded-xl">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider">
+                                    <th class="p-3 border-b">Código</th>
+                                    <th class="p-3 border-b">Nome da Disciplina</th>
+                                    <th class="p-3 border-b text-center">Período</th>
+                                    <th class="p-3 border-b text-center">Data AP1</th>
+                                    <th class="p-3 border-b text-center">Data AP2</th>
+                                    <th class="p-3 border-b text-center">Data AP3</th>
+                                    <th class="p-3 border-b text-center">Status / Controle</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-admin-disciplinas-curso">
+                                <tr><td colspan="7" class="p-6 text-center text-gray-400">Selecione um curso acima para carregar a grade.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -282,6 +359,7 @@
         let listaCursosGlobal = [];
         let disciplinasGlobalMap = {}; 
         let gradeDisciplinasPorCurso = {}; 
+        let dadosCsvTemporarios = null;
 
         // Função utilitária para desabilitar botão e mostrar loading (ampulheta/spinner)
         function setLoadingState(btnId, isLoading) {
@@ -322,6 +400,10 @@
                 renderizarCheckboxesFormPorCurso(e.target.value);
             });
 
+            document.getElementById('select-curso-admin-gerenciamento').addEventListener('change', (e) => {
+                renderizarGradeGerenciamentoCurso(e.target.value);
+            });
+
             document.getElementById('input-busca-admin-posts').addEventListener('input', renderizarTabelaPostsFiltrados);
             document.getElementById('select-filtro-admin-cat').addEventListener('change', renderizarTabelaPostsFiltrados);
             document.getElementById('select-filtro-admin-autor').addEventListener('change', renderizarTabelaPostsFiltrados);
@@ -341,11 +423,13 @@
             const { data: cursos } = await supabaseClient.from('cursos').select('*').order('nome');
             listaCursosGlobal = cursos || [];
 
-            const { data: disciplinas } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
+            const { data: disciplinas } = await supabaseClient.from('disciplinas').select('*').order('nome');
             disciplinasGlobalMap = {};
+            window.disciplinasCompletasMap = {};
             if (disciplinas) {
                 disciplinas.forEach(d => {
                     disciplinasGlobalMap[d.id] = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
+                    window.disciplinasCompletasMap[d.id] = d;
                 });
             }
 
@@ -362,35 +446,48 @@
 
             const selectForm = document.getElementById('select-curso-admin-form');
             const selectTabela = document.getElementById('select-filtro-admin-curso');
+            const selectGerenciamento = document.getElementById('select-curso-admin-gerenciamento');
 
             let optionsForm = '<option value="">Nenhum (Disponível para Todos os Cursos / Geral)</option>';
-            
-            // Adicionado a nova categoria "Livros sem curso definido" logo após "Todos os Cursos"
             let optionsTabela = '<option value="TODOS">Todos os Cursos</option>';
             optionsTabela += '<option value="NULL_COURSE">Livros sem curso definido</option>';
+            let optionsGerenciamento = '<option value="">Selecione um curso...</option>';
 
             listaCursosGlobal.forEach(c => {
                 optionsForm += `<option value="${c.id}">${c.nome}</option>`;
                 optionsTabela += `<option value="${c.id}">${c.nome}</option>`;
+                optionsGerenciamento += `<option value="${c.id}">${c.nome}</option>`;
             });
 
             if (selectForm) selectForm.innerHTML = optionsForm;
             if (selectTabela) selectTabela.innerHTML = optionsTabela;
+            if (selectGerenciamento) selectGerenciamento.innerHTML = optionsGerenciamento;
         }
 
         function mudarAbaAdmin(aba) {
             const secLivros = document.getElementById('secao-admin-livros');
             const secJornal = document.getElementById('secao-admin-jornal');
+            const secDisciplinas = document.getElementById('secao-admin-disciplinas');
             const btnLivros = document.getElementById('tab-btn-livros');
             const btnJornal = document.getElementById('tab-btn-jornal');
+            const btnDisciplinas = document.getElementById('tab-btn-disciplinas');
+
+            secLivros.classList.add('hidden');
+            secJornal.classList.add('hidden');
+            secDisciplinas.classList.add('hidden');
+            btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
+            btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
+            btnDisciplinas.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
+
             if (aba === 'livros') {
-                secLivros.classList.remove('hidden'); secJornal.classList.add('hidden');
-                btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm";
-                btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition";
-            } else {
-                secLivros.classList.add('hidden'); secJornal.classList.remove('hidden');
-                btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm";
-                btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition";
+                secLivros.classList.remove('hidden');
+                btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap";
+            } else if (aba === 'jornal') {
+                secJornal.classList.remove('hidden');
+                btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap";
+            } else if (aba === 'disciplinas') {
+                secDisciplinas.classList.remove('hidden');
+                btnDisciplinas.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap";
             }
         }
 
@@ -868,6 +965,205 @@
             await supabaseClient.from('jornal_posts').delete().eq('id', id);
             await dispararBuildAutomatico();
             await carregarAdminPosts();
+        }
+
+        // --- MÉTODOS PARA GERENCIAMENTO DE CURSOS E DISCIPLINAS ---
+        async function renderizarGradeGerenciamentoCurso(cursoIdStr) {
+            const tbody = document.getElementById('tabela-admin-disciplinas-curso');
+            if (!cursoIdStr) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Selecione um curso acima para carregar a grade.</td></tr>`;
+                return;
+            }
+
+            const cursoId = parseInt(cursoIdStr);
+            const discIds = gradeDisciplinasPorCurso[cursoId] || [];
+
+            if (discIds.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Nenhuma disciplina vinculada a este curso.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            discIds.forEach(idDisc => {
+                const d = window.disciplinasCompletasMap[idDisc];
+                if (!d) return;
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50" data-disc-id="${d.id}">
+                        <td class="p-2 font-mono"><input type="text" value="${d.codigo || ''}" class="input-codigo-disc w-20 px-2 py-1 border rounded bg-white"></td>
+                        <td class="p-2 font-medium"><input type="text" value="${d.nome || ''}" class="input-nome-disc w-full px-2 py-1 border rounded bg-white"></td>
+                        <td class="p-2 text-center"><input type="text" value="${d.periodo || ''}" class="input-periodo-disc w-16 px-2 py-1 border rounded bg-white text-center"></td>
+                        <td class="p-2 text-center"><input type="text" value="${d.data_ap1 || '-'}" class="input-ap1-disc w-28 px-2 py-1 border rounded bg-white text-center"></td>
+                        <td class="p-2 text-center"><input type="text" value="${d.data_ap2 || '-'}" class="input-ap2-disc w-28 px-2 py-1 border rounded bg-white text-center"></td>
+                        <td class="p-2 text-center"><input type="text" value="${d.data_ap3 || '-'}" class="input-ap3-disc w-28 px-2 py-1 border rounded bg-white text-center"></td>
+                        <td class="p-2 text-center">
+                            <select class="input-controle-disc px-2 py-1 border rounded bg-white font-semibold ${d.controle == 1 ? 'text-green-600' : 'text-red-600'}">
+                                <option value="1" ${d.controle == 1 ? 'selected' : ''}>Ativo</option>
+                                <option value="0" ${d.controle == 0 ? 'selected' : ''}>Inativo</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        async function salvarEdicoesManuaisGrade() {
+            const cursoIdStr = document.getElementById('select-curso-admin-gerenciamento').value;
+            if (!cursoIdStr) {
+                alert("Selecione um curso primeiro.");
+                return;
+            }
+
+            setLoadingState('btn-salvar-grade-manual', true);
+            const linhas = document.querySelectorAll('#tabela-admin-disciplinas-curso tr[data-disc-id]');
+
+            try {
+                for (let linha of linhas) {
+                    const idDisc = parseInt(linha.getAttribute('data-disc-id'));
+                    const codigo = linha.querySelector('.input-codigo-disc').value.trim();
+                    const nome = linha.querySelector('.input-nome-disc').value.trim();
+                    const periodo = linha.querySelector('.input-periodo-disc').value.trim();
+                    const data_ap1 = linha.querySelector('.input-ap1-disc').value.trim();
+                    const data_ap2 = linha.querySelector('.input-ap2-disc').value.trim();
+                    const data_ap3 = linha.querySelector('.input-ap3-disc').value.trim();
+                    const controle = parseInt(linha.querySelector('.input-controle-disc').value);
+
+                    await supabaseClient.from('disciplinas').update({
+                        codigo, nome, periodo, data_ap1, data_ap2, data_ap3, controle
+                    }).eq('id', idDisc);
+
+                    window.disciplinasCompletasMap[idDisc] = { ...window.disciplinasCompletasMap[idDisc], codigo, nome, periodo, data_ap1, data_ap2, data_ap3, controle };
+                    disciplinasGlobalMap[idDisc] = `${codigo ? codigo + ' - ' : ''}${nome}`;
+                }
+
+                alert("Alterações manuais salvas com sucesso!");
+            } catch (err) {
+                alert("Erro ao salvar alterações: " + err.message);
+            } finally {
+                setLoadingState('btn-salvar-grade-manual', false);
+            }
+        }
+
+        function processarArquivoCsvGrade(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const cursoIdStr = document.getElementById('select-curso-admin-gerenciamento').value;
+            if (!cursoIdStr) {
+                alert("Por favor, selecione o curso de destino antes de carregar o CSV.");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const texto = e.target.result;
+                const linhas = texto.split(/\r\n|\n/).filter(l => l.trim().length > 0);
+                if (linhas.length < 2) {
+                    alert("O arquivo CSV parece estar vazio ou mal formatado.");
+                    return;
+                }
+
+                // Assume separador vírgula ou ponto e vírgula
+                const separador = linhas[0].includes(';') ? ';' : ',';
+                const cabecalho = linhas[0].split(separador).map(h => h.trim().toLowerCase());
+
+                let parsedRows = [];
+                for (let i = 1; i < linhas.length; i++) {
+                    const cols = linhas[i].split(separador).map(c => c.trim().replace(/^"|"$/g, ''));
+                    if (cols.length >= 2) {
+                        parsedRows.push({
+                            codigo: cols[0] || '',
+                            nome: cols[1] || '',
+                            periodo: cols[2] || '1º Período',
+                            data_ap1: cols[3] || '-',
+                            data_ap2: cols[4] || '-',
+                            data_ap3: cols[5] || '-',
+                            controle: cols[6] !== undefined ? parseInt(cols[6]) : 1
+                        });
+                    }
+                }
+
+                dadosCsvTemporarios = parsedRows;
+                exibirPreviewCsv(cabecalho, parsedRows);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function exibirPreviewCsv(cabecalho, rows) {
+            const head = document.getElementById('preview-csv-head');
+            const body = document.getElementById('preview-csv-body');
+            document.getElementById('container-preview-csv').classList.remove('hidden');
+
+            head.innerHTML = `<tr><th class="p-2 border-b">Código</th><th class="p-2 border-b">Nome</th><th class="p-2 border-b">Período</th><th class="p-2 border-b">AP1</th><th class="p-2 border-b">AP2</th><th class="p-2 border-b">AP3</th><th class="p-2 border-b">Status</th></tr>`;
+            
+            let html = '';
+            rows.forEach(r => {
+                html += `<tr class="border-b"><td class="p-2 font-mono">${r.codigo}</td><td class="p-2 font-medium">${r.nome}</td><td class="p-2">${r.periodo}</td><td class="p-2">${r.data_ap1}</td><td class="p-2">${r.data_ap2}</td><td class="p-2">${r.data_ap3}</td><td class="p-2">${r.controle == 1 ? 'Ativo' : 'Inativo'}</td></tr>`;
+            });
+            body.innerHTML = html;
+        }
+
+        function cancelarPreviewCsv() {
+            dadosCsvTemporarios = null;
+            document.getElementById('container-preview-csv').classList.add('hidden');
+            document.getElementById('input-arquivo-csv-grade').value = '';
+        }
+
+        async function salvarGradeImportadaCsv() {
+            if (!dadosCsvTemporarios || dadosCsvTemporarios.length === 0) return;
+            const cursoId = parseInt(document.getElementById('select-curso-admin-gerenciamento').value);
+
+            setLoadingState('btn-confirmar-csv', true);
+
+            try {
+                // Insere as novas disciplinas e atualiza o relacionamento com o curso
+                for (let r of dadosCsvTemporarios) {
+                    // Verifica se a disciplina já existe por código ou nome para atualizar ou criar
+                    const { data: existente } = await supabaseClient.from('disciplinas').select('id').eq('nome', r.nome).maybeSingle();
+                    
+                    let discId;
+                    if (existente) {
+                        discId = existente.id;
+                        await supabaseClient.from('disciplinas').update({
+                            codigo: r.codigo,
+                            periodo: r.periodo,
+                            data_ap1: r.data_ap1,
+                            data_ap2: r.data_ap2,
+                            data_ap3: r.data_ap3,
+                            controle: r.controle
+                        }).eq('id', discId);
+                    } else {
+                        const { data: nova, error: errIns } = await supabaseClient.from('disciplinas').insert([{
+                            codigo: r.codigo,
+                            nome: r.nome,
+                            periodo: r.periodo,
+                            data_ap1: r.data_ap1,
+                            data_ap2: r.data_ap2,
+                            data_ap3: r.data_ap3,
+                            controle: r.controle
+                        }]).select().single();
+                        if (errIns) throw errIns;
+                        discId = nova.id;
+                    }
+
+                    // Garante o vínculo na tabela curso_disciplinas
+                    const { data: relExiste } = await supabaseClient.from('curso_disciplinas').select('*').eq('curso_id', cursoId).eq('id_disciplina', discId).maybeSingle();
+                    if (!relExiste) {
+                        await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, id_disciplina: discId }]);
+                    }
+                }
+
+                alert("Grade importada e sincronizada com sucesso!");
+                cancelarPreviewCsv();
+                await carregarCursosEGrades();
+                renderizarGradeGerenciamentoCurso(cursoId);
+            } catch (err) {
+                alert("Erro ao importar CSV: " + err.message);
+            } finally {
+                setLoadingState('btn-confirmar-csv', false);
+            }
         }
 
         initAdmin();
