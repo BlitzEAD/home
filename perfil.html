@@ -28,8 +28,8 @@
         <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center space-x-4">
                 <a href="index.html" class="flex items-center">
-    <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
-</a>
+                    <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
+                </a>
                 <div id="container-btn-admin"></div>
             </div>
             <div class="flex items-center space-x-2 md:space-x-3">
@@ -116,18 +116,12 @@
                     </div>
                 </div>
 
-                <!-- CURSO -->
+                <!-- CURSO (DINÂMICO DO BANCO DE DADOS) -->
                 <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
                     <div class="flex-1 pr-4">
                         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Curso</label>
                         <select id="perfil-curso" disabled required class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed cursor-pointer transition-all duration-200">
-                            <option value="Administração">Administração</option>
-                            <option value="Administração Pública">Administração Pública</option>
-                            <option value="Biblioteconomia">Biblioteconomia</option>
-                            <option value="Ciências Contábeis">Ciências Contábeis</option>
-                            <option value="Engenharia de Produção">Engenharia de Produção</option>
-                            <option value="Licenciatura em Ciências Biológicas">Licenciatura em Ciências Biológicas</option>
-                            <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
+                            <option value="">Carregando cursos...</option>
                         </select>
                     </div>
                     <button type="button" onclick="ativarEdicaoCampo('perfil-curso', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
@@ -189,7 +183,6 @@
         let flagRemoverFoto = false;
         let campoEmEdicao = null;
 
-        // Variáveis globais para os botões de exportação (Mesma lógica do index.html)
         let listaDisciplinasGlobal = [];
         let planejamentoGlobal = [];
         let semestreEmCursoAtual = "";
@@ -197,12 +190,35 @@
 
         async function initPerfil() {
             gerarOpcoesSemestres();
+            await carregarCursosNoSelect();
+            
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { alert("Faça login para acessar o perfil."); window.location.href = 'index.html'; return; }
             usuarioAtual = session.user;
             renderizarTopoUsuario();
             preencherDadosPerfil();
             await carregarDisciplinasCursando();
+        }
+
+        async function carregarCursosNoSelect() {
+            const selectCurso = document.getElementById('perfil-curso');
+            if (!selectCurso) return;
+            
+            try {
+                const { data: cursos, error } = await supabaseClient.from('cursos').select('nome').order('nome');
+                if (error) throw error;
+
+                let html = '<option value="">Selecione um curso</option>';
+                if (cursos && cursos.length > 0) {
+                    cursos.forEach(c => {
+                        html += `<option value="${c.nome}">${c.nome}</option>`;
+                    });
+                }
+                selectCurso.innerHTML = html;
+            } catch (err) {
+                console.error("Erro ao carregar cursos:", err);
+                selectCurso.innerHTML = '<option value="Administração">Administração</option>';
+            }
         }
 
         function gerarOpcoesSemestres() {
@@ -251,7 +267,7 @@
             dadosOriginais = {
                 email: usuarioAtual.email || '',
                 nome: md.nome || '',
-                curso: md.curso || 'Administração',
+                curso: md.curso || '',
                 semestre: md.semestre_ingresso || '',
                 foto_url: md.foto_url || ''
             };
@@ -261,13 +277,11 @@
             document.getElementById('perfil-semestre').value = dadosOriginais.semestre;
         }
 
-        // --- SISTEMA DE EDIÇÃO COM HIGHLIGHT E EXCLUSIVIDADE ---
         function desativarTodosCampos() {
             ['perfil-nome', 'perfil-email', 'perfil-curso', 'perfil-semestre'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el.disabled) {
                     el.disabled = true;
-                    // Remove destaque
                     el.classList.remove('bg-white', 'ring-2', 'ring-blue-500', 'px-3', 'py-1', 'rounded-md', 'shadow-sm', 'text-blue-900');
                     el.classList.add('bg-transparent', 'p-0', 'text-gray-800');
                 }
@@ -282,7 +296,6 @@
             const campo = document.getElementById(idCampo);
             campo.disabled = false;
             
-            // Adiciona destaque
             campo.classList.remove('bg-transparent', 'p-0', 'text-gray-800');
             campo.classList.add('bg-white', 'ring-2', 'ring-blue-500', 'px-3', 'py-1', 'rounded-md', 'shadow-sm', 'text-blue-900');
             campo.focus();
@@ -295,18 +308,15 @@
             verificarMudancas();
         }
 
-        // Listener global para fechar modo de edição ao clicar fora
         document.addEventListener('click', (e) => {
             if (campoEmEdicao) {
                 const campoAtivo = document.getElementById(campoEmEdicao);
-                
                 if (campoAtivo && !campoAtivo.contains(e.target)) {
                     desativarTodosCampos();
                 }
             }
         });
 
-        // Protege cliques nos containers de foto
         function ativarEdicaoFoto(event) {
             if (event) event.stopPropagation();
             document.getElementById('container-input-foto').classList.remove('hidden');
@@ -495,12 +505,9 @@
             });
             html += '</div>';
             containerLista.innerHTML = html;
-            
-            // Exibe os botões de exportação agora que há disciplinas
             containerBotoes.classList.remove('hidden');
         }
 
-        // --- FUNÇÕES DE EXPORTAÇÃO E AGENDA (IDÊNTICAS AO INDEX.HTML) ---
         function executarExportarSemestrePDF() {
             if (semestreEmCursoAtual) {
                 exportarSemestrePDF(semestreEmCursoAtual);
