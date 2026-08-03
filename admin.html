@@ -44,7 +44,7 @@
         <div id="secao-admin-livros" class="space-y-8">
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h2 id="titulo-form-livro" class="text-xl font-bold text-gray-900 mb-1">Cadastrar Novo Livro / Material</h2>
-                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital. Se nenhuma disciplina for marcada, o livro será considerado "Geral".</p>
+                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital. Se nenhum curso e nenhuma disciplina forem marcados, o livro será "Geral para todos". Se marcar apenas o curso, será "Geral do Curso".</p>
 
                 <form id="form-livro" class="space-y-4">
                     <input type="hidden" id="livro-id-edicao">
@@ -79,18 +79,20 @@
 
                     <!-- VINCULAÇÃO COM FILTRO EM CASCATA DE CURSOS -->
                     <div class="border rounded-xl p-4 bg-gray-50 space-y-3">
-                        <label class="block text-xs font-bold text-gray-800">Vincular às Disciplinas (Filtre por curso para facilitar)</label>
+                        <label class="block text-xs font-bold text-gray-800">Escopo e Disciplinas do Livro</label>
                         
                         <div class="w-full md:w-1/2">
-                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Filtrar disciplinas do curso:</label>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Vincular a um Curso Específico (Opcional):</label>
                             <select id="select-curso-admin-form" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
-                                <option value="">Carregando cursos...</option>
+                                <option value="">Nenhum (Disponível para Todos os Cursos / Geral)</option>
                             </select>
+                            <p class="text-[10px] text-gray-500 mt-1">Se selecionar um curso e não marcar nenhuma disciplina, o livro será Geral daquele curso.</p>
                         </div>
 
                         <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Disciplinas específicas:</label>
                             <div id="container-checkboxes-disciplinas" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border rounded-xl bg-white text-xs">
-                                <span class="text-gray-400">Selecione um curso acima ou aguarde...</span>
+                                <span class="text-gray-400">Selecione um curso acima para listar as disciplinas ou deixe livre.</span>
                             </div>
                         </div>
                     </div>
@@ -294,13 +296,14 @@
             renderizarTopoUsuario();
 
             await carregarCursosEGrades();
-            await carregarCheckboxesDisciplinasForm();
+            await carregarCheckboxesDisciplinasDropdown();
             await carregarAdminLivros();
             await carregarAdminPosts();
 
             // Event Listeners para busca e filtros de livros
             document.getElementById('input-busca-admin-livros').addEventListener('input', renderizarTabelaLivrosFiltrados);
             document.getElementById('select-filtro-admin-curso').addEventListener('change', renderizarTabelaLivrosFiltrados);
+            
             document.getElementById('select-curso-admin-form').addEventListener('change', (e) => {
                 renderizarCheckboxesFormPorCurso(e.target.value);
             });
@@ -327,7 +330,16 @@
             const { data: cursos } = await supabaseClient.from('cursos').select('*').order('nome');
             listaCursosGlobal = cursos || [];
 
-            // 2. Carrega relacionamento curso_disciplinas para saber quais disciplinas pertencem a qual curso
+            // 2. Carrega disciplinas globais para o mapa
+            const { data: disciplinas } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
+            disciplinasGlobalMap = {};
+            if (disciplinas) {
+                disciplinas.forEach(d => {
+                    disciplinasGlobalMap[d.id] = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
+                });
+            }
+
+            // 3. Carrega relacionamento curso_disciplinas
             const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('*');
             gradeDisciplinasPorCurso = {};
             if (relacoes) {
@@ -343,7 +355,7 @@
             const selectForm = document.getElementById('select-curso-admin-form');
             const selectTabela = document.getElementById('select-filtro-admin-curso');
 
-            let optionsForm = '<option value="">Selecione um curso para ver as disciplinas...</option>';
+            let optionsForm = '<option value="">Nenhum (Disponível para Todos os Cursos / Geral)</option>';
             let optionsTabela = '<option value="">Todos os Cursos</option>';
 
             listaCursosGlobal.forEach(c => {
@@ -391,21 +403,14 @@
             });
         }
 
-        async function carregarCheckboxesDisciplinasForm() {
+        async function carregarCheckboxesDisciplinasDropdown() {
             const containerDropdown = document.getElementById('container-filtros-disciplinas-dropdown');
-            
             const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (!data) { 
                 containerDropdown.innerHTML = 'Nenhuma disciplina encontrada.'; 
                 return; 
             }
 
-            disciplinasGlobalMap = {};
-            data.forEach(d => {
-                disciplinasGlobalMap[d.id] = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
-            });
-
-            // Popula o dropdown de filtros globais da tabela
             let htmlDropdown = '';
             data.forEach(d => {
                 const nomeFormatado = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
@@ -422,7 +427,7 @@
         function renderizarCheckboxesFormPorCurso(cursoIdStr, idsJaMarcados = []) {
             const containerForm = document.getElementById('container-checkboxes-disciplinas');
             if (!cursoIdStr) {
-                containerForm.innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima para listar as disciplinas.</span>';
+                containerForm.innerHTML = '<span class="text-gray-400 italic">Nenhum curso específico selecionado (O livro será Geral da plataforma ou Geral do Curso se marcado acima).</span>';
                 return;
             }
 
@@ -483,7 +488,7 @@
 
         async function dispararBuildAutomatico() {
             try {
-                // Se houver endpoint ou trigger configurada no seu ambiente
+                // Trigger ou build automático caso haja
             } catch (err) {
                 console.error("Aviso ao tentar atualizar build automático:", err);
             }
@@ -514,16 +519,19 @@
             if (cursoFiltroId !== "") {
                 const discIdsDoCurso = gradeDisciplinasPorCurso[parseInt(cursoFiltroId)] || [];
                 filtrados = filtrados.filter(l => {
+                    const isGeralPlataforma = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    const isGeralDoCurso = l.curso_id === parseInt(cursoFiltroId) && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => Number(v.id_disciplina));
-                    // O livro aparece se pertencer a alguma disciplina do curso OU se for geral (dependendo da regra)
-                    return idsLivro.some(idDisc => discIdsDoCurso.includes(idDisc));
+                    const pertenceAoCurso = idsLivro.some(idDisc => discIdsDoCurso.includes(idDisc));
+
+                    return isGeralPlataforma || isGeralDoCurso || pertenceAoCurso;
                 });
             }
 
             // 3. Filtro por disciplinas específicas ou GERAL selecionados
             if (checkboxesAtivos.length > 0) {
                 filtrados = filtrados.filter(l => {
-                    const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
+                    const isGeral = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => String(v.id_disciplina));
 
                     let match = false;
@@ -565,6 +573,9 @@
             const titulo = document.getElementById('livro-titulo').value;
             const preco = parseFloat(document.getElementById('livro-preco').value);
             const descricao = document.getElementById('livro-descricao').value;
+            const cursoIdInput = document.getElementById('select-curso-admin-form').value;
+            const cursoId = cursoIdInput !== "" ? parseInt(cursoIdInput) : null;
+
             let linkDestino = document.getElementById('livro-link').value.trim();
             let capaUrl = document.getElementById('livro-capa-url').value.trim();
             const arquivoPdf = document.getElementById('livro-arquivo-pdf').files[0];
@@ -589,7 +600,7 @@
                 const idsValidos = checkboxes.map(cb => parseInt(cb.value));
 
                 if (idEdicao) {
-                    const { error: errUp } = await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }).eq('id', idEdicao);
+                    const { error: errUp } = await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, curso_id: cursoId }).eq('id', idEdicao);
                     if (errUp) throw errUp;
 
                     await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', idEdicao);
@@ -600,7 +611,7 @@
                     }
                     alert("Livro atualizado com sucesso!");
                 } else {
-                    const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl }]).select().single();
+                    const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, curso_id: cursoId }]).select().single();
                     if (error) throw error;
 
                     if (idsValidos.length > 0) {
@@ -632,9 +643,8 @@
 
             const idsVinculados = (livro.livro_disciplinas || []).map(v => Number(v.id_disciplina));
             
-            // Tenta descobrir a qual curso pertence a primeira disciplina vinculada para selecionar no select de curso do form
-            let cursoEncontradoId = "";
-            if (idsVinculados.length > 0) {
+            let cursoEncontradoId = livro.curso_id ? String(livro.curso_id) : "";
+            if (!cursoEncontradoId && idsVinculados.length > 0) {
                 for (const [cId, dIds] of Object.entries(gradeDisciplinasPorCurso)) {
                     if (dIds.includes(idsVinculados[0])) {
                         cursoEncontradoId = cId;
@@ -644,13 +654,9 @@
             }
 
             const selectCursoForm = document.getElementById('select-curso-admin-form');
-            if (selectCursoForm && cursoEncontradoId) {
+            if (selectCursoForm) {
                 selectCursoForm.value = cursoEncontradoId;
                 renderizarCheckboxesFormPorCurso(cursoEncontradoId, idsVinculados);
-            } else {
-                document.querySelectorAll('.check-disc-livro').forEach(cb => {
-                    cb.checked = idsVinculados.includes(Number(cb.value));
-                });
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -663,7 +669,7 @@
             document.getElementById('btn-salvar-livro').textContent = "Salvar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.add('hidden');
             document.getElementById('select-curso-admin-form').value = "";
-            document.getElementById('container-checkboxes-disciplinas').innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima para listar as disciplinas.</span>';
+            document.getElementById('container-checkboxes-disciplinas').innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima para listar as disciplinas ou deixe livre.</span>';
         }
 
         async function deletarLivro(id) {
