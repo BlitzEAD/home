@@ -48,11 +48,24 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Biblioteca Digital</h2>
             <p class="text-gray-600 text-sm mb-6">Encontre livros e materiais complementares para seus estudos.</p>
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="w-full md:w-1/2 relative">
+                
+                <!-- Pesquisa por Título -->
+                <div class="w-full md:w-1/3 relative">
                     <input type="text" id="input-busca" placeholder="Pesquisar por título..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                 </div>
-                <div class="w-full md:w-1/3">
+
+                <!-- Dropdown de Cursos -->
+                <div class="w-full md:w-1/3 flex items-center">
+                    <label class="text-xs font-semibold text-gray-500 mr-2 uppercase tracking-wide">Curso:</label>
+                    <select id="select-filtro-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+
+                <!-- Dropdown de Disciplinas -->
+                <div class="w-full md:w-1/3 flex items-center">
+                    <label class="text-xs font-semibold text-gray-500 mr-2 uppercase tracking-wide hidden md:block">Disc.:</label>
                     <select id="select-filtro-disciplina" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
                         <option value="">Todas as Disciplinas / Geral</option>
                     </select>
@@ -99,20 +112,34 @@
         let usuarioAtual = null;
         let disciplinasCursadasIds = [];
         let semestreEmCursoAtual = "";
-        let cursoUsuarioId = null;
-        let nomeCursoUsuarioAtual = "Administração"; // Padrão caso não haja perfil ou index
-        let gradeDisciplinasCursoUsuario = [];
+        
+        let listaCursosGlobal = [];
+        let disciplinasGlobalMap = {};
+        let gradeDisciplinasPorCurso = {};
+        
+        let nomeCursoPadraoUsuario = "Administração"; 
+        let cursoUsuarioIdOriginal = null;
 
         async function initBiblioteca() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
             
             renderizarTopoUsuario(); 
+            await carregarEstruturaBanco();
             await carregarDadosUsuario(); 
-            await carregarDisciplinasSelect(); 
+            
+            renderizarSelectCursos();
+            renderizarSelectDisciplinas(); 
             await carregarLivros();
 
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
+            
+            // Quando mudar o curso no dropdown, atualiza as disciplinas
+            document.getElementById('select-filtro-curso').addEventListener('change', () => {
+                renderizarSelectDisciplinas();
+                filtrarEnderizarLivros();
+            });
+
             document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
 
             window.addEventListener('popstate', (event) => {
@@ -138,22 +165,32 @@
             verificarLivroUrl();
         }
 
+        async function carregarEstruturaBanco() {
+            // Busca Cursos
+            const { data: cursos } = await supabaseClient.from('cursos').select('*').order('nome');
+            listaCursosGlobal = cursos || [];
+
+            // Busca Disciplinas
+            const { data: disciplinas } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
+            if (disciplinas) {
+                disciplinas.forEach(d => disciplinasGlobalMap[d.id] = d);
+            }
+
+            // Busca Grade de Relacionamento
+            const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('*');
+            if (relacoes) {
+                relacoes.forEach(r => {
+                    if (!gradeDisciplinasPorCurso[r.curso_id]) gradeDisciplinasPorCurso[r.curso_id] = [];
+                    gradeDisciplinasPorCurso[r.curso_id].push(r.disciplina_id);
+                });
+            }
+        }
+
         async function carregarDadosUsuario() {
             try {
                 if (usuarioAtual) {
                     semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
-                    nomeCursoUsuarioAtual = usuarioAtual.user_metadata?.curso || localStorage.getItem('curso_selecionado') || "Administração";
-
-                    if (nomeCursoUsuarioAtual) {
-                        const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoUsuarioAtual).single();
-                        if (cursoData) {
-                            cursoUsuarioId = cursoData.id;
-                            const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('disciplina_id').eq('curso_id', cursoUsuarioId);
-                            if (relacoes) {
-                                gradeDisciplinasCursoUsuario = relacoes.map(r => r.disciplina_id);
-                            }
-                        }
-                    }
+                    nomeCursoPadraoUsuario = usuarioAtual.user_metadata?.curso || localStorage.getItem('curso_selecionado') || "Administração";
 
                     if (semestreEmCursoAtual) {
                         const { data } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, semestre').eq('user_id', usuarioAtual.id);
@@ -162,24 +199,20 @@
                     }
                 } else {
                     semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
-                    nomeCursoUsuarioAtual = localStorage.getItem('curso_selecionado') || "Administração";
-
-                    if (nomeCursoUsuarioAtual) {
-                        const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoUsuarioAtual).single();
-                        if (cursoData) {
-                            cursoUsuarioId = cursoData.id;
-                            const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('disciplina_id').eq('curso_id', cursoUsuarioId);
-                            if (relacoes) {
-                                gradeDisciplinasCursoUsuario = relacoes.map(r => r.disciplina_id);
-                            }
-                        }
-                    }
+                    nomeCursoPadraoUsuario = localStorage.getItem('curso_selecionado') || "Administração";
 
                     if (semestreEmCursoAtual) {
                         const plan = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
                         disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
                     }
                 }
+
+                // Identifica o ID original do curso padrão do usuário para referência de badges
+                const cursoEncontrado = listaCursosGlobal.find(c => c.nome === nomeCursoPadraoUsuario);
+                if (cursoEncontrado) {
+                    cursoUsuarioIdOriginal = cursoEncontrado.id;
+                }
+
             } catch (err) {
                 console.error("Erro ao carregar dados do usuário:", err);
             }
@@ -211,35 +244,54 @@
             document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
         }
 
-        async function carregarDisciplinasSelect() {
-            const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
-            if (!data) return;
+        function renderizarSelectCursos() {
+            const selectCurso = document.getElementById('select-filtro-curso');
+            let html = '';
+            
+            listaCursosGlobal.forEach(c => {
+                const isSelected = c.nome === nomeCursoPadraoUsuario ? 'selected' : '';
+                html += `<option value="${c.id}" ${isSelected}>${c.nome}</option>`;
+            });
+            
+            selectCurso.innerHTML = html;
+        }
+
+        function renderizarSelectDisciplinas() {
+            const selectDisc = document.getElementById('select-filtro-disciplina');
+            const cursoSelecionadoId = parseInt(document.getElementById('select-filtro-curso').value);
+            const cursoObj = listaCursosGlobal.find(c => c.id === cursoSelecionadoId);
+            const nomeCurso = cursoObj ? cursoObj.nome : '';
             
             let html = '<option value="">Todas as Disciplinas / Geral</option>';
-            if (semestreEmCursoAtual) {
+            
+            // Se o curso visualizado no dropdown é o MESMO do perfil do usuário, mostrar Cursando
+            if (semestreEmCursoAtual && cursoSelecionadoId === cursoUsuarioIdOriginal) {
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
             
-            // Opções renomeadas conforme solicitado
             html += '<option value="GERAL_PLATAFORMA">Livros sem Curso Definido</option>';
-            if (cursoUsuarioId) {
-                html += `<option value="GERAL_CURSO">Livros do curso ${nomeCursoUsuarioAtual}</option>`;
+            
+            if (cursoSelecionadoId) {
+                html += `<option value="GERAL_CURSO">Livros do curso ${nomeCurso}</option>`;
             }
             
-            data.forEach(d => {
-                if (!cursoUsuarioId || gradeDisciplinasCursoUsuario.includes(d.id)) {
+            // Exibe apenas as disciplinas pertencentes à grade do curso selecionado no dropdown
+            const idsPermitidos = gradeDisciplinasPorCurso[cursoSelecionadoId] || [];
+            
+            idsPermitidos.forEach(id => {
+                const d = disciplinasGlobalMap[id];
+                if (d) {
                     html += `<option value="${d.id}">${d.codigo ? d.codigo + ' - ' : ''}${d.nome}</option>`;
                 }
             });
             
-            document.getElementById('select-filtro-disciplina').innerHTML = html;
+            selectDisc.innerHTML = html;
         }
 
         async function carregarLivros() {
             const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
             listaLivrosGlobal = data || []; 
             filtrarEnderizarLivros();
-            verificarLivroUrl();
         }
 
         function ordenarLivrosIntercalados(livrosParaOrdernar) {
@@ -247,9 +299,16 @@
             let geral = [];
             let outros = [];
 
+            // Pega o ID do curso do dropdown para referência
+            const filtroCursoId = parseInt(document.getElementById('select-filtro-curso').value);
+
             livrosParaOrdernar.forEach(l => {
                 const isGeral = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
-                const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                
+                // O livro só recebe tag "Cursando" se ele estiver na grade E se o dropdown de curso atual for o mesmo do perfil
+                const isCursando = !isGeral && 
+                                   (filtroCursoId === cursoUsuarioIdOriginal) && 
+                                   (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
 
                 if (isCursando) cursando.push(l);
                 else if (isGeral) geral.push(l);
@@ -267,24 +326,28 @@
 
         function filtrarEnderizarLivros() {
             const texto = document.getElementById('input-busca').value.toLowerCase().trim();
+            const filtroCursoId = parseInt(document.getElementById('select-filtro-curso').value);
             const filtroDisc = document.getElementById('select-filtro-disciplina').value;
             
             let baseFiltrados = listaLivrosGlobal;
 
-            if (cursoUsuarioId) {
+            // Filtro por Curso (Dropdown 1)
+            if (filtroCursoId) {
                 baseFiltrados = baseFiltrados.filter(l => {
                     const isGeralPlataforma = !l.curso_id;
-                    const isDoCurso = l.curso_id === cursoUsuarioId;
-                    return isGeralPlataforma || isDoCurso;
+                    const isDoCursoSelecionado = l.curso_id === filtroCursoId;
+                    return isGeralPlataforma || isDoCursoSelecionado;
                 });
             }
 
+            // Filtro por Texto
             if (texto !== "") {
                 baseFiltrados = baseFiltrados.filter(l => 
                     l.titulo.toLowerCase().includes(texto) || (l.descricao && l.descricao.toLowerCase().includes(texto))
                 );
             }
 
+            // Filtro por Disciplinas (Dropdown 2)
             if (filtroDisc === "") {
                 const intercalados = ordenarLivrosIntercalados(baseFiltrados);
                 renderizarGrid(intercalados);
@@ -297,7 +360,7 @@
                     if (filtroDisc === "GERAL_PLATAFORMA") {
                         matchDisc = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     } else if (filtroDisc === "GERAL_CURSO") {
-                        matchDisc = l.curso_id === cursoUsuarioId && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                        matchDisc = l.curso_id === filtroCursoId && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     } else if (filtroDisc === "CURSANDO") {
                         matchDisc = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
                     } else {
@@ -343,7 +406,9 @@
 
         function gerarHtmlCardLivro(l) {
             const precoF = l.preco === 0 || l.preco === "0.00" ? '<span class="text-emerald-600 font-bold">Gratuito</span>' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
-            const isCursando = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+            
+            const filtroCursoId = parseInt(document.getElementById('select-filtro-curso').value);
+            const isCursando = (filtroCursoId === cursoUsuarioIdOriginal) && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
             const badgeHtml = isCursando ? `<span class="absolute top-3 right-3 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
 
             const livroStr = JSON.stringify(l).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
