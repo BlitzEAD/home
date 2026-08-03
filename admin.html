@@ -98,7 +98,7 @@
                     </div>
 
                     <div class="flex items-center space-x-3 pt-2">
-                        <button type="submit" id="btn-salvar-livro" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Salvar Livro</button>
+                        <button type="submit" id="btn-salvar-livro" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm flex items-center justify-center min-w-[140px]">Salvar Livro</button>
                         <button type="button" id="btn-cancelar-edicao-livro" onclick="cancelarEdicaoLivro()" class="hidden bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-300 transition text-sm">Cancelar Edição</button>
                     </div>
                 </form>
@@ -118,7 +118,7 @@
                     <!-- Filtro por Curso na Tabela -->
                     <div>
                         <select id="select-filtro-admin-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todos os Cursos</option>
+                            <!-- Inserido dinamicamente no JS -->
                         </select>
                     </div>
 
@@ -130,12 +130,8 @@
                         </button>
                         <div id="dropdown-filtros-livros" class="hidden absolute left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-xl z-30 p-3 max-h-60 overflow-y-auto space-y-2 text-xs">
                             <div class="font-semibold text-gray-500 border-b pb-1 mb-1">Selecione os filtros:</div>
-                            <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded font-medium text-blue-600">
-                                <input type="checkbox" value="GERAL" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 rounded">
-                                <span>📚 Geral (Sem disciplina)</span>
-                            </label>
                             <div id="container-filtros-disciplinas-dropdown" class="space-y-1">
-                                <!-- Inserido via JS -->
+                                <span class="text-gray-400">Selecione um curso específico ao lado para filtrar as disciplinas.</span>
                             </div>
                         </div>
                     </div>
@@ -215,7 +211,7 @@
                     </div>
 
                     <div class="flex items-center space-x-3 pt-2">
-                        <button type="submit" id="btn-salvar-post" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Publicar Notícia</button>
+                        <button type="submit" id="btn-salvar-post" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm flex items-center justify-center min-w-[140px]">Publicar Notícia</button>
                         <button type="button" id="btn-cancelar-edicao-post" onclick="cancelarEdicaoPost()" class="hidden bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-300 transition text-sm">Cancelar Edição</button>
                     </div>
                 </form>
@@ -287,6 +283,22 @@
         let disciplinasGlobalMap = {}; 
         let gradeDisciplinasPorCurso = {}; 
 
+        // Função utilitária para desabilitar botão e mostrar loading (ampulheta/spinner)
+        function setLoadingState(btnId, isLoading) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (isLoading) {
+                btn.disabled = true;
+                btn.dataset.originalText = btn.innerHTML; // Salva o texto original ('Salvar Livro' ou 'Atualizar Livro')
+                btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...`;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset.originalText;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session || session.user.user_metadata?.is_admin !== true) {
@@ -296,12 +308,15 @@
             renderizarTopoUsuario();
 
             await carregarCursosEGrades();
-            await carregarCheckboxesDisciplinasDropdown();
             await carregarAdminLivros();
             await carregarAdminPosts();
 
             document.getElementById('input-busca-admin-livros').addEventListener('input', renderizarTabelaLivrosFiltrados);
-            document.getElementById('select-filtro-admin-curso').addEventListener('change', renderizarTabelaLivrosFiltrados);
+            
+            document.getElementById('select-filtro-admin-curso').addEventListener('change', (e) => {
+                atualizarDropdownDisciplinasTabela(e.target.value);
+                atualizarFiltrosLivros();
+            });
             
             document.getElementById('select-curso-admin-form').addEventListener('change', (e) => {
                 renderizarCheckboxesFormPorCurso(e.target.value);
@@ -349,7 +364,10 @@
             const selectTabela = document.getElementById('select-filtro-admin-curso');
 
             let optionsForm = '<option value="">Nenhum (Disponível para Todos os Cursos / Geral)</option>';
-            let optionsTabela = '<option value="">Todos os Cursos</option>';
+            
+            // Adicionado a nova categoria "Livros sem curso definido" logo após "Todos os Cursos"
+            let optionsTabela = '<option value="TODOS">Todos os Cursos</option>';
+            optionsTabela += '<option value="NULL_COURSE">Livros sem curso definido</option>';
 
             listaCursosGlobal.forEach(c => {
                 optionsForm += `<option value="${c.id}">${c.nome}</option>`;
@@ -396,24 +414,41 @@
             });
         }
 
-        async function carregarCheckboxesDisciplinasDropdown() {
+        function atualizarDropdownDisciplinasTabela(cursoIdStr) {
             const containerDropdown = document.getElementById('container-filtros-disciplinas-dropdown');
-            const { data } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
-            if (!data) { 
-                containerDropdown.innerHTML = 'Nenhuma disciplina encontrada.'; 
-                return; 
+            
+            // Só mostra disciplinas se um curso específico for selecionado (diferente de TODOS ou NULL_COURSE)
+            if (!cursoIdStr || cursoIdStr === "TODOS" || cursoIdStr === "NULL_COURSE") {
+                containerDropdown.innerHTML = '<span class="text-gray-400">Selecione um curso específico ao lado para filtrar as disciplinas.</span>';
+                return;
             }
 
-            let htmlDropdown = '';
-            data.forEach(d => {
-                const nomeFormatado = `${d.codigo ? d.codigo + ' - ' : ''}${d.nome}`;
+            const cursoId = parseInt(cursoIdStr);
+            const idsPermitidos = gradeDisciplinasPorCurso[cursoId] || [];
+
+            // Se o curso específico não tiver disciplinas, exibe a mensagem de retorno vazio
+            if (idsPermitidos.length === 0) {
+                containerDropdown.innerHTML = '<span class="text-gray-400 italic">Não há disciplinas inscritas para este curso.</span>';
+                return;
+            }
+
+            let htmlDropdown = `
+                <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded font-medium text-blue-600 border-b pb-1 mb-1">
+                    <input type="checkbox" value="GERAL_CURSO" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 rounded">
+                    <span>📚 Livros sem disciplina específica</span>
+                </label>
+            `;
+
+            idsPermitidos.forEach(idDisc => {
+                const nomeFormatado = disciplinasGlobalMap[idDisc] || `Disciplina ID ${idDisc}`;
                 htmlDropdown += `
                     <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                        <input type="checkbox" value="${d.id}" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 text-blue-600 rounded">
+                        <input type="checkbox" value="${idDisc}" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 text-blue-600 rounded">
                         <span class="truncate">${nomeFormatado}</span>
                     </label>
                 `;
             });
+
             containerDropdown.innerHTML = htmlDropdown;
         }
 
@@ -458,7 +493,7 @@
             
             let tagsHtml = '';
             checkboxes.forEach(cb => {
-                let nomeFiltro = cb.value === 'GERAL' ? 'Geral' : (disciplinasGlobalMap[cb.value] || `Disc. ${cb.value}`);
+                let nomeFiltro = cb.value === 'GERAL_CURSO' ? 'Livros sem disciplina específica' : (disciplinasGlobalMap[cb.value] || `Disc. ${cb.value}`);
                 tagsHtml += `
                     <span class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium">
                         ${nomeFiltro}
@@ -507,25 +542,34 @@
                 );
             }
 
-            if (cursoFiltroId !== "") {
-                const discIdsDoCurso = gradeDisciplinasPorCurso[parseInt(cursoFiltroId)] || [];
+            // Filtro por Curso (Nova Regra Rígida)
+            if (cursoFiltroId === "TODOS" || cursoFiltroId === "") {
+                // Não aplica filtro rígido, mostra tudo
+            } else if (cursoFiltroId === "NULL_COURSE") {
+                // Filtra para exibir APENAS livros onde curso_id é vazio/nulo
+                filtrados = filtrados.filter(l => !l.curso_id || l.curso_id === null || l.curso_id === "");
+            } else {
+                const cursoIdNum = parseInt(cursoFiltroId);
+                const discIdsDoCurso = gradeDisciplinasPorCurso[cursoIdNum] || [];
+                
+                // Exibe APENAS livros deste curso, rejeitando livros com curso definido nulo ou de outros cursos
                 filtrados = filtrados.filter(l => {
-                    const isGeralPlataforma = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
-                    const isGeralDoCurso = l.curso_id === parseInt(cursoFiltroId) && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    const isGeralDoCurso = l.curso_id === cursoIdNum && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => Number(v.id_disciplina));
                     const pertenceAoCurso = idsLivro.some(idDisc => discIdsDoCurso.includes(idDisc));
 
-                    return isGeralPlataforma || isGeralDoCurso || pertenceAoCurso;
+                    return isGeralDoCurso || pertenceAoCurso;
                 });
             }
 
+            // Filtro por Disciplinas ou Geral do Curso selecionados via checkboxes
             if (checkboxesAtivos.length > 0) {
                 filtrados = filtrados.filter(l => {
-                    const isGeral = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    const isGeralDoCurso = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => String(v.id_disciplina));
 
                     let match = false;
-                    if (checkboxesAtivos.includes('GERAL') && isGeral) match = true;
+                    if (checkboxesAtivos.includes('GERAL_CURSO') && isGeralDoCurso) match = true;
                     
                     const discMatch = idsLivro.some(idDisc => checkboxesAtivos.includes(idDisc));
                     if (discMatch) match = true;
@@ -559,6 +603,10 @@
 
         document.getElementById('form-livro').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Ativa o estado de loading e desabilita botão
+            setLoadingState('btn-salvar-livro', true);
+
             const idEdicao = document.getElementById('livro-id-edicao').value;
             const titulo = document.getElementById('livro-titulo').value;
             const preco = parseFloat(document.getElementById('livro-preco').value);
@@ -617,6 +665,9 @@
                 await carregarAdminLivros();
             } catch (err) { 
                 alert("Erro ao salvar livro: " + err.message); 
+            } finally {
+                // Desativa estado de loading
+                setLoadingState('btn-salvar-livro', false);
             }
         });
 
@@ -744,6 +795,10 @@
 
         document.getElementById('form-post').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Ativa o estado de loading e desabilita botão
+            setLoadingState('btn-salvar-post', true);
+
             const idEdicao = document.getElementById('post-id-edicao').value;
             const titulo = document.getElementById('post-titulo').value;
             const categoria = document.getElementById('post-categoria').value;
@@ -777,7 +832,12 @@
                 await dispararBuildAutomatico();
                 cancelarEdicaoPost(); 
                 await carregarAdminPosts();
-            } catch (err) { alert("Erro: " + err.message); }
+            } catch (err) { 
+                alert("Erro: " + err.message); 
+            } finally {
+                // Desativa estado de loading
+                setLoadingState('btn-salvar-post', false);
+            }
         });
 
         async function editarPost(post) {
