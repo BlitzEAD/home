@@ -44,7 +44,7 @@
         <div id="secao-admin-livros" class="space-y-8">
             <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200">
                 <h2 id="titulo-form-livro" class="text-xl font-bold text-gray-900 mb-1">Cadastrar Novo Livro / Material</h2>
-                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital. Se nenhum curso e nenhuma disciplina forem marcados, o livro será "Geral para todos". Se marcar apenas o curso, será "Geral do Curso".</p>
+                <p class="text-gray-500 text-xs mb-6">Adicione materiais à Biblioteca Digital. Sem curso e sem disciplinas = Geral para todos. Apenas curso selecionado = Geral daquele curso específico.</p>
 
                 <form id="form-livro" class="space-y-4">
                     <input type="hidden" id="livro-id-edicao">
@@ -82,17 +82,17 @@
                         <label class="block text-xs font-bold text-gray-800">Escopo e Disciplinas do Livro</label>
                         
                         <div class="w-full md:w-1/2">
-                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Vincular a um Curso Específico (Opcional):</label>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Vincular a um Curso Específico:</label>
                             <select id="select-curso-admin-form" class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
-                                <option value="">Nenhum (Disponível para Todos os Cursos / Geral)</option>
+                                <option value="">Nenhum (Disponível para Todos os Cursos / Geral da Plataforma)</option>
                             </select>
-                            <p class="text-[10px] text-gray-500 mt-1">Se selecionar um curso e não marcar nenhuma disciplina, o livro será Geral daquele curso.</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Se selecionar um curso e não marcar nenhuma disciplina, o livro será "Geral" daquele curso.</p>
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Disciplinas específicas:</label>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Disciplinas específicas (Opcional):</label>
                             <div id="container-checkboxes-disciplinas" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border rounded-xl bg-white text-xs">
-                                <span class="text-gray-400">Selecione um curso acima para listar as disciplinas ou deixe livre.</span>
+                                <span class="text-gray-400">Selecione um curso acima para listar as disciplinas.</span>
                             </div>
                         </div>
                     </div>
@@ -284,8 +284,8 @@
         let listaLivrosAdminGlobal = [];
         let listaPostsAdminGlobal = [];
         let listaCursosGlobal = [];
-        let disciplinasGlobalMap = {}; // id -> nome da disciplina
-        let gradeDisciplinasPorCurso = {}; // curso_id -> [array de IDs de disciplinas]
+        let disciplinasGlobalMap = {}; 
+        let gradeDisciplinasPorCurso = {}; 
 
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -300,7 +300,6 @@
             await carregarAdminLivros();
             await carregarAdminPosts();
 
-            // Event Listeners para busca e filtros de livros
             document.getElementById('input-busca-admin-livros').addEventListener('input', renderizarTabelaLivrosFiltrados);
             document.getElementById('select-filtro-admin-curso').addEventListener('change', renderizarTabelaLivrosFiltrados);
             
@@ -308,14 +307,12 @@
                 renderizarCheckboxesFormPorCurso(e.target.value);
             });
 
-            // Event Listeners para busca e filtros de posts
             document.getElementById('input-busca-admin-posts').addEventListener('input', renderizarTabelaPostsFiltrados);
             document.getElementById('select-filtro-admin-cat').addEventListener('change', renderizarTabelaPostsFiltrados);
             document.getElementById('select-filtro-admin-autor').addEventListener('change', renderizarTabelaPostsFiltrados);
             document.getElementById('input-data-inicio').addEventListener('change', renderizarTabelaPostsFiltrados);
             document.getElementById('input-data-fim').addEventListener('change', renderizarTabelaPostsFiltrados);
 
-            // Fecha dropdown de filtros ao clicar fora
             window.addEventListener('click', (e) => {
                 const drop = document.getElementById('dropdown-filtros-livros');
                 const btn = document.getElementById('btn-dropdown-filtros-livros');
@@ -326,11 +323,9 @@
         }
 
         async function carregarCursosEGrades() {
-            // 1. Carrega cursos
             const { data: cursos } = await supabaseClient.from('cursos').select('*').order('nome');
             listaCursosGlobal = cursos || [];
 
-            // 2. Carrega disciplinas globais para o mapa
             const { data: disciplinas } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             disciplinasGlobalMap = {};
             if (disciplinas) {
@@ -339,7 +334,6 @@
                 });
             }
 
-            // 3. Carrega relacionamento curso_disciplinas
             const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('*');
             gradeDisciplinasPorCurso = {};
             if (relacoes) {
@@ -351,7 +345,6 @@
                 });
             }
 
-            // Popula selects de curso
             const selectForm = document.getElementById('select-curso-admin-form');
             const selectTabela = document.getElementById('select-filtro-admin-curso');
 
@@ -488,7 +481,7 @@
 
         async function dispararBuildAutomatico() {
             try {
-                // Trigger ou build automático caso haja
+                // Trigger ou build automático
             } catch (err) {
                 console.error("Aviso ao tentar atualizar build automático:", err);
             }
@@ -508,14 +501,12 @@
 
             let filtrados = listaLivrosAdminGlobal;
 
-            // 1. Filtro por texto
             if (textoBusca !== "") {
                 filtrados = filtrados.filter(l => 
                     l.titulo.toLowerCase().includes(textoBusca) || (l.descricao && l.descricao.toLowerCase().includes(textoBusca))
                 );
             }
 
-            // 2. Filtro rápido por Curso selecionado no dropdown da tabela
             if (cursoFiltroId !== "") {
                 const discIdsDoCurso = gradeDisciplinasPorCurso[parseInt(cursoFiltroId)] || [];
                 filtrados = filtrados.filter(l => {
@@ -528,7 +519,6 @@
                 });
             }
 
-            // 3. Filtro por disciplinas específicas ou GERAL selecionados
             if (checkboxesAtivos.length > 0) {
                 filtrados = filtrados.filter(l => {
                     const isGeral = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
@@ -669,7 +659,7 @@
             document.getElementById('btn-salvar-livro').textContent = "Salvar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.add('hidden');
             document.getElementById('select-curso-admin-form').value = "";
-            document.getElementById('container-checkboxes-disciplinas').innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima para listar as disciplinas ou deixe livre.</span>';
+            document.getElementById('container-checkboxes-disciplinas').innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima para listar as disciplinas.</span>';
         }
 
         async function deletarLivro(id) {
