@@ -110,6 +110,8 @@
         
         let usuarioAtual = null;
         let semestreEmCursoAtual = "";
+        let nomeCursoPadraoUsuario = "Administração";
+        let cursoUsuarioIdOriginal = null;
 
         // O ROBÔ INJETA O ID AQUI DURANTE A CRIAÇÃO DO ARQUIVO
         const POST_ID = 5;
@@ -118,11 +120,18 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) usuarioAtual = session.user;
             
-            // Carrega o semestre em curso (igual na index.html)
+            // Carrega dados do usuário / visitante
             if (usuarioAtual) {
                 semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
+                nomeCursoPadraoUsuario = usuarioAtual.user_metadata?.curso || localStorage.getItem('curso_selecionado') || "Administração";
             } else {
                 semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
+                nomeCursoPadraoUsuario = localStorage.getItem('curso_selecionado') || "Administração";
+            }
+
+            const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoPadraoUsuario).single();
+            if (cursoData) {
+                cursoUsuarioIdOriginal = cursoData.id;
             }
 
             renderizarTopoUsuario();
@@ -247,7 +256,7 @@
 
         async function carregarTeasersFimMateria(postIdAtual) {
             try {
-                // --- TEASER DA BIBLIOTECA COM ORDENAÇÃO INTELIGENTE (IGUAL INDEX.HTML) ---
+                // --- TEASER DA BIBLIOTECA COM ORDENAÇÃO PROPORCIONAL 3:2:1 ---
                 const { data: livros } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
                 const sectionBib = document.getElementById('teaser-biblioteca-section');
                 const gridBib = document.getElementById('teaser-biblioteca-grid');
@@ -265,24 +274,39 @@
                         }
                     }
 
+                    // Filtro acadêmico inicial por curso
+                    let baseLivros = livros;
+                    if (cursoUsuarioIdOriginal) {
+                        baseLivros = baseLivros.filter(l => {
+                            const isGeralPlataforma = !l.curso_id;
+                            const isDoCurso = l.curso_id === cursoUsuarioIdOriginal;
+                            return isGeralPlataforma || isDoCurso;
+                        });
+                    }
+
                     let cursando = [];
-                    let geral = [];
-                    let outros = [];
+                    let doCurso = [];
+                    let geralPlataforma = [];
 
-                    livros.forEach(l => {
-                        const isGeral = !l.livro_disciplinas || l.livro_disciplinas.length === 0;
-                        const isCursando = !isGeral && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                    baseLivros.forEach(l => {
+                        const isGeralPlataforma = !l.curso_id;
+                        const isCursando = !isGeralPlataforma && 
+                                           (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
 
-                        if (isCursando) cursando.push(l);
-                        else if (isGeral) geral.push(l);
-                        else outros.push(l);
+                        if (isCursando) {
+                            cursando.push(l);
+                        } else if (isGeralPlataforma) {
+                            geralPlataforma.push(l);
+                        } else {
+                            doCurso.push(l);
+                        }
                     });
 
                     let intercalados = [];
-                    while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
+                    while (cursando.length > 0 || doCurso.length > 0 || geralPlataforma.length > 0) {
                         for (let i = 0; i < 3 && cursando.length > 0; i++) intercalados.push(cursando.shift());
-                        for (let i = 0; i < 2 && geral.length > 0; i++) intercalados.push(geral.shift());
-                        for (let i = 0; i < 1 && outros.length > 0; i++) intercalados.push(outros.shift());
+                        for (let i = 0; i < 2 && doCurso.length > 0; i++) intercalados.push(doCurso.shift());
+                        for (let i = 0; i < 1 && geralPlataforma.length > 0; i++) intercalados.push(geralPlataforma.shift());
                     }
 
                     const livrosTeaser = intercalados.slice(0, 4);
