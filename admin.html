@@ -118,7 +118,7 @@
                     <!-- Filtro por Curso na Tabela -->
                     <div>
                         <select id="select-filtro-admin-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todos os Cursos / Sem Curso Específico</option>
+                            <option value="">Todos os Cursos</option>
                         </select>
                     </div>
 
@@ -415,10 +415,12 @@
                 );
             }
 
-            // Filtro por Curso corrigido para abranger corretamente os livros sem curso ID ou nulos
+            // Filtro por Curso
             if (cursoFiltroId === "") {
-                filtrados = filtrados.filter(l => !l.curso_id || l.curso_id === null || l.curso_id === "");
+                // Se nenhum curso específico foi selecionado (mostra os livros sem curso específico na plataforma)
+                filtrados = filtrados.filter(l => !l.curso_id);
             } else {
+                // Se um curso específico foi selecionado
                 const cursoIdNum = parseInt(cursoFiltroId);
                 const discIdsDoCurso = gradeDisciplinasPorCurso[cursoIdNum] || [];
                 
