@@ -1120,9 +1120,8 @@
             setLoadingState('btn-confirmar-csv', true);
 
             try {
-                // Insere as novas disciplinas e atualiza o relacionamento com o curso
+                // Insere as novas disciplinas e atualiza o relacionamento com o curso usando 'disciplina_id'
                 for (let r of dadosCsvTemporarios) {
-                    // Tenta localizar a disciplina pelo código ou pelo nome para evitar duplicatas desnecessárias, ou cria uma nova
                     let existente = null;
                     if (r.codigo) {
                         const { data: porCodigo } = await supabaseClient.from('disciplinas').select('id').eq('codigo', r.codigo).maybeSingle();
@@ -1160,10 +1159,10 @@
                         discId = nova.id;
                     }
 
-                    // Garante o vínculo na tabela curso_disciplinas
-                    const { data: relExiste } = await supabaseClient.from('curso_disciplinas').select('*').eq('curso_id', cursoId).eq('id_disciplina', discId).maybeSingle();
+                    // Garante o vínculo na tabela curso_disciplinas usando a coluna correta 'disciplina_id'
+                    const { data: relExiste } = await supabaseClient.from('curso_disciplinas').select('*').eq('curso_id', cursoId).eq('disciplina_id', discId).maybeSingle();
                     if (!relExiste) {
-                        const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, id_disciplina: discId }]);
+                        const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, disciplina_id: discId }]);
                         if (errRel) throw errRel;
                     }
                 }
