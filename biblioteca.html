@@ -134,7 +134,6 @@
 
             document.getElementById('input-busca').addEventListener('input', filtrarEnderizarLivros);
             
-            // Quando mudar o curso no dropdown, atualiza as disciplinas
             document.getElementById('select-filtro-curso').addEventListener('change', () => {
                 renderizarSelectDisciplinas();
                 filtrarEnderizarLivros();
@@ -166,17 +165,14 @@
         }
 
         async function carregarEstruturaBanco() {
-            // Busca Cursos
             const { data: cursos } = await supabaseClient.from('cursos').select('*').order('nome');
             listaCursosGlobal = cursos || [];
 
-            // Busca Disciplinas
             const { data: disciplinas } = await supabaseClient.from('disciplinas').select('id, codigo, nome').order('nome');
             if (disciplinas) {
                 disciplinas.forEach(d => disciplinasGlobalMap[d.id] = d);
             }
 
-            // Busca Grade de Relacionamento
             const { data: relacoes } = await supabaseClient.from('curso_disciplinas').select('*');
             if (relacoes) {
                 relacoes.forEach(r => {
@@ -207,7 +203,6 @@
                     }
                 }
 
-                // Identifica o ID original do curso padrão do usuário para referência de badges
                 const cursoEncontrado = listaCursosGlobal.find(c => c.nome === nomeCursoPadraoUsuario);
                 if (cursoEncontrado) {
                     cursoUsuarioIdOriginal = cursoEncontrado.id;
@@ -264,7 +259,6 @@
             
             let html = '<option value="">Todos os Livros</option>';
             
-            // Se o curso visualizado no dropdown é o MESMO do perfil do usuário, mostrar Cursando
             if (semestreEmCursoAtual && cursoSelecionadoId === cursoUsuarioIdOriginal) {
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
@@ -275,7 +269,6 @@
                 html += `<option value="GERAL_CURSO">Livros do curso ${nomeCurso}</option>`;
             }
             
-            // Exibe apenas as disciplinas pertencentes à grade do curso selecionado no dropdown
             const idsPermitidos = gradeDisciplinasPorCurso[cursoSelecionadoId] || [];
             
             idsPermitidos.forEach(id => {
@@ -296,31 +289,35 @@
 
         function ordenarLivrosIntercalados(livrosParaOrdernar) {
             let cursando = [];
-            let geral = [];
-            let outros = [];
+            let doCurso = [];
+            let geralPlataforma = [];
 
-            // Pega o ID do curso do dropdown para referência
             const filtroCursoId = parseInt(document.getElementById('select-filtro-curso').value);
 
             livrosParaOrdernar.forEach(l => {
-                const isGeral = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
-                
-                // O livro só recebe tag "Cursando" se ele estiver na grade E se o dropdown de curso atual for o mesmo do perfil
-                const isCursando = !isGeral && 
+                const isGeralPlataforma = !l.curso_id;
+                const isCursando = !isGeralPlataforma && 
                                    (filtroCursoId === cursoUsuarioIdOriginal) && 
                                    (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
 
-                if (isCursando) cursando.push(l);
-                else if (isGeral) geral.push(l);
-                else outros.push(l);
+                if (isCursando) {
+                    cursando.push(l);
+                } else if (isGeralPlataforma) {
+                    geralPlataforma.push(l);
+                } else {
+                    doCurso.push(l);
+                }
             });
 
             let resultado = [];
-            while (cursando.length > 0 || geral.length > 0 || outros.length > 0) {
+            
+            // Proporção 3:2:1
+            while (cursando.length > 0 || doCurso.length > 0 || geralPlataforma.length > 0) {
                 for (let i = 0; i < 3 && cursando.length > 0; i++) resultado.push(cursando.shift());
-                for (let i = 0; i < 2 && geral.length > 0; i++) resultado.push(geral.shift());
-                for (let i = 0; i < 1 && outros.length > 0; i++) resultado.push(outros.shift());
+                for (let i = 0; i < 2 && doCurso.length > 0; i++) resultado.push(doCurso.shift());
+                for (let i = 0; i < 1 && geralPlataforma.length > 0; i++) resultado.push(geralPlataforma.shift());
             }
+            
             return resultado;
         }
 
@@ -331,7 +328,6 @@
             
             let baseFiltrados = listaLivrosGlobal;
 
-            // Filtro por Curso (Dropdown 1)
             if (filtroCursoId) {
                 baseFiltrados = baseFiltrados.filter(l => {
                     const isGeralPlataforma = !l.curso_id;
@@ -340,14 +336,12 @@
                 });
             }
 
-            // Filtro por Texto
             if (texto !== "") {
                 baseFiltrados = baseFiltrados.filter(l => 
                     l.titulo.toLowerCase().includes(texto) || (l.descricao && l.descricao.toLowerCase().includes(texto))
                 );
             }
 
-            // Filtro por Disciplinas (Dropdown 2)
             if (filtroDisc === "") {
                 const intercalados = ordenarLivrosIntercalados(baseFiltrados);
                 renderizarGrid(intercalados);
