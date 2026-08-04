@@ -748,14 +748,20 @@
 
             setLoadingState('btn-salvar-usuario', true);
             try {
-                const { error } = await supabaseClient.from('perfis_usuarios').update({
-                    role, lacre_nome, lacre_email, lacre_curso, lacre_semestre
-                }).eq('id', userId);
+                // Chama a função RPC segura no Supabase que atualiza o auth.users (raw_user_meta_data) e o perfil simultaneamente
+                const { error } = await supabaseClient.rpc('admin_atualizar_usuario', {
+                    target_user_id: userId,
+                    novo_role: role,
+                    novo_lacre_nome: lacre_nome,
+                    novo_lacre_email: lacre_email,
+                    novo_lacre_curso: lacre_curso,
+                    novo_lacre_semestre: lacre_semestre
+                });
 
                 if (error) throw error;
 
-                await registrarLogAuditoria('editou permissões/lacres do usuário ID', `${userId} - Cargo: ${role}`);
-                alert("Alterações salvas com sucesso!");
+                await registrarLogAuditoria('atualizou o raw_user_meta_data do usuário ID', `${userId} - Cargo: ${role}`);
+                alert("Alterações e lacres salvos diretamente na autenticação do Supabase com sucesso!");
                 document.getElementById('modal-edicao-usuario').classList.add('hidden');
                 await carregarAdminUsuarios();
                 await carregarLogsAuditoria();
