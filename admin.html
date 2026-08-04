@@ -15,6 +15,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS para leitura robusta de ODS, XLSX e CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24">
 
@@ -277,7 +279,7 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900 mb-1">Gerenciamento de Cursos e Disciplinas</h2>
-                        <p class="text-gray-500 text-xs">Selecione um curso para gerenciar sua grade curricular, alterar horários de APs ou importar atualizações via CSV.</p>
+                        <p class="text-gray-500 text-xs">Selecione um curso para gerenciar sua grade curricular, alterar horários de APs ou importar atualizações via ODS/CSV.</p>
                     </div>
                     <div class="w-full md:w-72">
                         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Curso Ativo:</label>
@@ -287,23 +289,23 @@
                     </div>
                 </div>
 
-                <!-- Painel de Importação CSV e Ações Gerais -->
+                <!-- Painel de Importação ODS/CSV e Ações Gerais -->
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h3 class="text-sm font-bold text-gray-800">📥 Importação em Lote via Arquivo CSV</h3>
-                            <p class="text-xs text-gray-500">O arquivo CSV deve conter colunas para Código, Nome, Data AP1, Data AP2, Data AP3, Período e Controle (Ativo/Inativo).</p>
+                            <h3 class="text-sm font-bold text-gray-800">📥 Importação em Lote via Arquivo (ODS ou CSV)</h3>
+                            <p class="text-xs text-gray-500">O arquivo deve conter colunas para: Código, Nome, Período, Data AP1, Data AP2, Data AP3 e Controle (1 ou 0).</p>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <input type="file" id="input-arquivo-csv-grade" accept=".csv" class="hidden" onchange="processarArquivoCsvGrade(event)">
-                            <button type="button" onclick="document.getElementById('input-arquivo-csv-grade').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition shadow-sm">Selecionar Arquivo CSV</button>
+                            <input type="file" id="input-arquivo-csv-grade" accept=".csv, .ods, .xlsx" class="hidden" onchange="processarArquivoPlanilhaGrade(event)">
+                            <button type="button" onclick="document.getElementById('input-arquivo-csv-grade').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition shadow-sm">Selecionar ODS ou CSV</button>
                         </div>
                     </div>
 
-                    <!-- Área de Pré-visualização do CSV antes de salvar -->
+                    <!-- Área de Pré-visualização antes de salvar -->
                     <div id="container-preview-csv" class="hidden border border-amber-300 bg-amber-50 rounded-xl p-4 space-y-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-amber-900">⚠️ Pré-visualização dos dados carregados do CSV. Revise antes de confirmar a substituição oficial.</span>
+                            <span class="text-xs font-bold text-amber-900">⚠️ Pré-visualização dos dados carregados. Revise antes de confirmar a substituição oficial.</span>
                             <div class="space-x-2">
                                 <button type="button" onclick="cancelarPreviewCsv()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition">Cancelar</button>
                                 <button type="button" id="btn-confirmar-csv" onclick="salvarGradeImportadaCsv()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg transition shadow-sm">Confirmar e Salvar Grade</button>
@@ -361,13 +363,12 @@
         let gradeDisciplinasPorCurso = {}; 
         let dadosCsvTemporarios = null;
 
-        // Função utilitária para desabilitar botão e mostrar loading (ampulheta/spinner)
         function setLoadingState(btnId, isLoading) {
             const btn = document.getElementById(btnId);
             if (!btn) return;
             if (isLoading) {
                 btn.disabled = true;
-                btn.dataset.originalText = btn.innerHTML; // Salva o texto original ('Salvar Livro' ou 'Atualizar Livro')
+                btn.dataset.originalText = btn.innerHTML;
                 btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...`;
                 btn.classList.add('opacity-75', 'cursor-not-allowed');
             } else {
@@ -513,8 +514,6 @@
 
         function atualizarDropdownDisciplinasTabela(cursoIdStr) {
             const containerDropdown = document.getElementById('container-filtros-disciplinas-dropdown');
-            
-            // Só mostra disciplinas se um curso específico for selecionado (diferente de TODOS ou NULL_COURSE)
             if (!cursoIdStr || cursoIdStr === "TODOS" || cursoIdStr === "NULL_COURSE") {
                 containerDropdown.innerHTML = '<span class="text-gray-400">Selecione um curso específico ao lado para filtrar as disciplinas.</span>';
                 return;
@@ -523,7 +522,6 @@
             const cursoId = parseInt(cursoIdStr);
             const idsPermitidos = gradeDisciplinasPorCurso[cursoId] || [];
 
-            // Se o curso específico não tiver disciplinas, exibe a mensagem de retorno vazio
             if (idsPermitidos.length === 0) {
                 containerDropdown.innerHTML = '<span class="text-gray-400 italic">Não há disciplinas inscritas para este curso.</span>';
                 return;
@@ -552,7 +550,7 @@
         function renderizarCheckboxesFormPorCurso(cursoIdStr, idsJaMarcados = []) {
             const containerForm = document.getElementById('container-checkboxes-disciplinas');
             if (!cursoIdStr) {
-                containerForm.innerHTML = '<span class="text-gray-400 italic">Nenhum curso específico selecionado (O livro será Geral da plataforma ou Geral do Curso se marcado acima).</span>';
+                containerForm.innerHTML = '<span class="text-gray-400 italic">Nenhum curso específico selecionado.</span>';
                 return;
             }
 
@@ -612,11 +610,7 @@
         }
 
         async function dispararBuildAutomatico() {
-            try {
-                // Trigger ou build automático
-            } catch (err) {
-                console.error("Aviso ao tentar atualizar build automático:", err);
-            }
+            try {} catch (err) {}
         }
 
         async function carregarAdminLivros() {
@@ -639,17 +633,14 @@
                 );
             }
 
-            // Filtro por Curso (Nova Regra Rígida)
             if (cursoFiltroId === "TODOS" || cursoFiltroId === "") {
-                // Não aplica filtro rígido, mostra tudo
+                // Mostra tudo
             } else if (cursoFiltroId === "NULL_COURSE") {
-                // Filtra para exibir APENAS livros onde curso_id é vazio/nulo
                 filtrados = filtrados.filter(l => !l.curso_id || l.curso_id === null || l.curso_id === "");
             } else {
                 const cursoIdNum = parseInt(cursoFiltroId);
                 const discIdsDoCurso = gradeDisciplinasPorCurso[cursoIdNum] || [];
                 
-                // Exibe APENAS livros deste curso, rejeitando livros com curso definido nulo ou de outros cursos
                 filtrados = filtrados.filter(l => {
                     const isGeralDoCurso = l.curso_id === cursoIdNum && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => Number(v.id_disciplina));
@@ -659,7 +650,6 @@
                 });
             }
 
-            // Filtro por Disciplinas ou Geral do Curso selecionados via checkboxes
             if (checkboxesAtivos.length > 0) {
                 filtrados = filtrados.filter(l => {
                     const isGeralDoCurso = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
@@ -700,8 +690,6 @@
 
         document.getElementById('form-livro').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Ativa o estado de loading e desabilita botão
             setLoadingState('btn-salvar-livro', true);
 
             const idEdicao = document.getElementById('livro-id-edicao').value;
@@ -763,7 +751,6 @@
             } catch (err) { 
                 alert("Erro ao salvar livro: " + err.message); 
             } finally {
-                // Desativa estado de loading
                 setLoadingState('btn-salvar-livro', false);
             }
         });
@@ -892,8 +879,6 @@
 
         document.getElementById('form-post').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Ativa o estado de loading e desabilita botão
             setLoadingState('btn-salvar-post', true);
 
             const idEdicao = document.getElementById('post-id-edicao').value;
@@ -932,7 +917,6 @@
             } catch (err) { 
                 alert("Erro: " + err.message); 
             } finally {
-                // Desativa estado de loading
                 setLoadingState('btn-salvar-post', false);
             }
         });
@@ -1047,50 +1031,68 @@
             }
         }
 
-        function processarArquivoCsvGrade(event) {
+        // --- LEITOR ROBUSTO PARA ODS, CSV E XLSX (VIA SHEETJS) ---
+        function processarArquivoPlanilhaGrade(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const cursoIdStr = document.getElementById('select-curso-admin-gerenciamento').value;
             if (!cursoIdStr) {
-                alert("Por favor, selecione o curso de destino antes de carregar o CSV.");
+                alert("Por favor, selecione o curso de destino antes de carregar o arquivo.");
                 event.target.value = '';
                 return;
             }
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const texto = e.target.result;
-                const linhas = texto.split(/\r\n|\n/).filter(l => l.trim().length > 0);
-                if (linhas.length < 2) {
-                    alert("O arquivo CSV parece estar vazio ou mal formatado.");
-                    return;
-                }
-
-                // Assume separador vírgula ou ponto e vírgula
-                const separador = linhas[0].includes(';') ? ';' : ',';
-                const cabecalho = linhas[0].split(separador).map(h => h.trim().toLowerCase());
-
-                let parsedRows = [];
-                for (let i = 1; i < linhas.length; i++) {
-                    const cols = linhas[i].split(separador).map(c => c.trim().replace(/^"|"$/g, ''));
-                    if (cols.length >= 2) {
-                        parsedRows.push({
-                            codigo: cols[0] || '',
-                            nome: cols[1] || '',
-                            periodo: cols[2] || '1º Período',
-                            data_ap1: cols[3] || '-',
-                            data_ap2: cols[4] || '-',
-                            data_ap3: cols[5] || '-',
-                            controle: cols[6] !== undefined ? parseInt(cols[6]) : 1
-                        });
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Pega a primeira aba da planilha
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Converte a aba em matriz de linhas (array de arrays)
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (!rows || rows.length < 2) {
+                        alert("O arquivo parece estar vazio ou sem dados suficientes.");
+                        return;
                     }
-                }
 
-                dadosCsvTemporarios = parsedRows;
-                exibirPreviewCsv(cabecalho, parsedRows);
+                    // A primeira linha contém os cabeçalhos
+                    const cabecalho = rows[0].map(h => String(h || '').trim().toLowerCase());
+                    let parsedRows = [];
+
+                    // Percorre a partir da segunda linha
+                    for (let i = 1; i < rows.length; i++) {
+                        const cols = rows[i];
+                        if (cols && cols.length >= 2 && (cols[0] || cols[1])) {
+                            parsedRows.push({
+                                codigo: String(cols[0] || '').trim(),
+                                nome: String(cols[1] || '').trim(),
+                                periodo: String(cols[2] || '1º Período').trim(),
+                                data_ap1: String(cols[3] || '-').trim(),
+                                data_ap2: String(cols[4] || '-').trim(),
+                                data_ap3: String(cols[5] || '-').trim(),
+                                controle: cols[6] !== undefined && cols[6] !== '' ? parseInt(cols[6]) : 1
+                            });
+                        }
+                    }
+
+                    if (parsedRows.length === 0) {
+                        alert("Nenhuma linha de dado válida foi encontrada no arquivo.");
+                        return;
+                    }
+
+                    dadosCsvTemporarios = parsedRows;
+                    exibirPreviewCsv(cabecalho, parsedRows);
+                } catch (err) {
+                    alert("Erro ao processar o arquivo ODS/CSV: " + err.message);
+                }
             };
-            reader.readAsText(file, 'UTF-8');
+            reader.readAsArrayBuffer(file);
         }
 
         function exibirPreviewCsv(cabecalho, rows) {
@@ -1120,7 +1122,6 @@
             setLoadingState('btn-confirmar-csv', true);
 
             try {
-                // Insere as novas disciplinas e atualiza o relacionamento com o curso usando 'disciplina_id'
                 for (let r of dadosCsvTemporarios) {
                     let existente = null;
                     if (r.codigo) {
@@ -1159,7 +1160,6 @@
                         discId = nova.id;
                     }
 
-                    // Garante o vínculo na tabela curso_disciplinas usando a coluna correta 'disciplina_id'
                     const { data: relExiste } = await supabaseClient.from('curso_disciplinas').select('*').eq('curso_id', cursoId).eq('disciplina_id', discId).maybeSingle();
                     if (!relExiste) {
                         const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, disciplina_id: discId }]);
@@ -1172,7 +1172,7 @@
                 await carregarCursosEGrades();
                 renderizarGradeGerenciamentoCurso(cursoId);
             } catch (err) {
-                alert("Erro ao importar CSV: " + err.message);
+                alert("Erro ao importar arquivo: " + err.message);
             } finally {
                 setLoadingState('btn-confirmar-csv', false);
             }
