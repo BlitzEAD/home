@@ -442,6 +442,14 @@
                 <div class="border rounded-xl p-3 bg-amber-50 border-amber-200 space-y-2">
                     <span class="font-bold text-amber-900 block">🔒 Lacres de Edição (Impedir alteração pelo aluno)</span>
                     <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="lacre-nome" class="w-4 h-4 text-blue-600 rounded">
+                        <span>Lacrar alteração de Nome</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="lacre-email" class="w-4 h-4 text-blue-600 rounded">
+                        <span>Lacrar alteração de E-mail</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="checkbox" id="lacre-curso" class="w-4 h-4 text-blue-600 rounded">
                         <span>Lacrar alteração de Curso</span>
                     </label>
@@ -452,9 +460,12 @@
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-2 pt-4 border-t">
-                <button type="button" onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs">Cancelar</button>
-                <button type="button" id="btn-salvar-usuario" onclick="salvarEdicaoUsuario()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg text-xs shadow-sm">Salvar Alterações</button>
+            <div class="flex justify-between items-center pt-4 border-t">
+                <button type="button" id="btn-excluir-usuario" onclick="excluirUsuarioCadastro()" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 px-4 rounded-lg text-xs transition">Excluir Cadastro</button>
+                <div class="space-x-2">
+                    <button type="button" onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs">Cancelar</button>
+                    <button type="button" id="btn-salvar-usuario" onclick="salvarEdicaoUsuario()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg text-xs shadow-sm">Salvar Alterações</button>
+                </div>
             </div>
         </div>
     </div>
@@ -535,6 +546,7 @@
         // --- SISTEMA DE LOGS DE AUDITORIA ---
         async function registrarLogAuditoria(acao, detalhes) {
             try {
+                if (!usuarioAtual) return;
                 const nomeAdmin = usuarioAtual.user_metadata?.nome || usuarioAtual.email;
                 const roleAdmin = usuarioAtual.user_metadata?.role || (usuarioAtual.user_metadata?.is_admin ? 'super_admin' : 'admin');
                 const textoLog = `${roleAdmin} - ${nomeAdmin} (${usuarioAtual.email}) - ${acao} - ${detalhes}`;
@@ -664,34 +676,31 @@
 
         // --- GESTÃO DE USUÁRIOS E PERMISSÕES ---
         async function carregarAdminUsuarios() {
-            const tbody = document.getElementById('tabela-admin-usuarios');
-            const { data, error } = await supabaseClient.from('planejamento_usuarios').select('*').limit(100);
-            
-            // Alternativa caso utilize tabela de perfis customizada ou auth admin api via RPC
-            // Buscando usuários da tabela de perfis ou metadados salvos
-            const { data: perfis } = await supabaseClient.from('perfis_usuarios').select('*');
-            
-            // Simulação robusta unindo dados salvos localmente ou tabela de usuários
-            listaUsuariosGlobal = perfis || data || [];
-            
+            const { data, error } = await supabaseClient.from('perfis_usuarios').select('*').order('nome');
+            listaUsuariosGlobal = data || [];
             renderizarTabelaUsuarios(listaUsuariosGlobal);
         }
 
         function renderizarTabelaUsuarios(usuarios) {
             const tbody = document.getElementById('tabela-admin-usuarios');
             if (!usuarios || usuarios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário cadastrado na base de perfis.</td></tr>`;
                 return;
             }
 
             let html = '';
             usuarios.forEach(u => {
-                const nome = u.nome || u.user_metadata?.nome || 'Usuário';
+                const nome = u.nome || 'Usuário';
                 const email = u.email || 'email@naoinformado.com';
                 const curso = u.curso || 'Não definido';
                 const role = u.role || 'aluno';
-                const lacreCurso = u.lacre_curso ? '🔒 Curso' : '-';
-                const lacreSemestre = u.lacre_semestre ? '🔒 Semestre' : '-';
+                
+                let lacresStr = [];
+                if (u.lacre_nome) lacresStr.push('Nome');
+                if (u.lacre_email) lacresStr.push('E-mail');
+                if (u.lacre_curso) lacresStr.push('Curso');
+                if (u.lacre_semestre) lacresStr.push('Semestre');
+                const lacresExibicao = lacresStr.length > 0 ? `🔒 ${lacresStr.join(', ')}` : '-';
 
                 html += `
                     <tr class="border-b hover:bg-gray-50">
@@ -699,7 +708,7 @@
                         <td class="p-3 text-gray-600">${email}</td>
                         <td class="p-3 text-gray-600">${curso}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${role}</span></td>
-                        <td class="p-3 text-center text-gray-500 font-semibold">${lacreCurso} | ${lacreSemestre}</td>
+                        <td class="p-3 text-center text-gray-500 font-semibold">${lacresExibicao}</td>
                         <td class="p-3 text-center">
                             <button onclick='abrirModalEdicaoUsuario(${JSON.stringify(u)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Configurar</button>
                         </td>
@@ -719,9 +728,11 @@
         }
 
         function abrirModalEdicaoUsuario(u) {
-            document.getElementById('edit-user-id').value = u.id || u.user_id;
-            document.getElementById('edit-user-nome').value = u.nome || u.user_metadata?.nome || u.email;
+            document.getElementById('edit-user-id').value = u.id;
+            document.getElementById('edit-user-nome').value = u.nome || u.email;
             document.getElementById('edit-user-role').value = u.role || 'aluno';
+            document.getElementById('lacre-nome').checked = !!u.lacre_nome;
+            document.getElementById('lacre-email').checked = !!u.lacre_email;
             document.getElementById('lacre-curso').checked = !!u.lacre_curso;
             document.getElementById('lacre-semestre').checked = !!u.lacre_semestre;
             document.getElementById('modal-edicao-usuario').classList.remove('hidden');
@@ -730,20 +741,21 @@
         async function salvarEdicaoUsuario() {
             const userId = document.getElementById('edit-user-id').value;
             const role = document.getElementById('edit-user-role').value;
+            const lacre_nome = document.getElementById('lacre-nome').checked;
+            const lacre_email = document.getElementById('lacre-email').checked;
             const lacre_curso = document.getElementById('lacre-curso').checked;
             const lacre_semestre = document.getElementById('lacre-semestre').checked;
 
             setLoadingState('btn-salvar-usuario', true);
             try {
-                // Atualiza perfil na base de dados
                 const { error } = await supabaseClient.from('perfis_usuarios').update({
-                    role, lacre_curso, lacre_semestre
+                    role, lacre_nome, lacre_email, lacre_curso, lacre_semestre
                 }).eq('id', userId);
 
                 if (error) throw error;
 
-                await registrarLogAuditoria('editou as permissões do usuário', `ID: ${userId} - Novo Cargo: ${role} | Lacres: [Curso: ${lacre_curso}, Semestre: ${lacre_semestre}]`);
-                alert("Permissões e lacres salvos com sucesso!");
+                await registrarLogAuditoria('editou permissões/lacres do usuário ID', `${userId} - Cargo: ${role}`);
+                alert("Alterações salvas com sucesso!");
                 document.getElementById('modal-edicao-usuario').classList.add('hidden');
                 await carregarAdminUsuarios();
                 await carregarLogsAuditoria();
@@ -751,6 +763,24 @@
                 alert("Erro ao atualizar usuário: " + err.message);
             } finally {
                 setLoadingState('btn-salvar-usuario', false);
+            }
+        }
+
+        async function excluirUsuarioCadastro() {
+            const userId = document.getElementById('edit-user-id').value;
+            if (!confirm("Tem certeza que deseja apagar o cadastro deste usuário do sistema?")) return;
+
+            try {
+                const { error } = await supabaseClient.from('perfis_usuarios').delete().eq('id', userId);
+                if (error) throw error;
+
+                await registrarLogAuditoria('excluiu o cadastro do usuário ID', `${userId}`);
+                alert("Cadastro excluído com sucesso!");
+                document.getElementById('modal-edicao-usuario').classList.add('hidden');
+                await carregarAdminUsuarios();
+                await carregarLogsAuditoria();
+            } catch (err) {
+                alert("Erro ao excluir usuário: " + err.message);
             }
         }
 
