@@ -266,7 +266,7 @@
             html += '<option value="GERAL_PLATAFORMA">Livros sem Curso Definido (Plataforma Geral)</option>';
             
             if (cursoSelecionadoId) {
-                html += `<option value="GERAL_CURSO">Apenas materiais gerais do curso ${nomeCurso}</option>`;
+                html += `<option value="GERAL_CURSO">Livros de ${nomeCurso} (sem disciplina específica)</option>`;
             }
             
             const idsPermitidos = gradeDisciplinasPorCurso[cursoSelecionadoId] || [];
