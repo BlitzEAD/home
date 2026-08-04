@@ -1031,7 +1031,7 @@
             }
         }
 
-        // --- LEITOR ROBUSTO PARA ODS, CSV E XLSX (VIA SHEETJS) ---
+        // --- LEITOR ROBUSTO PARA ODS, CSV E XLSX (VIA SHEETJS) COM CORREÇÃO DE UTF-8 PARA CSV ---
         function processarArquivoPlanilhaGrade(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1044,10 +1044,23 @@
             }
 
             const reader = new FileReader();
+
+            // Se for arquivo CSV, lemos como texto UTF-8 para preservar acentos perfeitamente
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+
             reader.onload = function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    let workbook;
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        workbook = XLSX.read(e.target.result, { type: 'string' });
+                    } else {
+                        const data = new Uint8Array(e.target.result);
+                        workbook = XLSX.read(data, { type: 'array' });
+                    }
                     
                     // Pega a primeira aba da planilha
                     const firstSheetName = workbook.SheetNames[0];
@@ -1092,7 +1105,6 @@
                     alert("Erro ao processar o arquivo ODS/CSV: " + err.message);
                 }
             };
-            reader.readAsArrayBuffer(file);
         }
 
         function exibirPreviewCsv(cabecalho, rows) {
