@@ -108,7 +108,7 @@
                         <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                     </div>
                     <div>
-                        <select id="select-filtro-admin-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">></select>
+                        <select id="select-filtro-admin-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"></select>
                     </div>
                 </div>
                 <div class="overflow-x-auto pt-2">
@@ -314,7 +314,6 @@
             if (cargoUsuarioAtual === 'super_admin' || cargoUsuarioAtual === 'admin_jornal') await carregarAdminPosts();
             if (cargoUsuarioAtual === 'super_admin' || cargoUsuarioAtual === 'admin_usuarios') await carregarAdminUsuarios();
 
-            // Event Listeners básicos
             const inputBuscaLivros = document.getElementById('input-busca-admin-livros');
             if (inputBuscaLivros) inputBuscaLivros.addEventListener('input', renderizarTabelaLivrosFiltrados);
         }
@@ -339,7 +338,6 @@
 
             menu.innerHTML = html;
 
-            // Abre a primeira aba disponível automaticamente
             if (temPermissao('livros')) mudarAbaAdmin('livros');
             else if (temPermissao('jornal')) mudarAbaAdmin('jornal');
             else if (temPermissao('disciplinas')) mudarAbaAdmin('disciplinas');
@@ -427,6 +425,7 @@
             const bloquear_semestre = document.getElementById('bloquear-semestre').checked;
 
             try {
+                // Envia os argumentos na ordem exata correspondente à função SQL
                 const { error } = await supabaseClient.rpc('admin_atualizar_usuario_completo', {
                     target_user_id: userId,
                     novo_nome: nome,
