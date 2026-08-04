@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área Administrativa - Planejamento Acadêmico</title>
     
-    <!-- SEO de Segurança: Bloqueia a indexação desta página restrita -->
     <meta name="robots" content="noindex, nofollow">
     
-    <!-- Otimização de Performance: Antecipa conexões (Tailwind, jsDelivr e Supabase) -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SheetJS para leitura robusta de ODS, XLSX e CSV -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24">
@@ -415,53 +412,83 @@
 
     <!-- MODAL DE EDIÇÃO DE USUÁRIO E LACRES -->
     <div id="modal-edicao-usuario" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative space-y-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
-            <h3 class="text-lg font-bold text-gray-900">⚙️ Configurar Usuário e Lacres</h3>
+            <h3 class="text-lg font-bold text-gray-900">⚙️ Editar Cadastro Completo e Lacres</h3>
             
             <input type="hidden" id="edit-user-id">
 
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-gray-700 mb-1">Nome do Usuário</label>
-                    <input type="text" id="edit-user-nome" class="w-full px-3 py-2 border rounded-lg bg-gray-50" readonly>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                
+                <!-- Dados Cadastrais -->
+                <div class="space-y-3">
+                    <span class="font-bold text-gray-800 block border-b pb-1">📝 Dados do Aluno</span>
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Nome Completo</label>
+                        <input type="text" id="edit-user-nome" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">E-mail de Acesso (Login)</label>
+                        <input type="email" id="edit-user-email" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                        <p class="text-[10px] text-red-500 mt-0.5">Atenção: Mudar o e-mail altera o login do usuário.</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Curso Vinculado</label>
+                        <input type="text" id="edit-user-curso" placeholder="Ex: Sistemas de Informação" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Semestre Atual</label>
+                        <input type="text" id="edit-user-semestre" placeholder="Ex: 3º Semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block font-semibold text-gray-700 mb-1">Cargo / Nível de Acesso (RBAC)</label>
-                    <select id="edit-user-role" class="w-full px-3 py-2 border rounded-lg bg-white font-semibold text-blue-900">
-                        <option value="aluno">Aluno (Padrão)</option>
-                        <option value="admin_usuarios">Admin de Usuários</option>
-                        <option value="admin_jornal">Admin do Jornal</option>
-                        <option value="admin_livros">Admin de Livros</option>
-                        <option value="admin_disciplinas">Admin de Disciplinas</option>
-                        <option value="super_admin">Administrador Principal (Total)</option>
-                    </select>
+                <!-- Permissões e Lacres -->
+                <div class="space-y-3">
+                    <span class="font-bold text-gray-800 block border-b pb-1">🛡️ Permissões e Restrições</span>
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Cargo / Nível de Acesso (RBAC)</label>
+                        <select id="edit-user-role" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white font-semibold text-blue-900 focus:ring-2 focus:ring-blue-500">
+                            <option value="aluno">Aluno (Padrão)</option>
+                            <option value="admin_usuarios">Admin de Usuários</option>
+                            <option value="admin_jornal">Admin do Jornal</option>
+                            <option value="admin_livros">Admin de Livros</option>
+                            <option value="admin_disciplinas">Admin de Disciplinas</option>
+                            <option value="super_admin">Administrador Principal (Total)</option>
+                        </select>
+                    </div>
+
+                    <div class="border rounded-xl p-3 bg-amber-50 border-amber-200 space-y-2 mt-2">
+                        <span class="font-bold text-amber-900 block">🔒 Lacres de Edição no Perfil</span>
+                        <p class="text-[10px] text-amber-700 leading-tight mb-2">Impedir que o próprio usuário altere estes dados lá na página perfil.html.</p>
+                        
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-nome" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de Nome</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-email" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de E-mail</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-curso" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de Curso</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-semestre" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de Semestre</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div class="border rounded-xl p-3 bg-amber-50 border-amber-200 space-y-2">
-                    <span class="font-bold text-amber-900 block">🔒 Lacres de Edição (Impedir alteração pelo aluno)</span>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="lacre-nome" class="w-4 h-4 text-blue-600 rounded">
-                        <span>Lacrar alteração de Nome</span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="lacre-email" class="w-4 h-4 text-blue-600 rounded">
-                        <span>Lacrar alteração de E-mail</span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="lacre-curso" class="w-4 h-4 text-blue-600 rounded">
-                        <span>Lacrar alteração de Curso</span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="lacre-semestre" class="w-4 h-4 text-blue-600 rounded">
-                        <span>Lacrar alteração de Semestre em Curso</span>
-                    </label>
-                </div>
             </div>
 
-            <div class="flex justify-between items-center pt-4 border-t">
-                <button type="button" id="btn-excluir-usuario" onclick="excluirUsuarioCadastro()" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 px-4 rounded-lg text-xs transition">Excluir Cadastro</button>
+            <div class="flex justify-between items-center pt-4 border-t mt-4">
+                <button type="button" id="btn-excluir-usuario" onclick="excluirUsuarioCadastro()" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 px-4 rounded-lg text-xs transition">Excluir Conta Oficial</button>
                 <div class="space-x-2">
                     <button type="button" onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs">Cancelar</button>
                     <button type="button" id="btn-salvar-usuario" onclick="salvarEdicaoUsuario()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg text-xs shadow-sm">Salvar Alterações</button>
@@ -674,17 +701,24 @@
             bloco.innerHTML = `<span class="text-xs font-medium text-gray-700">${(usuarioAtual.user_metadata?.nome || usuarioAtual.email).split(' ')[0]} (Admin)</span>`;
         }
 
-        // --- GESTÃO DE USUÁRIOS E PERMISSÕES ---
+        // --- GESTÃO DE USUÁRIOS E PERMISSÕES (ATUALIZADA) ---
         async function carregarAdminUsuarios() {
-            const { data, error } = await supabaseClient.from('perfis_usuarios').select('*').order('nome');
-            listaUsuariosGlobal = data || [];
+            // Agora lê diretamente do `auth.users` via RPC, garantindo 100% de sincronia!
+            const { data, error } = await supabaseClient.rpc('admin_listar_usuarios');
+            if (error) {
+                console.error("Erro ao carregar usuários da base oficial:", error);
+                return;
+            }
+            
+            // Ordena os dados no Javascript (já que o JSON retorna desordenado)
+            listaUsuariosGlobal = (data || []).sort((a, b) => (a.nome || a.email).localeCompare(b.nome || b.email));
             renderizarTabelaUsuarios(listaUsuariosGlobal);
         }
 
         function renderizarTabelaUsuarios(usuarios) {
             const tbody = document.getElementById('tabela-admin-usuarios');
             if (!usuarios || usuarios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário cadastrado na base de perfis.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário encontrado no sistema de Autenticação.</td></tr>`;
                 return;
             }
 
@@ -710,7 +744,7 @@
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${role}</span></td>
                         <td class="p-3 text-center text-gray-500 font-semibold">${lacresExibicao}</td>
                         <td class="p-3 text-center">
-                            <button onclick='abrirModalEdicaoUsuario(${JSON.stringify(u)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Configurar</button>
+                            <button onclick='abrirModalEdicaoUsuario(${JSON.stringify(u)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar Tudo</button>
                         </td>
                     </tr>
                 `;
@@ -729,17 +763,27 @@
 
         function abrirModalEdicaoUsuario(u) {
             document.getElementById('edit-user-id').value = u.id;
-            document.getElementById('edit-user-nome').value = u.nome || u.email;
+            document.getElementById('edit-user-nome').value = u.nome || '';
+            document.getElementById('edit-user-email').value = u.email || '';
+            document.getElementById('edit-user-curso').value = u.curso || '';
+            document.getElementById('edit-user-semestre').value = u.semestre || '';
+            
             document.getElementById('edit-user-role').value = u.role || 'aluno';
             document.getElementById('lacre-nome').checked = !!u.lacre_nome;
             document.getElementById('lacre-email').checked = !!u.lacre_email;
             document.getElementById('lacre-curso').checked = !!u.lacre_curso;
             document.getElementById('lacre-semestre').checked = !!u.lacre_semestre;
+            
             document.getElementById('modal-edicao-usuario').classList.remove('hidden');
         }
 
         async function salvarEdicaoUsuario() {
             const userId = document.getElementById('edit-user-id').value;
+            const nome = document.getElementById('edit-user-nome').value;
+            const email = document.getElementById('edit-user-email').value;
+            const curso = document.getElementById('edit-user-curso').value;
+            const semestre = document.getElementById('edit-user-semestre').value;
+            
             const role = document.getElementById('edit-user-role').value;
             const lacre_nome = document.getElementById('lacre-nome').checked;
             const lacre_email = document.getElementById('lacre-email').checked;
@@ -748,9 +792,13 @@
 
             setLoadingState('btn-salvar-usuario', true);
             try {
-                // Chama a função RPC segura no Supabase que atualiza o auth.users (raw_user_meta_data) e o perfil simultaneamente
-                const { error } = await supabaseClient.rpc('admin_atualizar_usuario', {
+                // Chama a nova função RPC segura que escreve direto na raiz do banco (auth.users)
+                const { error } = await supabaseClient.rpc('admin_atualizar_usuario_completo', {
                     target_user_id: userId,
+                    novo_nome: nome,
+                    novo_email: email,
+                    novo_curso: curso,
+                    novo_semestre: semestre,
                     novo_role: role,
                     novo_lacre_nome: lacre_nome,
                     novo_lacre_email: lacre_email,
@@ -760,8 +808,8 @@
 
                 if (error) throw error;
 
-                await registrarLogAuditoria('atualizou o raw_user_meta_data do usuário ID', `${userId} - Cargo: ${role}`);
-                alert("Alterações e lacres salvos diretamente na autenticação do Supabase com sucesso!");
+                await registrarLogAuditoria('editou cadastro completo do usuário ID', `${userId} - E-mail: ${email}`);
+                alert("Dados, e-mail e lacres salvos com sucesso na base oficial do sistema!");
                 document.getElementById('modal-edicao-usuario').classList.add('hidden');
                 await carregarAdminUsuarios();
                 await carregarLogsAuditoria();
@@ -774,14 +822,15 @@
 
         async function excluirUsuarioCadastro() {
             const userId = document.getElementById('edit-user-id').value;
-            if (!confirm("Tem certeza que deseja apagar o cadastro deste usuário do sistema?")) return;
+            if (!confirm("Tem certeza ABSOLUTA que deseja excluir a conta de autenticação deste usuário do banco de dados oficial? Esta ação é irreversível.")) return;
 
             try {
-                const { error } = await supabaseClient.from('perfis_usuarios').delete().eq('id', userId);
+                // Chama a RPC que apaga o usuário direto do auth.users
+                const { error } = await supabaseClient.rpc('admin_excluir_usuario', { target_user_id: userId });
                 if (error) throw error;
 
-                await registrarLogAuditoria('excluiu o cadastro do usuário ID', `${userId}`);
-                alert("Cadastro excluído com sucesso!");
+                await registrarLogAuditoria('excluiu permanentemente a conta do usuário ID', `${userId}`);
+                alert("Cadastro excluído permanentemente com sucesso!");
                 document.getElementById('modal-edicao-usuario').classList.add('hidden');
                 await carregarAdminUsuarios();
                 await carregarLogsAuditoria();
@@ -1336,7 +1385,6 @@
             }
         }
 
-        // --- LEITOR ROBUSTO PARA ODS, CSV E XLSX (VIA SHEETJS) COM CORREÇÃO DE UTF-8 PARA CSV ---
         function processarArquivoPlanilhaGrade(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1350,7 +1398,6 @@
 
             const reader = new FileReader();
 
-            // Se for arquivo CSV, lemos como texto UTF-8 para preservar acentos perfeitamente
             if (file.name.toLowerCase().endsWith('.csv')) {
                 reader.readAsText(file, 'UTF-8');
             } else {
@@ -1367,11 +1414,9 @@
                         workbook = XLSX.read(data, { type: 'array' });
                     }
                     
-                    // Pega a primeira aba da planilha
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     
-                    // Converte a aba em matriz de linhas (array de arrays)
                     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                     
                     if (!rows || rows.length < 2) {
@@ -1379,11 +1424,9 @@
                         return;
                     }
 
-                    // A primeira linha contém os cabeçalhos
                     const cabecalho = rows[0].map(h => String(h || '').trim().toLowerCase());
                     let parsedRows = [];
 
-                    // Percorre a partir da segunda linha
                     for (let i = 1; i < rows.length; i++) {
                         const cols = rows[i];
                         if (cols && cols.length >= 2 && (cols[0] || cols[1])) {
@@ -1440,7 +1483,6 @@
 
             try {
                 for (let r of dadosCsvTemporarios) {
-                    // Sempre cria uma nova linha na tabela disciplinas para isolar o controle deste curso
                     const { data: novaDisc, error: errInsDisc } = await supabaseClient.from('disciplinas').insert([{
                         codigo: r.codigo,
                         nome: r.nome,
@@ -1454,7 +1496,6 @@
                     if (errInsDisc) throw errInsDisc;
                     const discId = novaDisc.id;
 
-                    // Cria o relacionamento exclusivo do curso com esta nova linha de disciplina
                     const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ 
                         curso_id: cursoId, 
                         disciplina_id: discId 
