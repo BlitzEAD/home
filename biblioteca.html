@@ -139,7 +139,13 @@
                 filtrarEnderizarLivros();
             });
 
-            document.getElementById('select-filtro-disciplina').addEventListener('change', filtrarEnderizarLivros);
+            document.getElementById('select-filtro-disciplina').addEventListener('change', (e) => {
+                if (e.target.value === "CURSANDO" && !semestreEmCursoAtual) {
+                    alert("Você ainda não configurou o seu semestre atual lá na página principal (Início). Configure seu planejamento para usar este filtro!");
+                    e.target.value = ""; 
+                }
+                filtrarEnderizarLivros();
+            });
 
             window.addEventListener('popstate', (event) => {
                 const path = window.location.pathname;
@@ -259,7 +265,8 @@
             
             let html = '<option value="">Todos os Livros</option>';
             
-            if (semestreEmCursoAtual && cursoSelecionadoId === cursoUsuarioIdOriginal) {
+            // A opção agora aparece sempre para usuários logados na visão do seu curso oficial
+            if (usuarioAtual && cursoSelecionadoId === cursoUsuarioIdOriginal) {
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
             
