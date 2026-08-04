@@ -15,7 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col pt-24">
+<body class="bg-gray-50 min-h-screen flex flex-col pt-24 hidden" id="body-admin">
+    <!-- Body começa oculto para evitar o "piscar" da tela para alunos não autorizados -->
 
     <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
@@ -24,7 +25,7 @@
                 <a href="index.html" class="flex items-center">
                     <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
                 </a>
-                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Painel Admin</span>
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Administração Geral</span>
             </div>
             <div class="flex items-center space-x-3">
                 <a href="index.html" class="text-xs font-semibold text-gray-600 hover:text-blue-600 transition">Voltar ao site</a>
@@ -110,20 +111,17 @@
                 <h3 class="text-lg font-bold text-gray-900">Livros Cadastrados no Acervo</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <!-- Busca textual -->
                     <div class="relative">
                         <input type="text" id="input-busca-admin-livros" placeholder="Pesquisar por título ou descrição..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                     </div>
 
-                    <!-- Filtro por Curso na Tabela -->
                     <div>
                         <select id="select-filtro-admin-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
                             <!-- Inserido dinamicamente no JS -->
                         </select>
                     </div>
 
-                    <!-- Dropdown customizado com checkboxes de disciplinas -->
                     <div class="relative">
                         <button type="button" id="btn-dropdown-filtros-livros" onclick="toggleDropdownFiltrosLivros(event)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500">
                             <span id="label-dropdown-filtros">Filtrar por Disciplinas / Geral</span>
@@ -138,10 +136,7 @@
                     </div>
                 </div>
 
-                <!-- Lista de tags de filtros selecionados -->
-                <div id="tags-filtros-livros-ativos" class="flex flex-wrap gap-2 pt-1">
-                    <!-- Tags aparecem aqui -->
-                </div>
+                <div id="tags-filtros-livros-ativos" class="flex flex-wrap gap-2 pt-1"></div>
 
                 <div class="overflow-x-auto pt-2">
                     <table class="w-full text-left border-collapse">
@@ -223,12 +218,10 @@
                 <h3 class="text-lg font-bold text-gray-900">Publicações do Jornal Blitz</h3>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <!-- Busca textual -->
                     <div class="relative">
                         <input type="text" id="input-busca-admin-posts" placeholder="Buscar título/resumo..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                     </div>
-                    <!-- Filtro por Categoria -->
                     <div>
                         <select id="select-filtro-admin-cat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
                             <option value="">Todas as Categorias</option>
@@ -238,13 +231,11 @@
                             <option value="Institucional">Institucional</option>
                         </select>
                     </div>
-                    <!-- Filtro por Autor -->
                     <div>
                         <select id="select-filtro-admin-autor" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
                             <option value="">Todos os Autores</option>
                         </select>
                     </div>
-                    <!-- Filtro por Período (Data Início / Fim) -->
                     <div class="flex items-center space-x-1">
                         <input type="date" id="input-data-inicio" title="Data Inicial" class="w-1/2 px-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
                         <span class="text-gray-400 text-xs">até</span>
@@ -422,7 +413,7 @@
                 
                 <!-- Dados Cadastrais -->
                 <div class="space-y-3">
-                    <span class="font-bold text-gray-800 block border-b pb-1">📝 Dados do Aluno</span>
+                    <span class="font-bold text-gray-800 block border-b pb-1">📝 Dados do Usuário</span>
                     
                     <div>
                         <label class="block font-semibold text-gray-700 mb-1">Nome Completo</label>
@@ -437,12 +428,16 @@
 
                     <div>
                         <label class="block font-semibold text-gray-700 mb-1">Curso Vinculado</label>
-                        <input type="text" id="edit-user-curso" placeholder="Ex: Sistemas de Informação" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                        <select id="edit-user-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <!-- Inserido dinamicamente no JS -->
+                        </select>
                     </div>
 
                     <div>
                         <label class="block font-semibold text-gray-700 mb-1">Semestre Atual</label>
-                        <input type="text" id="edit-user-semestre" placeholder="Ex: 3º Semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                        <select id="edit-user-semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <!-- Inserido dinamicamente no JS -->
+                        </select>
                     </div>
                 </div>
 
@@ -451,20 +446,24 @@
                     <span class="font-bold text-gray-800 block border-b pb-1">🛡️ Permissões e Restrições</span>
                     
                     <div>
-                        <label class="block font-semibold text-gray-700 mb-1">Cargo / Nível de Acesso (RBAC)</label>
-                        <select id="edit-user-role" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white font-semibold text-blue-900 focus:ring-2 focus:ring-blue-500">
+                        <label class="block font-semibold text-gray-700 mb-1 flex items-center justify-between">
+                            <span>Cargo / Nível de Acesso (RBAC)</span>
+                            <span id="badge-lock-role" class="hidden text-[9px] bg-amber-100 text-amber-800 px-1.5 rounded font-bold uppercase">Somente o Dono altera</span>
+                        </label>
+                        <select id="edit-user-role" class="w-full px-3 py-2 border border-gray-300 rounded-lg font-semibold text-blue-900 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed">
                             <option value="aluno">Aluno (Padrão)</option>
+                            <option value="editor_livro">Editor de Livros</option>
+                            <option value="editor_jornal">Editor do Jornal</option>
+                            <option value="editor_geral">Editor Geral (Livros e Jornal)</option>
+                            <option value="editor_curso">Editor de Cursos e Disciplinas</option>
                             <option value="admin_usuarios">Admin de Usuários</option>
-                            <option value="admin_jornal">Admin do Jornal</option>
-                            <option value="admin_livros">Admin de Livros</option>
-                            <option value="admin_disciplinas">Admin de Disciplinas</option>
-                            <option value="super_admin">Administrador Principal (Total)</option>
+                            <option value="super_admin">Administrador Geral</option>
                         </select>
                     </div>
 
                     <div class="border rounded-xl p-3 bg-amber-50 border-amber-200 space-y-2 mt-2">
                         <span class="font-bold text-amber-900 block">🔒 Lacres de Edição no Perfil</span>
-                        <p class="text-[10px] text-amber-700 leading-tight mb-2">Impedir que o próprio usuário altere estes dados lá na página perfil.html.</p>
+                        <p class="text-[10px] text-amber-700 leading-tight mb-2">Impedir que o próprio usuário altere estes dados lá na página de perfil do aluno.</p>
                         
                         <label class="flex items-center space-x-2 cursor-pointer">
                             <input type="checkbox" id="lacre-nome" class="w-4 h-4 text-blue-600 rounded">
@@ -528,9 +527,21 @@
 
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session || (session.user.user_metadata?.is_admin !== true && !session.user.user_metadata?.role)) {
-                alert("Acesso negado."); window.location.href = 'index.html'; return;
+            
+            // Trava de segurança: Alunos ou deslogados não podem sequer visualizar a página renderizada
+            const role = session?.user?.user_metadata?.role || 'aluno';
+            const isDono = role === 'dono';
+            const isSuperAdmin = role === 'super_admin';
+            
+            if (!session || (!isDono && !isSuperAdmin)) {
+                alert("Acesso Negado: Apenas o Administrador Geral e o Dono possuem acesso a este painel completo.");
+                window.location.href = 'index.html'; 
+                return;
             }
+
+            // Exibe a tela após confirmar permissão (evita piscar a tela)
+            document.getElementById('body-admin').classList.remove('hidden');
+
             usuarioAtual = session.user;
             renderizarTopoUsuario();
 
@@ -541,20 +552,16 @@
             await carregarLogsAuditoria();
 
             document.getElementById('input-busca-admin-livros').addEventListener('input', renderizarTabelaLivrosFiltrados);
-            
             document.getElementById('select-filtro-admin-curso').addEventListener('change', (e) => {
                 atualizarDropdownDisciplinasTabela(e.target.value);
                 atualizarFiltrosLivros();
             });
-            
             document.getElementById('select-curso-admin-form').addEventListener('change', (e) => {
                 renderizarCheckboxesFormPorCurso(e.target.value);
             });
-
             document.getElementById('select-curso-admin-gerenciamento').addEventListener('change', (e) => {
                 renderizarGradeGerenciamentoCurso(e.target.value);
             });
-
             document.getElementById('input-busca-admin-posts').addEventListener('input', renderizarTabelaPostsFiltrados);
             document.getElementById('select-filtro-admin-cat').addEventListener('change', renderizarTabelaPostsFiltrados);
             document.getElementById('select-filtro-admin-autor').addEventListener('change', renderizarTabelaPostsFiltrados);
@@ -570,12 +577,11 @@
             });
         }
 
-        // --- SISTEMA DE LOGS DE AUDITORIA ---
         async function registrarLogAuditoria(acao, detalhes) {
             try {
                 if (!usuarioAtual) return;
                 const nomeAdmin = usuarioAtual.user_metadata?.nome || usuarioAtual.email;
-                const roleAdmin = usuarioAtual.user_metadata?.role || (usuarioAtual.user_metadata?.is_admin ? 'super_admin' : 'admin');
+                const roleAdmin = usuarioAtual.user_metadata?.role || 'admin';
                 const textoLog = `${roleAdmin} - ${nomeAdmin} (${usuarioAtual.email}) - ${acao} - ${detalhes}`;
 
                 await supabaseClient.from('logs_admin').insert([{
@@ -659,6 +665,27 @@
             if (selectForm) selectForm.innerHTML = optionsForm;
             if (selectTabela) selectTabela.innerHTML = optionsTabela;
             if (selectGerenciamento) selectGerenciamento.innerHTML = optionsGerenciamento;
+            
+            popularSelectsModalUsuario(); // Popula os Selects do Modal
+        }
+
+        function popularSelectsModalUsuario() {
+            const selectCurso = document.getElementById('edit-user-curso');
+            let optionsCurso = '<option value="">Não definido</option>';
+            listaCursosGlobal.forEach(c => {
+                optionsCurso += `<option value="${c.nome}">${c.nome}</option>`;
+            });
+            if (selectCurso) selectCurso.innerHTML = optionsCurso;
+
+            const selectSem = document.getElementById('edit-user-semestre');
+            let optionsSem = '<option value="">Não definido / Nenhum</option>';
+            for (let ano = 2026; ano >= 2019; ano--) {
+                for (let sem = 2; sem >= 1; sem--) {
+                    if (ano === 2026 && sem > 2) continue;
+                    optionsSem += `<option value="${ano}-${sem}">${ano}-${sem}</option>`;
+                }
+            }
+            if (selectSem) selectSem.innerHTML = optionsSem;
         }
 
         function mudarAbaAdmin(aba) {
@@ -703,14 +730,11 @@
 
         // --- GESTÃO DE USUÁRIOS E PERMISSÕES (ATUALIZADA) ---
         async function carregarAdminUsuarios() {
-            // Agora lê diretamente do `auth.users` via RPC, garantindo 100% de sincronia!
             const { data, error } = await supabaseClient.rpc('admin_listar_usuarios');
             if (error) {
                 console.error("Erro ao carregar usuários da base oficial:", error);
                 return;
             }
-            
-            // Ordena os dados no Javascript (já que o JSON retorna desordenado)
             listaUsuariosGlobal = (data || []).sort((a, b) => (a.nome || a.email).localeCompare(b.nome || b.email));
             renderizarTabelaUsuarios(listaUsuariosGlobal);
         }
@@ -718,7 +742,7 @@
         function renderizarTabelaUsuarios(usuarios) {
             const tbody = document.getElementById('tabela-admin-usuarios');
             if (!usuarios || usuarios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário encontrado no sistema de Autenticação.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário correspondente encontrado na sua hierarquia.</td></tr>`;
                 return;
             }
 
@@ -774,6 +798,19 @@
             document.getElementById('lacre-curso').checked = !!u.lacre_curso;
             document.getElementById('lacre-semestre').checked = !!u.lacre_semestre;
             
+            // Trava de Cargo: Apenas o 'dono' pode mudar a combo-box de Role
+            const isDono = (usuarioAtual.user_metadata?.role === 'dono');
+            const selectRole = document.getElementById('edit-user-role');
+            const badgeLock = document.getElementById('badge-lock-role');
+            
+            if (!isDono) {
+                selectRole.disabled = true;
+                badgeLock.classList.remove('hidden');
+            } else {
+                selectRole.disabled = false;
+                badgeLock.classList.add('hidden');
+            }
+
             document.getElementById('modal-edicao-usuario').classList.remove('hidden');
         }
 
@@ -792,7 +829,6 @@
 
             setLoadingState('btn-salvar-usuario', true);
             try {
-                // Chama a nova função RPC segura que escreve direto na raiz do banco (auth.users)
                 const { error } = await supabaseClient.rpc('admin_atualizar_usuario_completo', {
                     target_user_id: userId,
                     novo_nome: nome,
@@ -809,7 +845,7 @@
                 if (error) throw error;
 
                 await registrarLogAuditoria('editou cadastro completo do usuário ID', `${userId} - E-mail: ${email}`);
-                alert("Dados, e-mail e lacres salvos com sucesso na base oficial do sistema!");
+                alert("Dados, e-mail e lacres salvos com sucesso!");
                 document.getElementById('modal-edicao-usuario').classList.add('hidden');
                 await carregarAdminUsuarios();
                 await carregarLogsAuditoria();
@@ -825,7 +861,6 @@
             if (!confirm("Tem certeza ABSOLUTA que deseja excluir a conta de autenticação deste usuário do banco de dados oficial? Esta ação é irreversível.")) return;
 
             try {
-                // Chama a RPC que apaga o usuário direto do auth.users
                 const { error } = await supabaseClient.rpc('admin_excluir_usuario', { target_user_id: userId });
                 if (error) throw error;
 
@@ -839,6 +874,7 @@
             }
         }
 
+        // Restante das funções de Livros, Jornal e Grade inalteradas...
         async function redimensionarImagem(file, larguraMax = 400, qualidade = 0.8) {
             return new Promise((resolve) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
@@ -860,32 +896,17 @@
                 containerDropdown.innerHTML = '<span class="text-gray-400">Selecione um curso específico ao lado para filtrar as disciplinas.</span>';
                 return;
             }
-
             const cursoId = parseInt(cursoIdStr);
             const idsPermitidos = gradeDisciplinasPorCurso[cursoId] || [];
-
             if (idsPermitidos.length === 0) {
                 containerDropdown.innerHTML = '<span class="text-gray-400 italic">Não há disciplinas inscritas para este curso.</span>';
                 return;
             }
-
-            let htmlDropdown = `
-                <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded font-medium text-blue-600 border-b pb-1 mb-1">
-                    <input type="checkbox" value="GERAL_CURSO" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 rounded">
-                    <span>📚 Livros sem disciplina específica</span>
-                </label>
-            `;
-
+            let htmlDropdown = `<label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded font-medium text-blue-600 border-b pb-1 mb-1"><input type="checkbox" value="GERAL_CURSO" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 rounded"><span>📚 Livros sem disciplina específica</span></label>`;
             idsPermitidos.forEach(idDisc => {
                 const nomeFormatado = disciplinasGlobalMap[idDisc] || `Disciplina ID ${idDisc}`;
-                htmlDropdown += `
-                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                        <input type="checkbox" value="${idDisc}" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 text-blue-600 rounded">
-                        <span class="truncate">${nomeFormatado}</span>
-                    </label>
-                `;
+                htmlDropdown += `<label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"><input type="checkbox" value="${idDisc}" onchange="atualizarFiltrosLivros()" class="check-filtro-livro w-3.5 h-3.5 text-blue-600 rounded"><span class="truncate">${nomeFormatado}</span></label>`;
             });
-
             containerDropdown.innerHTML = htmlDropdown;
         }
 
@@ -895,65 +916,44 @@
                 containerForm.innerHTML = '<span class="text-gray-400 italic">Nenhum curso específico selecionado.</span>';
                 return;
             }
-
             const cursoId = parseInt(cursoIdStr);
             const idsPermitidos = gradeDisciplinasPorCurso[cursoId] || [];
-
             if (idsPermitidos.length === 0) {
                 containerForm.innerHTML = '<span class="text-gray-400 italic">Nenhuma disciplina cadastrada para este curso.</span>';
                 return;
             }
-
             let htmlForm = '';
             idsPermitidos.forEach(idDisc => {
                 const nomeFormatado = disciplinasGlobalMap[idDisc] || `Disciplina ID ${idDisc}`;
                 const isChecked = idsJaMarcados.includes(idDisc) ? 'checked' : '';
-                htmlForm += `
-                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="checkbox" value="${idDisc}" ${isChecked} class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded">
-                        <span class="truncate">${nomeFormatado}</span>
-                    </label>
-                `;
+                htmlForm += `<label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded"><input type="checkbox" value="${idDisc}" ${isChecked} class="check-disc-livro w-3.5 h-3.5 text-blue-600 rounded"><span class="truncate">${nomeFormatado}</span></label>`;
             });
             containerForm.innerHTML = htmlForm;
         }
 
         function toggleDropdownFiltrosLivros(e) {
             e.stopPropagation();
-            const drop = document.getElementById('dropdown-filtros-livros');
-            drop.classList.toggle('hidden');
+            document.getElementById('dropdown-filtros-livros').classList.toggle('hidden');
         }
 
         function atualizarFiltrosLivros() {
             const checkboxes = document.querySelectorAll('.check-filtro-livro:checked');
             const tagsContainer = document.getElementById('tags-filtros-livros-ativos');
-            
             let tagsHtml = '';
             checkboxes.forEach(cb => {
                 let nomeFiltro = cb.value === 'GERAL_CURSO' ? 'Livros sem disciplina específica' : (disciplinasGlobalMap[cb.value] || `Disc. ${cb.value}`);
-                tagsHtml += `
-                    <span class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium">
-                        ${nomeFiltro}
-                        <button type="button" onclick="removerFiltroLivro('${cb.value}')" class="ml-1.5 text-blue-400 hover:text-blue-700 font-bold">×</button>
-                    </span>
-                `;
+                tagsHtml += `<span class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium">${nomeFiltro}<button type="button" onclick="removerFiltroLivro('${cb.value}')" class="ml-1.5 text-blue-400 hover:text-blue-700 font-bold">×</button></span>`;
             });
-
             tagsContainer.innerHTML = tagsHtml;
             renderizarTabelaLivrosFiltrados();
         }
 
         function removerFiltroLivro(valor) {
             const cb = document.querySelector(`.check-filtro-livro[value="${valor}"]`);
-            if (cb) {
-                cb.checked = false;
-                atualizarFiltrosLivros();
-            }
+            if (cb) { cb.checked = false; atualizarFiltrosLivros(); }
         }
 
-        async function dispararBuildAutomatico() {
-            try {} catch (err) {}
-        }
+        async function dispararBuildAutomatico() { try {} catch (err) {} }
 
         async function carregarAdminLivros() {
             const { data } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
@@ -968,202 +968,107 @@
             const checkboxesAtivos = Array.from(document.querySelectorAll('.check-filtro-livro:checked')).map(cb => cb.value);
 
             let filtrados = listaLivrosAdminGlobal;
-
-            if (textoBusca !== "") {
-                filtrados = filtrados.filter(l => 
-                    l.titulo.toLowerCase().includes(textoBusca) || (l.descricao && l.descricao.toLowerCase().includes(textoBusca))
-                );
-            }
-
-            if (cursoFiltroId === "TODOS" || cursoFiltroId === "") {
-                // Mostra tudo
-            } else if (cursoFiltroId === "NULL_COURSE") {
-                filtrados = filtrados.filter(l => !l.curso_id || l.curso_id === null || l.curso_id === "");
-            } else {
+            if (textoBusca !== "") filtrados = filtrados.filter(l => l.titulo.toLowerCase().includes(textoBusca) || (l.descricao && l.descricao.toLowerCase().includes(textoBusca)));
+            if (cursoFiltroId === "TODOS" || cursoFiltroId === "") { } 
+            else if (cursoFiltroId === "NULL_COURSE") { filtrados = filtrados.filter(l => !l.curso_id || l.curso_id === null || l.curso_id === ""); } 
+            else {
                 const cursoIdNum = parseInt(cursoFiltroId);
                 const discIdsDoCurso = gradeDisciplinasPorCurso[cursoIdNum] || [];
-                
                 filtrados = filtrados.filter(l => {
                     const isGeralDoCurso = l.curso_id === cursoIdNum && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => Number(v.id_disciplina));
-                    const pertenceAoCurso = idsLivro.some(idDisc => discIdsDoCurso.includes(idDisc));
-
-                    return isGeralDoCurso || pertenceAoCurso;
+                    return isGeralDoCurso || idsLivro.some(idDisc => discIdsDoCurso.includes(idDisc));
                 });
             }
-
             if (checkboxesAtivos.length > 0) {
                 filtrados = filtrados.filter(l => {
                     const isGeralDoCurso = (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     const idsLivro = (l.livro_disciplinas || []).map(v => String(v.id_disciplina));
-
-                    let match = false;
-                    if (checkboxesAtivos.includes('GERAL_CURSO') && isGeralDoCurso) match = true;
-                    
-                    const discMatch = idsLivro.some(idDisc => checkboxesAtivos.includes(idDisc));
-                    if (discMatch) match = true;
-
-                    return match;
+                    return (checkboxesAtivos.includes('GERAL_CURSO') && isGeralDoCurso) || idsLivro.some(idDisc => checkboxesAtivos.includes(idDisc));
                 });
             }
 
-            if (filtrados.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum livro encontrado com esses filtros.</td></tr>`; 
-                return; 
-            }
+            if (filtrados.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum livro encontrado com esses filtros.</td></tr>`; return; }
 
             let html = '';
             filtrados.forEach(l => {
                 const precoFormatado = l.preco === 0 || l.preco === "0.00" ? 'Gratuito' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
-                html += `
-                    <tr class="border-b hover:bg-gray-50 text-sm">
-                        <td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td>
-                        <td class="p-3 font-medium text-gray-800">${l.titulo}</td>
-                        <td class="p-3 font-bold text-blue-600">${precoFormatado}</td>
-                        <td class="p-3 text-center space-x-2">
-                            <button onclick='editarLivro(${JSON.stringify(l)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button>
-                            <button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button>
-                        </td>
-                    </tr>
-                `;
+                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td><td class="p-3 font-medium text-gray-800">${l.titulo}</td><td class="p-3 font-bold text-blue-600">${precoFormatado}</td><td class="p-3 text-center space-x-2"><button onclick='editarLivro(${JSON.stringify(l)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
 
         document.getElementById('form-livro').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            setLoadingState('btn-salvar-livro', true);
-
+            e.preventDefault(); setLoadingState('btn-salvar-livro', true);
             const idEdicao = document.getElementById('livro-id-edicao').value;
             const titulo = document.getElementById('livro-titulo').value;
             const preco = parseFloat(document.getElementById('livro-preco').value);
             const descricao = document.getElementById('livro-descricao').value;
             const cursoIdInput = document.getElementById('select-curso-admin-form').value;
             const cursoId = cursoIdInput !== "" ? parseInt(cursoIdInput) : null;
-
             let linkDestino = document.getElementById('livro-link').value.trim();
             let capaUrl = document.getElementById('livro-capa-url').value.trim();
             const arquivoPdf = document.getElementById('livro-arquivo-pdf').files[0];
             const arquivoCapa = document.getElementById('livro-arquivo-capa').files[0];
 
             try {
-                if (arquivoPdf) {
-                    const nomePdf = `pdf_${Date.now()}.pdf`;
-                    await supabaseClient.storage.from('biblioteca').upload(nomePdf, arquivoPdf);
-                    const { data: pubPdf } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf);
-                    linkDestino = pubPdf.publicUrl;
-                }
-                if (arquivoCapa) {
-                    const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75);
-                    const nomeArq = `capa_${Date.now()}.jpg`;
-                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada);
-                    const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
-                    capaUrl = pubCapa.publicUrl;
-                }
-
+                if (arquivoPdf) { const nomePdf = `pdf_${Date.now()}.pdf`; await supabaseClient.storage.from('biblioteca').upload(nomePdf, arquivoPdf); const { data: pubPdf } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf); linkDestino = pubPdf.publicUrl; }
+                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75); const nomeArq = `capa_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pubCapa.publicUrl; }
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
                 const idsValidos = checkboxes.map(cb => parseInt(cb.value));
 
                 if (idEdicao) {
                     const { error: errUp } = await supabaseClient.from('livros').update({ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, curso_id: cursoId }).eq('id', idEdicao);
                     if (errUp) throw errUp;
-
                     await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', idEdicao);
-                    if (idsValidos.length > 0) {
-                        const vinculos = idsValidos.map(id_disc => ({ livro_id: parseInt(idEdicao), id_disciplina: id_disc }));
-                        const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
-                        if (errIns) throw errIns;
-                    }
-                    await registrarLogAuditoria('editou o livro', `Título: ${titulo}`);
-                    alert("Livro atualizado com sucesso!");
+                    if (idsValidos.length > 0) { const vinculos = idsValidos.map(id_disc => ({ livro_id: parseInt(idEdicao), id_disciplina: id_disc })); await supabaseClient.from('livro_disciplinas').insert(vinculos); }
+                    await registrarLogAuditoria('editou o livro', `Título: ${titulo}`); alert("Atualizado!");
                 } else {
                     const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, curso_id: cursoId }]).select().single();
                     if (error) throw error;
-
-                    if (idsValidos.length > 0) {
-                        const vinculos = idsValidos.map(id_disc => ({ livro_id: novoLivro.id, id_disciplina: id_disc }));
-                        const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
-                        if (errIns) throw errIns;
-                    }
-                    await registrarLogAuditoria('cadastrou o livro', `Título: ${titulo}`);
-                    alert("Livro cadastrado com sucesso!");
+                    if (idsValidos.length > 0) { const vinculos = idsValidos.map(id_disc => ({ livro_id: novoLivro.id, id_disciplina: id_disc })); await supabaseClient.from('livro_disciplinas').insert(vinculos); }
+                    await registrarLogAuditoria('cadastrou o livro', `Título: ${titulo}`); alert("Cadastrado!");
                 }
-
-                await dispararBuildAutomatico();
-                cancelarEdicaoLivro(); 
-                await carregarAdminLivros();
-                await carregarLogsAuditoria();
-            } catch (err) { 
-                alert("Erro ao salvar livro: " + err.message); 
-            } finally {
-                setLoadingState('btn-salvar-livro', false);
-            }
+                await dispararBuildAutomatico(); cancelarEdicaoLivro(); await carregarAdminLivros(); await carregarLogsAuditoria();
+            } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-livro', false); }
         });
 
         async function editarLivro(livro) {
-            document.getElementById('livro-id-edicao').value = livro.id;
-            document.getElementById('livro-titulo').value = livro.titulo;
-            document.getElementById('livro-preco').value = livro.preco;
-            document.getElementById('livro-link').value = livro.link_destino;
-            document.getElementById('livro-descricao').value = livro.descricao || '';
-            document.getElementById('livro-capa-url').value = livro.capa_url || '';
-            document.getElementById('titulo-form-livro').textContent = "Editar Livro / Material";
-            document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
+            document.getElementById('livro-id-edicao').value = livro.id; document.getElementById('livro-titulo').value = livro.titulo;
+            document.getElementById('livro-preco').value = livro.preco; document.getElementById('livro-link').value = livro.link_destino;
+            document.getElementById('livro-descricao').value = livro.descricao || ''; document.getElementById('livro-capa-url').value = livro.capa_url || '';
+            document.getElementById('titulo-form-livro').textContent = "Editar Livro"; document.getElementById('btn-salvar-livro').textContent = "Atualizar Livro";
             document.getElementById('btn-cancelar-edicao-livro').classList.remove('hidden');
 
             const idsVinculados = (livro.livro_disciplinas || []).map(v => Number(v.id_disciplina));
-            
             let cursoEncontradoId = livro.curso_id ? String(livro.curso_id) : "";
             if (!cursoEncontradoId && idsVinculados.length > 0) {
-                for (const [cId, dIds] of Object.entries(gradeDisciplinasPorCurso)) {
-                    if (dIds.includes(idsVinculados[0])) {
-                        cursoEncontradoId = cId;
-                        break;
-                    }
-                }
+                for (const [cId, dIds] of Object.entries(gradeDisciplinasPorCurso)) { if (dIds.includes(idsVinculados[0])) { cursoEncontradoId = cId; break; } }
             }
-
-            const selectCursoForm = document.getElementById('select-curso-admin-form');
-            if (selectCursoForm) {
-                selectCursoForm.value = cursoEncontradoId;
-                renderizarCheckboxesFormPorCurso(cursoEncontradoId, idsVinculados);
-            }
-
+            if (document.getElementById('select-curso-admin-form')) { document.getElementById('select-curso-admin-form').value = cursoEncontradoId; renderizarCheckboxesFormPorCurso(cursoEncontradoId, idsVinculados); }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicaoLivro() {
-            document.getElementById('form-livro').reset();
-            document.getElementById('livro-id-edicao').value = '';
-            document.getElementById('titulo-form-livro').textContent = "Cadastrar Novo Livro / Material";
-            document.getElementById('btn-salvar-livro').textContent = "Salvar Livro";
-            document.getElementById('btn-cancelar-edicao-livro').classList.add('hidden');
-            document.getElementById('select-curso-admin-form').value = "";
-            document.getElementById('container-checkboxes-disciplinas').innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima para listar as disciplinas.</span>';
+            document.getElementById('form-livro').reset(); document.getElementById('livro-id-edicao').value = '';
+            document.getElementById('titulo-form-livro').textContent = "Cadastrar Novo Livro"; document.getElementById('btn-salvar-livro').textContent = "Salvar Livro";
+            document.getElementById('btn-cancelar-edicao-livro').classList.add('hidden'); document.getElementById('select-curso-admin-form').value = "";
+            document.getElementById('container-checkboxes-disciplinas').innerHTML = '<span class="text-gray-400 italic">Selecione um curso acima.</span>';
         }
 
         async function deletarLivro(id) {
-            if (!confirm("Excluir este livro?")) return;
-            await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', id);
-            await supabaseClient.from('livros').delete().eq('id', id);
-            await registrarLogAuditoria('excluiu o livro ID', `${id}`);
-            await dispararBuildAutomatico();
-            await carregarAdminLivros();
-            await carregarLogsAuditoria();
+            if (!confirm("Excluir livro?")) return;
+            await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', id); await supabaseClient.from('livros').delete().eq('id', id);
+            await registrarLogAuditoria('excluiu o livro ID', `${id}`); await dispararBuildAutomatico(); await carregarAdminLivros(); await carregarLogsAuditoria();
         }
 
         async function carregarAdminPosts() {
             const { data } = await supabaseClient.from('jornal_posts').select('*').order('criado_em', { ascending: false });
             listaPostsAdminGlobal = data || [];
-            
-            const selectAutor = document.getElementById('select-filtro-admin-autor');
             const autoresUnicos = [...new Set(listaPostsAdminGlobal.map(p => p.autor || 'BlitzEAD'))];
             let autorHtml = '<option value="">Todos os Autores</option>';
-            autoresUnicos.forEach(aut => {
-                autorHtml += `<option value="${aut}">${aut}</option>`;
-            });
-            selectAutor.innerHTML = autorHtml;
-
+            autoresUnicos.forEach(aut => { autorHtml += `<option value="${aut}">${aut}</option>`; });
+            document.getElementById('select-filtro-admin-autor').innerHTML = autorHtml;
             renderizarTabelaPostsFiltrados();
         }
 
@@ -1176,345 +1081,149 @@
             const dataFim = document.getElementById('input-data-fim').value;
 
             let filtrados = listaPostsAdminGlobal;
+            if (textoBusca !== "") filtrados = filtrados.filter(p => p.titulo.toLowerCase().includes(textoBusca) || (p.resumo && p.resumo.toLowerCase().includes(textoBusca)));
+            if (catFiltro !== "") filtrados = filtrados.filter(p => p.categoria === catFiltro);
+            if (autorFiltro !== "") filtrados = filtrados.filter(p => (p.autor || 'BlitzEAD') === autorFiltro);
+            if (dataInicio) { const dInicio = new Date(dataInicio + "T00:00:00"); filtrados = filtrados.filter(p => new Date(p.criado_em) >= dInicio); }
+            if (dataFim) { const dFim = new Date(dataFim + "T23:59:59"); filtrados = filtrados.filter(p => new Date(p.criado_em) <= dFim); }
 
-            if (textoBusca !== "") {
-                filtrados = filtrados.filter(p => 
-                    p.titulo.toLowerCase().includes(textoBusca) || (p.resumo && p.resumo.toLowerCase().includes(textoBusca))
-                );
-            }
-
-            if (catFiltro !== "") {
-                filtrados = filtrados.filter(p => p.categoria === catFiltro);
-            }
-
-            if (autorFiltro !== "") {
-                filtrados = filtrados.filter(p => (p.autor || 'BlitzEAD') === autorFiltro);
-            }
-
-            if (dataInicio) {
-                const dInicio = new Date(dataInicio + "T00:00:00");
-                filtrados = filtrados.filter(p => new Date(p.criado_em) >= dInicio);
-            }
-            if (dataFim) {
-                const dFim = new Date(dataFim + "T23:59:59");
-                filtrados = filtrados.filter(p => new Date(p.criado_em) <= dFim);
-            }
-
-            if (filtrados.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">Nenhuma publicação encontrada.</td></tr>`; 
-                return; 
-            }
+            if (filtrados.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">Nenhuma publicação encontrada.</td></tr>`; return; }
 
             let html = '';
             filtrados.forEach(p => {
                 const dataFormatada = p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '-';
-                html += `
-                    <tr class="border-b hover:bg-gray-50 text-sm">
-                        <td class="p-3 font-medium text-gray-800">${p.titulo}</td>
-                        <td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td>
-                        <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td>
-                        <td class="p-3 text-gray-500 text-xs">${dataFormatada}</td>
-                        <td class="p-3 text-center space-x-2">
-                            <button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button>
-                            <button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button>
-                        </td>
-                    </tr>
-                `;
+                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 font-medium text-gray-800">${p.titulo}</td><td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td><td class="p-3 text-gray-500 text-xs">${dataFormatada}</td><td class="p-3 text-center space-x-2"><button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
 
         document.getElementById('form-post').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            setLoadingState('btn-salvar-post', true);
-
+            e.preventDefault(); setLoadingState('btn-salvar-post', true);
             const idEdicao = document.getElementById('post-id-edicao').value;
-            const titulo = document.getElementById('post-titulo').value;
-            const categoria = document.getElementById('post-categoria').value;
-            const autorInput = document.getElementById('post-autor').value.trim();
-            const autor = autorInput !== "" ? autorInput : "BlitzEAD";
-            const resumo = document.getElementById('post-resumo').value;
-            const conteudo = document.getElementById('post-conteudo').value;
-            const tagsStr = document.getElementById('post-tags').value;
-            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
-            let capaUrl = document.getElementById('post-capa-url').value.trim();
-            const arquivoCapa = document.getElementById('post-arquivo-capa').files[0];
+            const titulo = document.getElementById('post-titulo').value; const categoria = document.getElementById('post-categoria').value;
+            const autor = document.getElementById('post-autor').value.trim() !== "" ? document.getElementById('post-autor').value.trim() : "BlitzEAD";
+            const resumo = document.getElementById('post-resumo').value; const conteudo = document.getElementById('post-conteudo').value;
+            const tags = document.getElementById('post-tags').value ? document.getElementById('post-tags').value.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+            let capaUrl = document.getElementById('post-capa-url').value.trim(); const arquivoCapa = document.getElementById('post-arquivo-capa').files[0];
             const slug = titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 
             try {
-                if (arquivoCapa) {
-                    const otimizada = await redimensionarImagem(arquivoCapa, 600, 0.8);
-                    const nomeArq = `jornal_${Date.now()}.jpg`;
-                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada);
-                    const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq);
-                    capaUrl = pub.publicUrl;
-                }
-                if (idEdicao) {
-                    await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao);
-                    await registrarLogAuditoria('editou a matéria', `Título: ${titulo} (jornal.html?post=${slug})`);
-                    alert("Atualizado com sucesso!");
-                } else {
-                    const { error } = await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]);
-                    if (error) throw error;
-                    await registrarLogAuditoria('publicou a matéria', `Título: ${titulo} (jornal.html?post=${slug})`);
-                    alert("Publicado com sucesso!");
-                }
-                
-                await dispararBuildAutomatico();
-                cancelarEdicaoPost(); 
-                await carregarAdminPosts();
-                await carregarLogsAuditoria();
-            } catch (err) { 
-                alert("Erro: " + err.message); 
-            } finally {
-                setLoadingState('btn-salvar-post', false);
-            }
+                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 600, 0.8); const nomeArq = `jornal_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pub.publicUrl; }
+                if (idEdicao) { await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao); await registrarLogAuditoria('editou a matéria', `Título: ${titulo}`); alert("Atualizado!"); } 
+                else { await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]); await registrarLogAuditoria('publicou a matéria', `Título: ${titulo}`); alert("Publicado!"); }
+                await dispararBuildAutomatico(); cancelarEdicaoPost(); await carregarAdminPosts(); await carregarLogsAuditoria();
+            } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-post', false); }
         });
 
         async function editarPost(post) {
-            document.getElementById('post-id-edicao').value = post.id;
-            document.getElementById('post-titulo').value = post.titulo;
-            document.getElementById('post-categoria').value = post.categoria;
-            document.getElementById('post-autor').value = post.autor === 'BlitzEAD' ? '' : (post.autor || '');
-            document.getElementById('post-resumo').value = post.resumo || '';
-            document.getElementById('post-conteudo').value = post.conteudo || '';
-            document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : '';
-            document.getElementById('post-capa-url').value = post.capa_url || '';
-            document.getElementById('titulo-form-post').textContent = "Editar Publicação";
-            document.getElementById('btn-salvar-post').textContent = "Atualizar Publicação";
-            document.getElementById('btn-cancelar-edicao-post').classList.remove('hidden');
-            mudarAbaAdmin('jornal'); window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('post-id-edicao').value = post.id; document.getElementById('post-titulo').value = post.titulo;
+            document.getElementById('post-categoria').value = post.categoria; document.getElementById('post-autor').value = post.autor === 'BlitzEAD' ? '' : (post.autor || '');
+            document.getElementById('post-resumo').value = post.resumo || ''; document.getElementById('post-conteudo').value = post.conteudo || '';
+            document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : ''; document.getElementById('post-capa-url').value = post.capa_url || '';
+            document.getElementById('titulo-form-post').textContent = "Editar Publicação"; document.getElementById('btn-salvar-post').textContent = "Atualizar Publicação";
+            document.getElementById('btn-cancelar-edicao-post').classList.remove('hidden'); mudarAbaAdmin('jornal'); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicaoPost() {
-            document.getElementById('form-post').reset();
-            document.getElementById('post-id-edicao').value = '';
-            document.getElementById('titulo-form-post').textContent = "Criar Nova Publicação (Jornal Blitz)";
-            document.getElementById('btn-salvar-post').textContent = "Publicar Notícia";
+            document.getElementById('form-post').reset(); document.getElementById('post-id-edicao').value = '';
+            document.getElementById('titulo-form-post').textContent = "Criar Nova Publicação (Jornal Blitz)"; document.getElementById('btn-salvar-post').textContent = "Publicar Notícia";
             document.getElementById('btn-cancelar-edicao-post').classList.add('hidden');
         }
 
         async function deletarPost(id) {
             if (!confirm("Excluir publicação?")) return;
-            await supabaseClient.from('jornal_posts').delete().eq('id', id);
-            await registrarLogAuditoria('excluiu a matéria ID', `${id}`);
-            await dispararBuildAutomatico();
-            await carregarAdminPosts();
-            await carregarLogsAuditoria();
+            await supabaseClient.from('jornal_posts').delete().eq('id', id); await registrarLogAuditoria('excluiu a matéria ID', `${id}`);
+            await dispararBuildAutomatico(); await carregarAdminPosts(); await carregarLogsAuditoria();
         }
 
-        // --- MÉTODOS PARA GERENCIAMENTO DE CURSOS E DISCIPLINAS ---
         async function renderizarGradeGerenciamentoCurso(cursoIdStr) {
             const tbody = document.getElementById('tabela-admin-disciplinas-curso');
-            if (!cursoIdStr) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Selecione um curso acima para carregar a grade.</td></tr>`;
-                return;
-            }
-
-            const cursoId = parseInt(cursoIdStr);
-            const discIds = gradeDisciplinasPorCurso[cursoId] || [];
-
-            if (discIds.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Nenhuma disciplina vinculada a este curso.</td></tr>`;
-                return;
-            }
-
+            if (!cursoIdStr) { tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Selecione um curso acima.</td></tr>`; return; }
+            const discIds = gradeDisciplinasPorCurso[parseInt(cursoIdStr)] || [];
+            if (discIds.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Nenhuma disciplina vinculada a este curso.</td></tr>`; return; }
             let html = '';
             discIds.forEach(idDisc => {
-                const d = window.disciplinasCompletasMap[idDisc];
-                if (!d) return;
-
-                html += `
-                    <tr class="border-b hover:bg-gray-50" data-disc-id="${d.id}">
-                        <td class="p-2 font-mono"><input type="text" value="${d.codigo || ''}" class="input-codigo-disc w-20 px-2 py-1 border rounded bg-white"></td>
-                        <td class="p-2 font-medium"><input type="text" value="${d.nome || ''}" class="input-nome-disc w-full px-2 py-1 border rounded bg-white"></td>
-                        <td class="p-2 text-center"><input type="text" value="${d.periodo || ''}" class="input-periodo-disc w-16 px-2 py-1 border rounded bg-white text-center"></td>
-                        <td class="p-2 text-center"><input type="text" value="${d.data_ap1 || '-'}" class="input-ap1-disc w-28 px-2 py-1 border rounded bg-white text-center"></td>
-                        <td class="p-2 text-center"><input type="text" value="${d.data_ap2 || '-'}" class="input-ap2-disc w-28 px-2 py-1 border rounded bg-white text-center"></td>
-                        <td class="p-2 text-center"><input type="text" value="${d.data_ap3 || '-'}" class="input-ap3-disc w-28 px-2 py-1 border rounded bg-white text-center"></td>
-                        <td class="p-2 text-center">
-                            <select class="input-controle-disc px-2 py-1 border rounded bg-white font-semibold ${d.controle == 1 ? 'text-green-600' : 'text-red-600'}">
-                                <option value="1" ${d.controle == 1 ? 'selected' : ''}>Ativo</option>
-                                <option value="0" ${d.controle == 0 ? 'selected' : ''}>Inativo</option>
-                            </select>
-                        </td>
-                    </tr>
-                `;
+                const d = window.disciplinasCompletasMap[idDisc]; if (!d) return;
+                html += `<tr class="border-b hover:bg-gray-50" data-disc-id="${d.id}"><td class="p-2 font-mono"><input type="text" value="${d.codigo || ''}" class="input-codigo-disc w-20 px-2 py-1 border rounded bg-white"></td><td class="p-2 font-medium"><input type="text" value="${d.nome || ''}" class="input-nome-disc w-full px-2 py-1 border rounded bg-white"></td><td class="p-2 text-center"><input type="text" value="${d.periodo || ''}" class="input-periodo-disc w-16 px-2 py-1 border rounded bg-white text-center"></td><td class="p-2 text-center"><input type="text" value="${d.data_ap1 || '-'}" class="input-ap1-disc w-28 px-2 py-1 border rounded bg-white text-center"></td><td class="p-2 text-center"><input type="text" value="${d.data_ap2 || '-'}" class="input-ap2-disc w-28 px-2 py-1 border rounded bg-white text-center"></td><td class="p-2 text-center"><input type="text" value="${d.data_ap3 || '-'}" class="input-ap3-disc w-28 px-2 py-1 border rounded bg-white text-center"></td><td class="p-2 text-center"><select class="input-controle-disc px-2 py-1 border rounded bg-white font-semibold ${d.controle == 1 ? 'text-green-600' : 'text-red-600'}"><option value="1" ${d.controle == 1 ? 'selected' : ''}>Ativo</option><option value="0" ${d.controle == 0 ? 'selected' : ''}>Inativo</option></select></td></tr>`;
             });
             tbody.innerHTML = html;
         }
 
         async function salvarEdicoesManuaisGrade() {
             const cursoIdStr = document.getElementById('select-curso-admin-gerenciamento').value;
-            if (!cursoIdStr) {
-                alert("Selecione um curso primeiro.");
-                return;
-            }
-
+            if (!cursoIdStr) { alert("Selecione um curso primeiro."); return; }
             setLoadingState('btn-salvar-grade-manual', true);
             const linhas = document.querySelectorAll('#tabela-admin-disciplinas-curso tr[data-disc-id]');
-
             try {
                 for (let linha of linhas) {
                     const idDisc = parseInt(linha.getAttribute('data-disc-id'));
-                    const codigo = linha.querySelector('.input-codigo-disc').value.trim();
-                    const nome = linha.querySelector('.input-nome-disc').value.trim();
-                    const periodo = linha.querySelector('.input-periodo-disc').value.trim();
-                    const data_ap1 = linha.querySelector('.input-ap1-disc').value.trim();
-                    const data_ap2 = linha.querySelector('.input-ap2-disc').value.trim();
-                    const data_ap3 = linha.querySelector('.input-ap3-disc').value.trim();
-                    const controle = parseInt(linha.querySelector('.input-controle-disc').value);
-
-                    const { error } = await supabaseClient.from('disciplinas').update({
-                        codigo, nome, periodo, data_ap1, data_ap2, data_ap3, controle
-                    }).eq('id', idDisc);
-
+                    const upd = {
+                        codigo: linha.querySelector('.input-codigo-disc').value.trim(),
+                        nome: linha.querySelector('.input-nome-disc').value.trim(),
+                        periodo: linha.querySelector('.input-periodo-disc').value.trim(),
+                        data_ap1: linha.querySelector('.input-ap1-disc').value.trim(),
+                        data_ap2: linha.querySelector('.input-ap2-disc').value.trim(),
+                        data_ap3: linha.querySelector('.input-ap3-disc').value.trim(),
+                        controle: parseInt(linha.querySelector('.input-controle-disc').value)
+                    };
+                    const { error } = await supabaseClient.from('disciplinas').update(upd).eq('id', idDisc);
                     if (error) throw error;
-
-                    window.disciplinasCompletasMap[idDisc] = { ...window.disciplinasCompletasMap[idDisc], codigo, nome, periodo, data_ap1, data_ap2, data_ap3, controle };
-                    disciplinasGlobalMap[idDisc] = `${codigo ? codigo + ' - ' : ''}${nome}`;
+                    window.disciplinasCompletasMap[idDisc] = { ...window.disciplinasCompletasMap[idDisc], ...upd };
+                    disciplinasGlobalMap[idDisc] = `${upd.codigo ? upd.codigo + ' - ' : ''}${upd.nome}`;
                 }
-
-                await registrarLogAuditoria('atualizou a grade de disciplinas manualmente', `Curso ID: ${cursoIdStr}`);
-                alert("Alterações manuais salvas com sucesso!");
-                await carregarLogsAuditoria();
-            } catch (err) {
-                alert("Erro ao salvar alterações: " + err.message);
-            } finally {
-                setLoadingState('btn-salvar-grade-manual', false);
-            }
+                await registrarLogAuditoria('atualizou a grade manualmente', `Curso ID: ${cursoIdStr}`);
+                alert("Alterações salvas!"); await carregarLogsAuditoria();
+            } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-grade-manual', false); }
         }
 
         function processarArquivoPlanilhaGrade(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const cursoIdStr = document.getElementById('select-curso-admin-gerenciamento').value;
-            if (!cursoIdStr) {
-                alert("Por favor, selecione o curso de destino antes de carregar o arquivo.");
-                event.target.value = '';
-                return;
-            }
-
+            const file = event.target.files[0]; if (!file) return;
+            if (!document.getElementById('select-curso-admin-gerenciamento').value) { alert("Selecione o curso primeiro."); event.target.value = ''; return; }
             const reader = new FileReader();
-
-            if (file.name.toLowerCase().endsWith('.csv')) {
-                reader.readAsText(file, 'UTF-8');
-            } else {
-                reader.readAsArrayBuffer(file);
-            }
-
+            if (file.name.toLowerCase().endsWith('.csv')) reader.readAsText(file, 'UTF-8'); else reader.readAsArrayBuffer(file);
             reader.onload = function(e) {
                 try {
-                    let workbook;
-                    if (file.name.toLowerCase().endsWith('.csv')) {
-                        workbook = XLSX.read(e.target.result, { type: 'string' });
-                    } else {
-                        const data = new Uint8Array(e.target.result);
-                        workbook = XLSX.read(data, { type: 'array' });
-                    }
-                    
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    
-                    if (!rows || rows.length < 2) {
-                        alert("O arquivo parece estar vazio ou sem dados suficientes.");
-                        return;
-                    }
-
-                    const cabecalho = rows[0].map(h => String(h || '').trim().toLowerCase());
+                    let workbook = file.name.toLowerCase().endsWith('.csv') ? XLSX.read(e.target.result, { type: 'string' }) : XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                    if (!rows || rows.length < 2) { alert("Arquivo vazio ou inválido."); return; }
                     let parsedRows = [];
-
                     for (let i = 1; i < rows.length; i++) {
                         const cols = rows[i];
                         if (cols && cols.length >= 2 && (cols[0] || cols[1])) {
                             parsedRows.push({
-                                codigo: String(cols[0] || '').trim(),
-                                nome: String(cols[1] || '').trim(),
-                                periodo: String(cols[2] || '1º Período').trim(),
-                                data_ap1: String(cols[3] || '-').trim(),
-                                data_ap2: String(cols[4] || '-').trim(),
-                                data_ap3: String(cols[5] || '-').trim(),
-                                controle: cols[6] !== undefined && cols[6] !== '' ? parseInt(cols[6]) : 1
+                                codigo: String(cols[0] || '').trim(), nome: String(cols[1] || '').trim(), periodo: String(cols[2] || '1º Período').trim(),
+                                data_ap1: String(cols[3] || '-').trim(), data_ap2: String(cols[4] || '-').trim(), data_ap3: String(cols[5] || '-').trim(), controle: cols[6] !== undefined ? parseInt(cols[6]) : 1
                             });
                         }
                     }
-
-                    if (parsedRows.length === 0) {
-                        alert("Nenhuma linha de dado válida foi encontrada no arquivo.");
-                        return;
-                    }
-
+                    if (parsedRows.length === 0) { alert("Nenhum dado válido encontrado."); return; }
                     dadosCsvTemporarios = parsedRows;
-                    exibirPreviewCsv(cabecalho, parsedRows);
-                } catch (err) {
-                    alert("Erro ao processar o arquivo ODS/CSV: " + err.message);
-                }
+                    const head = document.getElementById('preview-csv-head'); const body = document.getElementById('preview-csv-body');
+                    document.getElementById('container-preview-csv').classList.remove('hidden');
+                    head.innerHTML = `<tr><th class="p-2 border-b">Código</th><th class="p-2 border-b">Nome</th><th class="p-2 border-b">Período</th><th class="p-2 border-b">AP1</th><th class="p-2 border-b">AP2</th><th class="p-2 border-b">AP3</th><th class="p-2 border-b">Status</th></tr>`;
+                    let html = '';
+                    parsedRows.forEach(r => { html += `<tr class="border-b"><td class="p-2 font-mono">${r.codigo}</td><td class="p-2 font-medium">${r.nome}</td><td class="p-2">${r.periodo}</td><td class="p-2">${r.data_ap1}</td><td class="p-2">${r.data_ap2}</td><td class="p-2">${r.data_ap3}</td><td class="p-2">${r.controle == 1 ? 'Ativo' : 'Inativo'}</td></tr>`; });
+                    body.innerHTML = html;
+                } catch (err) { alert("Erro ao processar: " + err.message); }
             };
         }
 
-        function exibirPreviewCsv(cabecalho, rows) {
-            const head = document.getElementById('preview-csv-head');
-            const body = document.getElementById('preview-csv-body');
-            document.getElementById('container-preview-csv').classList.remove('hidden');
-
-            head.innerHTML = `<tr><th class="p-2 border-b">Código</th><th class="p-2 border-b">Nome</th><th class="p-2 border-b">Período</th><th class="p-2 border-b">AP1</th><th class="p-2 border-b">AP2</th><th class="p-2 border-b">AP3</th><th class="p-2 border-b">Status</th></tr>`;
-            
-            let html = '';
-            rows.forEach(r => {
-                html += `<tr class="border-b"><td class="p-2 font-mono">${r.codigo}</td><td class="p-2 font-medium">${r.nome}</td><td class="p-2">${r.periodo}</td><td class="p-2">${r.data_ap1}</td><td class="p-2">${r.data_ap2}</td><td class="p-2">${r.data_ap3}</td><td class="p-2">${r.controle == 1 ? 'Ativo' : 'Inativo'}</td></tr>`;
-            });
-            body.innerHTML = html;
-        }
-
-        function cancelarPreviewCsv() {
-            dadosCsvTemporarios = null;
-            document.getElementById('container-preview-csv').classList.add('hidden');
-            document.getElementById('input-arquivo-csv-grade').value = '';
-        }
+        function cancelarPreviewCsv() { dadosCsvTemporarios = null; document.getElementById('container-preview-csv').classList.add('hidden'); document.getElementById('input-arquivo-csv-grade').value = ''; }
 
         async function salvarGradeImportadaCsv() {
             if (!dadosCsvTemporarios || dadosCsvTemporarios.length === 0) return;
             const cursoId = parseInt(document.getElementById('select-curso-admin-gerenciamento').value);
-
             setLoadingState('btn-confirmar-csv', true);
-
             try {
                 for (let r of dadosCsvTemporarios) {
-                    const { data: novaDisc, error: errInsDisc } = await supabaseClient.from('disciplinas').insert([{
-                        codigo: r.codigo,
-                        nome: r.nome,
-                        periodo: r.periodo,
-                        data_ap1: r.data_ap1,
-                        data_ap2: r.data_ap2,
-                        data_ap3: r.data_ap3,
-                        controle: r.controle
-                    }]).select().single();
-
-                    if (errInsDisc) throw errInsDisc;
-                    const discId = novaDisc.id;
-
-                    const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ 
-                        curso_id: cursoId, 
-                        disciplina_id: discId 
-                    }]);
-                    
+                    const { data: novaDisc, error: errIns } = await supabaseClient.from('disciplinas').insert([{ codigo: r.codigo, nome: r.nome, periodo: r.periodo, data_ap1: r.data_ap1, data_ap2: r.data_ap2, data_ap3: r.data_ap3, controle: r.controle }]).select().single();
+                    if (errIns) throw errIns;
+                    const { error: errRel } = await supabaseClient.from('curso_disciplinas').insert([{ curso_id: cursoId, disciplina_id: novaDisc.id }]);
                     if (errRel) throw errRel;
                 }
-
-                await registrarLogAuditoria('importou grade curricular via CSV/ODS', `Curso ID: ${cursoId} (${dadosCsvTemporarios.length} disciplinas)`);
-                alert("Grade importada com novas linhas criadas com sucesso para este curso!");
-                cancelarPreviewCsv();
-                await carregarCursosEGrades();
-                renderizarGradeGerenciamentoCurso(cursoId);
-                await carregarLogsAuditoria();
-            } catch (err) {
-                alert("Erro ao importar arquivo: " + err.message);
-            } finally {
-                setLoadingState('btn-confirmar-csv', false);
-            }
+                await registrarLogAuditoria('importou grade via CSV', `Curso ID: ${cursoId}`);
+                alert("Importada com sucesso!"); cancelarPreviewCsv(); await carregarCursosEGrades(); renderizarGradeGerenciamentoCurso(cursoId); await carregarLogsAuditoria();
+            } catch (err) { alert("Erro ao importar: " + err.message); } finally { setLoadingState('btn-confirmar-csv', false); }
         }
 
         initAdmin();

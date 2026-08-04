@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área Administrativa - Gestão de Usuários</title>
+    
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pt-24 hidden" id="body-admin">
+    <!-- Body começa oculto para evitar o "piscar" da tela para alunos não autorizados -->
+
+    <!-- MENU SUPERIOR FIXO -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="flex items-center">
+                    <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
+                </a>
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Admin de Usuários</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="text-xs font-semibold text-gray-600 hover:text-blue-600 transition">Voltar ao site</a>
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 border-l relative"></div>
+            </div>
+        </div>
+        <div class="w-full bg-gray-100 px-4 md:px-6 py-2 flex space-x-4 overflow-x-auto">
+            <button id="tab-btn-usuarios" class="text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap">👥 Gestão de Usuários</button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-7xl mx-auto px-6 py-8 flex-1">
+        
+        <!-- ABA GESTÃO DE USUÁRIOS E HISTÓRICO -->
+        <div id="secao-admin-usuarios" class="space-y-8">
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">👥 Gestão de Usuários e Permissões Granulares</h2>
+                    <p class="text-gray-500 text-xs">Gerencie os papéis dos colaboradores, aplique lacres de edição nos perfis dos alunos e audite todas as alterações do sistema.</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div class="w-full md:w-1/3 relative">
+                        <input type="text" id="input-busca-admin-usuarios" placeholder="Buscar por nome ou email..." oninput="filtrarTabelaUsuarios()" class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border rounded-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider">
+                                <th class="p-3 border-b">Usuário</th>
+                                <th class="p-3 border-b">Email</th>
+                                <th class="p-3 border-b">Curso</th>
+                                <th class="p-3 border-b">Cargo / Nível</th>
+                                <th class="p-3 border-b text-center">Lacres Ativos</th>
+                                <th class="p-3 border-b text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin-usuarios">
+                            <tr><td colspan="6" class="p-6 text-center text-gray-400">Carregando usuários...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEÇÃO DE HISTÓRICO DE MODIFICAÇÕES (LOGS) -->
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">📜 Histórico de Modificações (Logs de Auditoria)</h3>
+                        <p class="text-xs text-gray-500">Rastreabilidade completa de todas as ações executadas pelos administradores.</p>
+                    </div>
+                    <button type="button" onclick="carregarLogsAuditoria()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition">🔄 Atualizar Logs</button>
+                </div>
+
+                <div class="overflow-x-auto border rounded-xl max-h-80">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider sticky top-0">
+                                <th class="p-3 border-b">Data / Hora</th>
+                                <th class="p-3 border-b">Autor da Ação</th>
+                                <th class="p-3 border-b">Cargo</th>
+                                <th class="p-3 border-b">Descrição da Modificação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin-logs">
+                            <tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum registro de log encontrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL DE EDIÇÃO DE USUÁRIO E LACRES -->
+    <div id="modal-edicao-usuario" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative space-y-4 max-h-[90vh] overflow-y-auto">
+            <button onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
+            <h3 class="text-lg font-bold text-gray-900">⚙️ Editar Cadastro Completo e Lacres</h3>
+            
+            <input type="hidden" id="edit-user-id">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                
+                <!-- Dados Cadastrais -->
+                <div class="space-y-3">
+                    <span class="font-bold text-gray-800 block border-b pb-1">📝 Dados do Usuário</span>
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Nome Completo</label>
+                        <input type="text" id="edit-user-nome" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">E-mail de Acesso (Login)</label>
+                        <input type="email" id="edit-user-email" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                        <p class="text-[10px] text-red-500 mt-0.5">Atenção: Mudar o e-mail altera o login do usuário.</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Curso Vinculado</label>
+                        <select id="edit-user-curso" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <!-- Inserido dinamicamente no JS -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Semestre Atual</label>
+                        <select id="edit-user-semestre" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <!-- Inserido dinamicamente no JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Permissões e Lacres -->
+                <div class="space-y-3">
+                    <span class="font-bold text-gray-800 block border-b pb-1">🛡️ Permissões e Restrições</span>
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1 flex items-center justify-between">
+                            <span>Cargo / Nível de Acesso (RBAC)</span>
+                            <span id="badge-lock-role" class="hidden text-[9px] bg-amber-100 text-amber-800 px-1.5 rounded font-bold uppercase">Somente o Dono altera</span>
+                        </label>
+                        <select id="edit-user-role" class="w-full px-3 py-2 border border-gray-300 rounded-lg font-semibold text-blue-900 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed">
+                            <option value="aluno">Aluno (Padrão)</option>
+                            <option value="editor_livro">Editor de Livros</option>
+                            <option value="editor_jornal">Editor do Jornal</option>
+                            <option value="editor_geral">Editor Geral (Livros e Jornal)</option>
+                            <option value="editor_curso">Editor de Cursos e Disciplinas</option>
+                            <option value="admin_usuarios">Admin de Usuários</option>
+                            <option value="super_admin">Administrador Geral</option>
+                        </select>
+                    </div>
+
+                    <div class="border rounded-xl p-3 bg-amber-50 border-amber-200 space-y-2 mt-2">
+                        <span class="font-bold text-amber-900 block">🔒 Lacres de Edição no Perfil</span>
+                        <p class="text-[10px] text-amber-700 leading-tight mb-2">Impedir que o próprio usuário altere estes dados lá na página de perfil do aluno.</p>
+                        
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-nome" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de Nome</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-email" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de E-mail</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-curso" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de Curso</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="lacre-semestre" class="w-4 h-4 text-blue-600 rounded">
+                            <span>Lacrar alteração de Semestre</span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="flex justify-between items-center pt-4 border-t mt-4">
+                <button type="button" id="btn-excluir-usuario" onclick="excluirUsuarioCadastro()" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 px-4 rounded-lg text-xs transition">Excluir Conta Oficial</button>
+                <div class="space-x-2">
+                    <button type="button" onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs">Cancelar</button>
+                    <button type="button" id="btn-salvar-usuario" onclick="salvarEdicaoUsuario()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg text-xs shadow-sm">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let usuarioAtual = null;
+        let listaUsuariosGlobal = [];
+        let listaCursosGlobal = [];
+
+        function setLoadingState(btnId, isLoading) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (isLoading) {
+                btn.disabled = true;
+                btn.dataset.originalText = btn.innerHTML;
+                btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...`;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset.originalText;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        async function initAdmin() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const role = session?.user?.user_metadata?.role || 'aluno';
+            
+            // Trava de Segurança: Apenas quem tem autoridade sobre usuários
+            const cargosPermitidos = ['dono', 'super_admin', 'admin_usuarios'];
+            
+            if (!session || !cargosPermitidos.includes(role)) {
+                alert("Acesso Negado: Você não tem permissão para gerenciar usuários.");
+                window.location.href = 'index.html'; 
+                return;
+            }
+
+            document.getElementById('body-admin').classList.remove('hidden');
+            usuarioAtual = session.user;
+            renderizarTopoUsuario();
+
+            // Carrega apenas os cursos (para o select do modal) e os dados de usuários/logs
+            await carregarCursosEGrades();
+            await carregarAdminUsuarios();
+            await carregarLogsAuditoria();
+        }
+
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            bloco.innerHTML = `<span class="text-xs font-medium text-gray-700">${(usuarioAtual.user_metadata?.nome || usuarioAtual.email).split(' ')[0]} (Admin)</span>`;
+        }
+
+        async function carregarCursosEGrades() {
+            // Busca apenas os nomes dos cursos para popular o modal de edição de usuários
+            const { data: cursos } = await supabaseClient.from('cursos').select('*').order('nome');
+            listaCursosGlobal = cursos || [];
+            popularSelectsModalUsuario();
+        }
+
+        function popularSelectsModalUsuario() {
+            const selectCurso = document.getElementById('edit-user-curso');
+            let optionsCurso = '<option value="">Não definido</option>';
+            listaCursosGlobal.forEach(c => {
+                optionsCurso += `<option value="${c.nome}">${c.nome}</option>`;
+            });
+            if (selectCurso) selectCurso.innerHTML = optionsCurso;
+
+            const selectSem = document.getElementById('edit-user-semestre');
+            let optionsSem = '<option value="">Não definido / Nenhum</option>';
+            for (let ano = 2026; ano >= 2019; ano--) {
+                for (let sem = 2; sem >= 1; sem--) {
+                    if (ano === 2026 && sem > 2) continue;
+                    optionsSem += `<option value="${ano}-${sem}">${ano}-${sem}</option>`;
+                }
+            }
+            if (selectSem) selectSem.innerHTML = optionsSem;
+        }
+
+        async function registrarLogAuditoria(acao, detalhes) {
+            try {
+                if (!usuarioAtual) return;
+                const nomeAdmin = usuarioAtual.user_metadata?.nome || usuarioAtual.email;
+                const roleAdmin = usuarioAtual.user_metadata?.role || 'admin';
+                const textoLog = `${roleAdmin} - ${nomeAdmin} (${usuarioAtual.email}) - ${acao} - ${detalhes}`;
+
+                await supabaseClient.from('logs_admin').insert([{
+                    autor: textoLog,
+                    criado_em: new Date().toISOString()
+                }]);
+            } catch (err) {
+                console.error("Erro ao registrar log:", err);
+            }
+        }
+
+        async function carregarLogsAuditoria() {
+            const tbody = document.getElementById('tabela-admin-logs');
+            const { data, error } = await supabaseClient.from('logs_admin').select('*').order('criado_em', { ascending: false }).limit(50);
+            
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum registro de log encontrado.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(l => {
+                const partes = l.autor.split(' - ');
+                const cargo = partes[0] || 'admin';
+                const autor = partes[1] || 'Sistema';
+                const acaoDesc = partes.slice(2).join(' - ') || l.autor;
+                const dataF = new Date(l.criado_em).toLocaleString('pt-BR');
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 text-gray-500 whitespace-nowrap">${dataF}</td>
+                        <td class="p-3 font-semibold text-gray-800">${autor}</td>
+                        <td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">${cargo}</span></td>
+                        <td class="p-3 text-gray-700 font-mono text-[11px]">${acaoDesc}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ==========================================
+        //  LÓGICA DE GESTÃO DE USUÁRIOS
+        // ==========================================
+        async function carregarAdminUsuarios() {
+            const { data, error } = await supabaseClient.rpc('admin_listar_usuarios');
+            if (error) {
+                console.error("Erro ao carregar usuários da base oficial:", error);
+                return;
+            }
+            listaUsuariosGlobal = (data || []).sort((a, b) => (a.nome || a.email).localeCompare(b.nome || b.email));
+            renderizarTabelaUsuarios(listaUsuariosGlobal);
+        }
+
+        function renderizarTabelaUsuarios(usuarios) {
+            const tbody = document.getElementById('tabela-admin-usuarios');
+            if (!usuarios || usuarios.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário correspondente encontrado na sua hierarquia.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            usuarios.forEach(u => {
+                const nome = u.nome || 'Usuário';
+                const email = u.email || 'email@naoinformado.com';
+                const curso = u.curso || 'Não definido';
+                const role = u.role || 'aluno';
+                
+                let lacresStr = [];
+                if (u.lacre_nome) lacresStr.push('Nome');
+                if (u.lacre_email) lacresStr.push('E-mail');
+                if (u.lacre_curso) lacresStr.push('Curso');
+                if (u.lacre_semestre) lacresStr.push('Semestre');
+                const lacresExibicao = lacresStr.length > 0 ? `🔒 ${lacresStr.join(', ')}` : '-';
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-medium text-gray-800">${nome}</td>
+                        <td class="p-3 text-gray-600">${email}</td>
+                        <td class="p-3 text-gray-600">${curso}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${role}</span></td>
+                        <td class="p-3 text-center text-gray-500 font-semibold">${lacresExibicao}</td>
+                        <td class="p-3 text-center">
+                            <button onclick='abrirModalEdicaoUsuario(${JSON.stringify(u)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar Tudo</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function filtrarTabelaUsuarios() {
+            const busca = document.getElementById('input-busca-admin-usuarios').value.toLowerCase().trim();
+            const filtrados = listaUsuariosGlobal.filter(u => 
+                (u.nome && u.nome.toLowerCase().includes(busca)) || 
+                (u.email && u.email.toLowerCase().includes(busca))
+            );
+            renderizarTabelaUsuarios(filtrados);
+        }
+
+        function abrirModalEdicaoUsuario(u) {
+            document.getElementById('edit-user-id').value = u.id;
+            document.getElementById('edit-user-nome').value = u.nome || '';
+            document.getElementById('edit-user-email').value = u.email || '';
+            document.getElementById('edit-user-curso').value = u.curso || '';
+            document.getElementById('edit-user-semestre').value = u.semestre || '';
+            
+            document.getElementById('edit-user-role').value = u.role || 'aluno';
+            document.getElementById('lacre-nome').checked = !!u.lacre_nome;
+            document.getElementById('lacre-email').checked = !!u.lacre_email;
+            document.getElementById('lacre-curso').checked = !!u.lacre_curso;
+            document.getElementById('lacre-semestre').checked = !!u.lacre_semestre;
+            
+            // Trava de Cargo: Apenas o 'dono' pode mudar a combo-box de Role
+            const isDono = (usuarioAtual.user_metadata?.role === 'dono');
+            const selectRole = document.getElementById('edit-user-role');
+            const badgeLock = document.getElementById('badge-lock-role');
+            
+            if (!isDono) {
+                selectRole.disabled = true;
+                badgeLock.classList.remove('hidden');
+            } else {
+                selectRole.disabled = false;
+                badgeLock.classList.add('hidden');
+            }
+
+            document.getElementById('modal-edicao-usuario').classList.remove('hidden');
+        }
+
+        async function salvarEdicaoUsuario() {
+            const userId = document.getElementById('edit-user-id').value;
+            const nome = document.getElementById('edit-user-nome').value;
+            const email = document.getElementById('edit-user-email').value;
+            const curso = document.getElementById('edit-user-curso').value;
+            const semestre = document.getElementById('edit-user-semestre').value;
+            
+            const role = document.getElementById('edit-user-role').value;
+            const lacre_nome = document.getElementById('lacre-nome').checked;
+            const lacre_email = document.getElementById('lacre-email').checked;
+            const lacre_curso = document.getElementById('lacre-curso').checked;
+            const lacre_semestre = document.getElementById('lacre-semestre').checked;
+
+            setLoadingState('btn-salvar-usuario', true);
+            try {
+                const { error } = await supabaseClient.rpc('admin_atualizar_usuario_completo', {
+                    target_user_id: userId,
+                    novo_nome: nome,
+                    novo_email: email,
+                    novo_curso: curso,
+                    novo_semestre: semestre,
+                    novo_role: role,
+                    novo_lacre_nome: lacre_nome,
+                    novo_lacre_email: lacre_email,
+                    novo_lacre_curso: lacre_curso,
+                    novo_lacre_semestre: lacre_semestre
+                });
+
+                if (error) throw error;
+
+                await registrarLogAuditoria('editou cadastro completo do usuário ID', `${userId} - E-mail: ${email}`);
+                alert("Dados, e-mail e lacres salvos com sucesso!");
+                document.getElementById('modal-edicao-usuario').classList.add('hidden');
+                await carregarAdminUsuarios();
+                await carregarLogsAuditoria();
+            } catch (err) {
+                alert("Erro ao atualizar usuário: " + err.message);
+            } finally {
+                setLoadingState('btn-salvar-usuario', false);
+            }
+        }
+
+        async function excluirUsuarioCadastro() {
+            const userId = document.getElementById('edit-user-id').value;
+            if (!confirm("Tem certeza ABSOLUTA que deseja excluir a conta de autenticação deste usuário do banco de dados oficial? Esta ação é irreversível.")) return;
+
+            try {
+                const { error } = await supabaseClient.rpc('admin_excluir_usuario', { target_user_id: userId });
+                if (error) throw error;
+
+                await registrarLogAuditoria('excluiu permanentemente a conta do usuário ID', `${userId}`);
+                alert("Cadastro excluído permanentemente com sucesso!");
+                document.getElementById('modal-edicao-usuario').classList.add('hidden');
+                await carregarAdminUsuarios();
+                await carregarLogsAuditoria();
+            } catch (err) {
+                alert("Erro ao excluir usuário: " + err.message);
+            }
+        }
+
+        initAdmin();
+    </script>
+</body>
+</html>

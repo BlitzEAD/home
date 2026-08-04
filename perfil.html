@@ -5,20 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Perfil - Planejamento Acadêmico</title>
     
-    <!-- SEO de Segurança: Bloqueia a indexação desta página restrita -->
     <meta name="robots" content="noindex, nofollow">
     
-    <!-- Otimização de Performance: Antecipa conexões -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- jsPDF para exportação de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-32">
@@ -48,19 +43,6 @@
         </div>
     </header>
 
-    <!-- MODAL DE GUIA E DOWNLOAD DO .ICS -->
-    <div id="modal-ics-guia" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative overflow-hidden">
-            <button onclick="fecharModalIcsGuia()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-            <h3 id="ics-guia-titulo" class="text-xl font-extrabold text-gray-900 mb-2">Adicionar Provas à Agenda</h3>
-            <div id="ics-guia-conteudo" class="text-sm text-gray-600 space-y-3 mb-6"></div>
-            <div class="flex justify-end space-x-3 mt-4 border-t pt-4">
-                <button onclick="fecharModalIcsGuia()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition">Cancelar</button>
-                <button id="btn-confirmar-download-ics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-sm">Fazer Download (.ics)</button>
-            </div>
-        </div>
-    </div>
-
     <main class="w-full max-w-2xl mx-auto px-6 py-8 flex-1">
         <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 mb-8">
             <h2 class="text-2xl font-bold text-gray-900 mb-1">Configurações de Perfil</h2>
@@ -81,7 +63,7 @@
                     </div>
                 </div>
 
-                <!-- CAMPO FOTO (OCULTO ATÉ CLICAR EM EDITAR) -->
+                <!-- CAMPO FOTO OCULTO -->
                 <div id="container-input-foto" class="hidden p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-900 mb-1">Escolher nova imagem</label>
@@ -99,7 +81,10 @@
                         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Nome Completo</label>
                         <input type="text" id="perfil-nome" disabled required class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed transition-all duration-200">
                     </div>
-                    <button type="button" onclick="ativarEdicaoCampo('perfil-nome', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                    <div class="flex items-center space-x-2">
+                        <span id="lacre-icon-nome" class="hidden text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded">🔒 Lacrado</span>
+                        <button type="button" id="btn-edit-nome" onclick="ativarEdicaoCampo('perfil-nome', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                    </div>
                 </div>
 
                 <!-- E-MAIL DE ACESSO -->
@@ -109,14 +94,17 @@
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">E-mail de Acesso</label>
                             <input type="email" id="perfil-email" disabled required class="w-full bg-transparent border-none text-sm font-semibold text-gray-800 focus:outline-none focus:ring-0 p-0 disabled:cursor-not-allowed transition-all duration-200">
                         </div>
-                        <button type="button" onclick="ativarEdicaoCampo('perfil-email', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                        <div class="flex items-center space-x-2">
+                            <span id="lacre-icon-email" class="hidden text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded">🔒 Lacrado</span>
+                            <button type="button" id="btn-edit-email" onclick="ativarEdicaoCampo('perfil-email', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                        </div>
                     </div>
                     <div id="aviso-email" class="hidden mt-2 text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
                         ⚠️ <strong>Atenção:</strong> Alterar o e-mail exigirá confirmação em duas etapas (um link será enviado tanto para o seu e-mail antigo quanto para o novo).
                     </div>
                 </div>
 
-                <!-- CURSO (DINÂMICO DO BANCO DE DADOS) -->
+                <!-- CURSO -->
                 <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
                     <div class="flex-1 pr-4">
                         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Curso</label>
@@ -124,7 +112,10 @@
                             <option value="">Carregando cursos...</option>
                         </select>
                     </div>
-                    <button type="button" onclick="ativarEdicaoCampo('perfil-curso', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                    <div class="flex items-center space-x-2">
+                        <span id="lacre-icon-curso" class="hidden text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded">🔒 Lacrado</span>
+                        <button type="button" id="btn-edit-curso" onclick="ativarEdicaoCampo('perfil-curso', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                    </div>
                 </div>
 
                 <!-- SEMESTRE DE INGRESSO -->
@@ -135,10 +126,13 @@
                             <option value="">Nenhum</option>
                         </select>
                     </div>
-                    <button type="button" onclick="ativarEdicaoCampo('perfil-semestre', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                    <div class="flex items-center space-x-2">
+                        <span id="lacre-icon-semestre" class="hidden text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded">🔒 Lacrado</span>
+                        <button type="button" id="btn-edit-semestre" onclick="ativarEdicaoCampo('perfil-semestre', event)" class="text-xs bg-white border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-100 transition shadow-xs flex-shrink-0 btn-editar">Editar</button>
+                    </div>
                 </div>
 
-                <!-- BOTÃO SALVAR (OCULTO ATÉ QUE HAJA MUDANÇAS) -->
+                <!-- BOTÃO SALVAR -->
                 <div id="container-salvar" class="hidden pt-4 border-t flex items-center justify-between animate-fadeIn">
                     <a href="index.html" class="text-xs text-gray-600 hover:underline font-semibold">← Voltar ao Planejamento</a>
                     <button type="submit" id="btn-salvar-perfil" class="bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Salvar Alterações</button>
@@ -156,18 +150,10 @@
                 </div>
                 <span id="badge-semestre-ativo" class="hidden text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full uppercase tracking-wide"></span>
             </div>
-            
-            <div id="lista-disciplinas-cursando" class="space-y-3">
-                <!-- Preenchido via JS -->
-            </div>
-
-            <!-- BOTÕES DE EXPORTAÇÃO (INICIALMENTE OCULTOS) -->
+            <div id="lista-disciplinas-cursando" class="space-y-3"></div>
             <div id="container-botoes-acoes-cursando" class="hidden flex justify-center items-center mt-6 pt-4 border-t space-x-3">
                 <button onclick="executarExportarSemestrePDF()" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
                     <span>🖨️ Exportar Grade do Semestre</span>
-                </button>
-                <button onclick="executarIniciarExportacaoICS()" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm space-x-1.5">
-                    <span>📅 Adicionar Agenda de Provas</span>
                 </button>
             </div>
         </div>
@@ -186,7 +172,6 @@
         let listaDisciplinasGlobal = [];
         let planejamentoGlobal = [];
         let semestreEmCursoAtual = "";
-        let semestreIcsPendente = null;
 
         async function initPerfil() {
             gerarOpcoesSemestres();
@@ -203,21 +188,16 @@
         async function carregarCursosNoSelect() {
             const selectCurso = document.getElementById('perfil-curso');
             if (!selectCurso) return;
-            
             try {
                 const { data: cursos, error } = await supabaseClient.from('cursos').select('nome').order('nome');
                 if (error) throw error;
-
                 let html = '<option value="">Selecione um curso</option>';
                 if (cursos && cursos.length > 0) {
-                    cursos.forEach(c => {
-                        html += `<option value="${c.nome}">${c.nome}</option>`;
-                    });
+                    cursos.forEach(c => { html += `<option value="${c.nome}">${c.nome}</option>`; });
                 }
                 selectCurso.innerHTML = html;
             } catch (err) {
                 console.error("Erro ao carregar cursos:", err);
-                selectCurso.innerHTML = '<option value="Administração">Administração</option>';
             }
         }
 
@@ -236,8 +216,27 @@
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             const containerBtnAdmin = document.getElementById('container-btn-admin');
-            const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
-            if (isAdmin && containerBtnAdmin) containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">⚙️ Admin</a>`;
+            
+            // Permissão para ver o botão Admin aqui no perfil
+            const isAdmin = usuarioAtual && (
+                usuarioAtual.user_metadata?.role === 'super_admin' || 
+                usuarioAtual.user_metadata?.role === 'dono' ||
+                usuarioAtual.user_metadata?.role?.startsWith('editor_') ||
+                usuarioAtual.user_metadata?.role === 'admin_usuarios' ||
+                usuarioAtual.user_metadata?.is_admin === true
+            );
+            
+            if (isAdmin && containerBtnAdmin) {
+                let urlDestino = 'admin.html';
+                const role = usuarioAtual.user_metadata?.role;
+                if(role === 'editor_livro') urlDestino = 'admin_biblioteca.html';
+                else if(role === 'editor_jornal') urlDestino = 'admin_jornal.html';
+                else if(role === 'editor_geral') urlDestino = 'admin_editor.html';
+                else if(role === 'editor_curso') urlDestino = 'admin_curso.html';
+                else if(role === 'admin_usuarios') urlDestino = 'admin_usuarios.html';
+                
+                containerBtnAdmin.innerHTML = `<a href="${urlDestino}" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">⚙️ Painel de Gestão</a>`;
+            }
 
             const metadata = usuarioAtual.user_metadata || {};
             const nome = metadata.nome || usuarioAtual.email || "Usuário";
@@ -269,12 +268,23 @@
                 nome: md.nome || '',
                 curso: md.curso || '',
                 semestre: md.semestre_ingresso || '',
-                foto_url: md.foto_url || ''
+                foto_url: md.foto_url || '',
+                lacre_nome: md.lacre_nome === true || md.lacre_nome === "true",
+                lacre_email: md.lacre_email === true || md.lacre_email === "true",
+                lacre_curso: md.lacre_curso === true || md.lacre_curso === "true",
+                lacre_semestre: md.lacre_semestre === true || md.lacre_semestre === "true"
             };
+
             document.getElementById('perfil-email').value = dadosOriginais.email;
             document.getElementById('perfil-nome').value = dadosOriginais.nome;
             document.getElementById('perfil-curso').value = dadosOriginais.curso;
             document.getElementById('perfil-semestre').value = dadosOriginais.semestre;
+
+            // Restrição visual e de controle baseada nos lacres do Administrador
+            if(dadosOriginais.lacre_nome) { document.getElementById('btn-edit-nome').classList.add('hidden'); document.getElementById('lacre-icon-nome').classList.remove('hidden'); }
+            if(dadosOriginais.lacre_email) { document.getElementById('btn-edit-email').classList.add('hidden'); document.getElementById('lacre-icon-email').classList.remove('hidden'); }
+            if(dadosOriginais.lacre_curso) { document.getElementById('btn-edit-curso').classList.add('hidden'); document.getElementById('lacre-icon-curso').classList.remove('hidden'); }
+            if(dadosOriginais.lacre_semestre) { document.getElementById('btn-edit-semestre').classList.add('hidden'); document.getElementById('lacre-icon-semestre').classList.remove('hidden'); }
         }
 
         function desativarTodosCampos() {
@@ -293,6 +303,10 @@
             if (event) event.stopPropagation();
             desativarTodosCampos(); 
 
+            // Impedir drible pelo inspecionar elemento
+            const nomeCampo = idCampo.split('-')[1]; 
+            if (dadosOriginais[`lacre_${nomeCampo}`]) return;
+
             const campo = document.getElementById(idCampo);
             campo.disabled = false;
             
@@ -302,18 +316,14 @@
             
             campoEmEdicao = idCampo;
 
-            if (idCampo === 'perfil-email') {
-                document.getElementById('aviso-email').classList.remove('hidden');
-            }
+            if (idCampo === 'perfil-email') document.getElementById('aviso-email').classList.remove('hidden');
             verificarMudancas();
         }
 
         document.addEventListener('click', (e) => {
             if (campoEmEdicao) {
                 const campoAtivo = document.getElementById(campoEmEdicao);
-                if (campoAtivo && !campoAtivo.contains(e.target)) {
-                    desativarTodosCampos();
-                }
+                if (campoAtivo && !campoAtivo.contains(e.target)) desativarTodosCampos();
             }
         });
 
@@ -328,9 +338,7 @@
             document.getElementById('container-input-foto').classList.add('hidden');
             document.getElementById('btn-editar-foto').classList.remove('hidden');
             document.getElementById('input-foto-perfil').value = '';
-            flagRemoverFoto = false;
-            renderizarTopoUsuario();
-            verificarMudancas();
+            flagRemoverFoto = false; renderizarTopoUsuario(); verificarMudancas();
         }
 
         function removerFotoPerfil(event) {
@@ -348,9 +356,7 @@
             const file = document.getElementById('input-foto-perfil').files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('preview-avatar').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
-                };
+                reader.onload = (e) => { document.getElementById('preview-avatar').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`; };
                 reader.readAsDataURL(file);
             }
             verificarMudancas();
@@ -368,21 +374,10 @@
             const semestreAtual = document.getElementById('perfil-semestre').value;
             const temNovaFoto = document.getElementById('input-foto-perfil').files.length > 0;
 
-            const houveAlteracao = (
-                nomeAtual !== dadosOriginais.nome ||
-                emailAtual !== dadosOriginais.email ||
-                cursoAtual !== dadosOriginais.curso ||
-                semestreAtual !== dadosOriginais.semestre ||
-                temNovaFoto ||
-                flagRemoverFoto
-            );
+            const houveAlteracao = (nomeAtual !== dadosOriginais.nome || emailAtual !== dadosOriginais.email || cursoAtual !== dadosOriginais.curso || semestreAtual !== dadosOriginais.semestre || temNovaFoto || flagRemoverFoto);
 
-            const containerSalvar = document.getElementById('container-salvar');
-            if (houveAlteracao) {
-                containerSalvar.classList.remove('hidden');
-            } else {
-                containerSalvar.classList.add('hidden');
-            }
+            if (houveAlteracao) document.getElementById('container-salvar').classList.remove('hidden');
+            else document.getElementById('container-salvar').classList.add('hidden');
         }
 
         async function redimensionarImagem(file, larguraMax = 300, qualidade = 0.8) {
@@ -410,9 +405,8 @@
 
             try {
                 let fotoUrl = dadosOriginais.foto_url;
-                if (flagRemoverFoto) {
-                    fotoUrl = null;
-                } else if (fotoFile) {
+                if (flagRemoverFoto) fotoUrl = null;
+                else if (fotoFile) {
                     const otimizada = await redimensionarImagem(fotoFile, 250, 0.75);
                     const nomeArq = `avatar_${usuarioAtual.id}_${Date.now()}.jpg`;
                     await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada, { upsert: true });
@@ -421,17 +415,20 @@
                 }
 
                 let alterouEmail = email !== dadosOriginais.email;
+                const updateData = { foto_url: fotoUrl };
+                if (!dadosOriginais.lacre_nome) updateData.nome = nome;
+                if (!dadosOriginais.lacre_curso) updateData.curso = curso;
+                if (!dadosOriginais.lacre_semestre) updateData.semestre_ingresso = semestre;
+
                 const { data, error } = await supabaseClient.auth.updateUser({ 
-                    email: alterouEmail ? email : undefined, 
-                    data: { nome, curso, semestre_ingresso: semestre, foto_url: fotoUrl } 
+                    email: (alterouEmail && !dadosOriginais.lacre_email) ? email : undefined, 
+                    data: updateData 
                 });
                 if (error) throw error;
                 
                 usuarioAtual = data.user; 
                 flagRemoverFoto = false;
-                renderizarTopoUsuario(); 
-                preencherDadosPerfil();
-                desativarTodosCampos();
+                renderizarTopoUsuario(); preencherDadosPerfil(); desativarTodosCampos();
                 
                 document.getElementById('container-input-foto').classList.add('hidden');
                 document.getElementById('btn-editar-foto').classList.remove('hidden');
@@ -514,12 +511,6 @@
             }
         }
 
-        function executarIniciarExportacaoICS() {
-            if (semestreEmCursoAtual) {
-                iniciarExportacaoICS(semestreEmCursoAtual);
-            }
-        }
-
         function exportarSemestrePDF(semestreNome) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape' });
@@ -561,276 +552,22 @@
             registros.forEach(reg => {
                 const d = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
                 if (!d) return;
-
-                if (y > 185) {
-                    doc.addPage();
-                    y = 20;
-                }
+                if (y > 185) { doc.addPage(); y = 20; }
 
                 doc.text(d.codigo || '-', 16, y);
                 const nomeDisc = (d.nome || '-').length > 41 ? (d.nome || '-').substring(0, 38) + '...' : (d.nome || '-');
                 doc.text(nomeDisc, 42, y);
                 
                 if (d.controle === 0 || d.controle === '0') {
-                    doc.text("Não disponível", 130, y);
-                    doc.text("-", 175, y);
-                    doc.text("-", 220, y);
+                    doc.text("Não disponível", 130, y); doc.text("-", 175, y); doc.text("-", 220, y);
                 } else {
-                    doc.text(d.data_ap1 || '-', 130, y);
-                    doc.text(d.data_ap2 || '-', 175, y);
-                    doc.text(d.data_ap3 || '-', 220, y);
+                    doc.text(d.data_ap1 || '-', 130, y); doc.text(d.data_ap2 || '-', 175, y); doc.text(d.data_ap3 || '-', 220, y);
                 }
                 doc.text(reg.status || 'Inscrita', 283, y, { align: "right" });
-
                 y += 8;
             });
-
             doc.save(`grade_${semestreNome.toLowerCase().replace(' ', '_')}_com_horarios.pdf`);
         }
-
-        function parseDataHoraStrICS(str) {
-            if (!str) return null;
-            const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2}):(\d{2})\s*(?:às|as)\s*(\d{1,2}):(\d{2})$/i;
-            const match = str.trim().match(regex);
-            
-            if (match) {
-                const dia = parseInt(match[1], 10);
-                const mes = parseInt(match[2], 10) - 1; 
-                const ano = parseInt(match[3], 10);
-                const horaInicio = parseInt(match[4], 10);
-                const minInicio = parseInt(match[5], 10);
-                const horaFim = parseInt(match[6], 10);
-                const minFim = parseInt(match[7], 10);
-                
-                const dataObjDate = new Date(Date.UTC(ano, mes, dia, horaInicio + 3, minInicio, 0));
-
-                function formatarUTC(h, m) {
-                    let d = new Date(Date.UTC(ano, mes, dia, h + 3, m, 0));
-                    const yyyy = d.getUTCFullYear();
-                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getUTCDate()).padStart(2, '0');
-                    const hh = String(d.getUTCHours()).padStart(2, '0');
-                    const mmm = String(d.getUTCMinutes()).padStart(2, '0');
-                    return `${yyyy}${mm}${dd}T${hh}${mmm}00Z`;
-                }
-
-                return {
-                    dateObj: dataObjDate,
-                    diaStr: String(dia).padStart(2, '0'),
-                    mesStr: String(mes + 1).padStart(2, '0'),
-                    anoStr: String(ano),
-                    horaInicioStr: String(horaInicio).padStart(2, '0'),
-                    minInicioStr: String(minInicio).padStart(2, '0'),
-                    horaFimStr: String(horaFim).padStart(2, '0'),
-                    minFimStr: String(minFim).padStart(2, '0'),
-                    horarioInicioCompleto: `${String(horaInicio).padStart(2, '0')}h${minInicio > 0 ? String(minInicio).padStart(2, '0') : ''}`,
-                    horarioFimCompleto: `${String(horaFim).padStart(2, '0')}h${minFim > 0 ? String(minFim).padStart(2, '0') : ''}`,
-                    dtstart: formatarUTC(horaInicio, minInicio),
-                    dtend: formatarUTC(horaFim, minFim)
-                };
-            }
-            return null;
-        }
-
-        function formatarDataHoraAtualZ() {
-            const dateObj = new Date();
-            const ano = dateObj.getUTCFullYear();
-            const mes = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-            const dia = String(dateObj.getUTCDate()).padStart(2, '0');
-            const hora = String(dateObj.getUTCHours()).padStart(2, '0');
-            const min = String(dateObj.getUTCMinutes()).padStart(2, '0');
-            const seg = String(dateObj.getUTCSeconds()).padStart(2, '0');
-            return `${ano}${mes}${dia}T${hora}${min}${seg}Z`;
-        }
-
-        function detectarDevice() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            if (/android/i.test(ua)) return 'android';
-            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'ios';
-            if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(ua)) return 'mac';
-            return 'pc';
-        }
-
-        function iniciarExportacaoICS(semestreNome) {
-            const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
-            if (registros.length === 0) {
-                alert("Não há disciplinas neste semestre para gerar o calendário.");
-                return;
-            }
-
-            semestreIcsPendente = semestreNome;
-            const device = detectarDevice();
-            
-            const tituloEl = document.getElementById('ics-guia-titulo');
-            const conteudoEl = document.getElementById('ics-guia-conteudo');
-            
-            tituloEl.textContent = `Como adicionar à Agenda (Apenas AP1 e AP2)`;
-
-            let instrucoesHtml = '';
-            if (device === 'android') {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">📱 Instruções para Android (Google Agenda):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li><li>Abra o arquivo baixado. O sistema Android sugerirá adicionar os eventos ao seu Google Agenda automaticamente.</li><li>Caso o arquivo não abra, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a> no navegador, vá em <em>Configurações > Importar e exportar</em> e selecione o arquivo.</li></ol>`;
-            } else if (device === 'ios') {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">📱 Instruções para iPhone / iPad (iOS):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li><li>Toque no arquivo baixado no seu aplicativo de <strong>Arquivos</strong> (ou diretamente no pop-up de download).</li><li>O sistema perguntará se você deseja adicionar os eventos ao seu aplicativo de <strong>Calendário</strong>. Confirme tocando em <em>Adicionar Todos</em>.</li></ol>`;
-            } else if (device === 'mac') {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">💻 Instruções para macOS (Apple Calendar):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li><li>Abra a sua pasta de <em>Downloads</em> e dê um duplo clique no arquivo baixado.</li><li>O aplicativo <strong>Calendário</strong> abrirá automaticamente. Escolha o seu calendário principal e clique em <em>OK</em> para importar as provas.</li></ol>`;
-            } else {
-                instrucoesHtml = `<p class="font-semibold text-gray-800">💻 Instruções para Computador (Google Agenda / Outlook):</p><ol class="list-decimal pl-5 space-y-1 text-xs text-gray-600 mt-2"><li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li><li>Se você usa o <strong>Google Agenda</strong>, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>.</li><li>No canto superior direito, clique na engrenagem de <em>Configurações > Importar e exportar</em>. Selecione o arquivo no seu computador e clique em <strong>Importar</strong>.</li><li>Se usa Outlook ou Calendário do Windows, basta dar um duplo clique no arquivo baixado.</li></ol>`;
-            }
-
-            conteudoEl.innerHTML = instrucoesHtml;
-            document.getElementById('modal-ics-guia').classList.remove('hidden');
-        }
-
-        function fecharModalIcsGuia() {
-            document.getElementById('modal-ics-guia').classList.add('hidden');
-            semestreIcsPendente = null;
-        }
-
-        document.getElementById('btn-confirmar-download-ics').addEventListener('click', async () => {
-            if (!semestreIcsPendente) return;
-            const semestreNome = semestreIcsPendente;
-            fecharModalIcsGuia();
-
-            const registros = planejamentoGlobal.filter(p => p.semestre === semestreNome);
-            const now = new Date();
-            const anoVigente = now.getFullYear();
-            const semestreVigenteNum = (now.getMonth() + 1) >= 6 ? 2 : 1;
-            const codigoSemestreFormatado = `${anoVigente}${semestreVigenteNum}`;
-
-            let eventosIcs = [];
-            let atualizacoesSequenciais = [];
-
-            const tiposAvaliacao = ['AP1', 'AP2'];
-
-            tiposAvaliacao.forEach(tipoAP => {
-                let provasDoTipo = [];
-
-                registros.forEach(reg => {
-                    const disc = listaDisciplinasGlobal.find(item => item.id === reg.disciplina_id);
-                    if (!disc) return;
-                    if (disc.controle === 0 || disc.controle === '0') return;
-
-                    const campoData = tipoAP === 'AP1' ? disc.data_ap1 : disc.data_ap2;
-                    const parsed = parseDataHoraStrICS(campoData);
-                    if (parsed) {
-                        provasDoTipo.push({ reg, disc, parsed, timestamp: parsed.dateObj.getTime() });
-                    }
-                });
-
-                if (provasDoTipo.length === 0) return;
-
-                provasDoTipo.sort((a, b) => a.timestamp - b.timestamp);
-
-                let finsDeSemana = [];
-                let currentFds = [provasDoTipo[0]];
-
-                for (let i = 1; i < provasDoTipo.length; i++) {
-                    const diffDias = (provasDoTipo[i].timestamp - provasDoTipo[i-1].timestamp) / (1000 * 60 * 60 * 24);
-                    if (diffDias <= 3) {
-                        currentFds.push(provasDoTipo[i]);
-                    } else {
-                        finsDeSemana.push(currentFds);
-                        currentFds = [provasDoTipo[i]];
-                    }
-                }
-                finsDeSemana.push(currentFds);
-
-                finsDeSemana.forEach((fdsProvas, fdsIndex) => {
-                    const primeiraProvaTimestamp = fdsProvas[0].timestamp;
-                    const primeiraProvaDate = new Date(primeiraProvaTimestamp);
-
-                    const dataAlerta = new Date(primeiraProvaDate);
-                    const diaSemanaPrimeiraProva = primeiraProvaDate.getUTCDay();
-                    let diasAteSegunda = diaSemanaPrimeiraProva === 0 ? 6 : diaSemanaPrimeiraProva - 1;
-                    dataAlerta.setUTCDate(dataAlerta.getUTCDate() - diasAteSegunda + 1);
-
-                    const yyyyA = dataAlerta.getUTCFullYear();
-                    const mmA = String(dataAlerta.getUTCMonth() + 1).padStart(2, '0');
-                    const ddA = String(dataAlerta.getUTCDate()).padStart(2, '0');
-                    const dtAlertaStart = `${yyyyA}${mmA}${ddA}T120000Z`;
-                    const dtAlertaEnd = `${yyyyA}${mmA}${ddA}T130000Z`;
-
-                    const nomeFdsOrdem = fdsIndex === 0 ? 'Primeiro' : (fdsIndex === 1 ? 'Segundo' : `${fdsIndex + 1}º`);
-                    const summaryAlerta = `Provas ${tipoAP} chegando! ${nomeFdsOrdem} fim de semana!`;
-
-                    let descAlertaLinhas = [];
-                    fdsProvas.forEach(p => {
-                        const diaSemanaStr = p.parsed.dateObj.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        descAlertaLinhas.push(`${diaSemanaStr.charAt(0).toUpperCase() + diaSemanaStr.slice(1)}, ${p.parsed.diaStr}/${p.parsed.mesStr} - ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}: ${p.disc.nome}`);
-                    });
-                    const descriptionAlerta = `Cronograma de provas deste fim de semana: ` + descAlertaLinhas.join(' | ');
-
-                    const uidAlerta = `ALERTA-${tipoAP}-FDS${fdsIndex+1}-${codigoSemestreFormatado}@eadblitz.com.br`;
-                    const dtstampStr = formatarDataHoraAtualZ();
-
-                    eventosIcs.push('BEGIN:VEVENT', `UID:${uidAlerta}`, `DTSTAMP:${dtstampStr}`, `DTSTART:${dtAlertaStart}`, `DTEND:${dtAlertaEnd}`, `SUMMARY:${summaryAlerta}`, `DESCRIPTION:${descriptionAlerta}`, 'URL:https://www.eadblitz.com.br', 'CATEGORIES:Provas', 'STATUS:CONFIRMED', 'TRANSP:TRANSPARENT', 'END:VEVENT');
-
-                    fdsProvas.forEach(p => {
-                        const provaDate = p.parsed.dateObj;
-                        const diaSemanaProva = provaDate.getUTCDay();
-                        let diasASubtrair = 0;
-                        if (diaSemanaProva === 6) {
-                            diasASubtrair = 1;
-                        } else if (diaSemanaProva === 0) {
-                            diasASubtrair = 2;
-                        } else {
-                            diasASubtrair = (diaSemanaProva + 2) % 7; 
-                        }
-
-                        const sextaVespers = new Date(provaDate);
-                        sextaVespers.setUTCDate(sextaVespers.getUTCDate() - diasASubtrair);
-
-                        const yyyyS = sextaVespers.getUTCFullYear();
-                        const mmS = String(sextaVespers.getUTCMonth() + 1).padStart(2, '0');
-                        const ddS = String(sextaVespers.getUTCDate()).padStart(2, '0');
-                        const dtSextaStart = `${yyyyS}${mmS}${ddS}T180000Z`;
-                        const dtSextaEnd = `${yyyyS}${mmS}${ddS}T190000Z`;
-
-                        const diaSemanaProvaNome = provaDate.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        const summaryVespers = `Prova de ${p.disc.nome} no ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, dia ${p.parsed.diaStr}/${p.parsed.mesStr}, de ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}`;
-                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome} - Horário: ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto} - Data: ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}`;
-
-                        const codigoDisc = p.disc.codigo || 'GERAL';
-                        const uidVespers = `${codigoDisc}-${p.disc.id}-${tipoAP}-VESP-${codigoSemestreFormatado}@eadblitz.com.br`;
-
-                        const novaSequence = (p.reg.sequence || 0) + 1;
-                        atualizacoesSequenciais.push({ disciplina_id: p.reg.disciplina_id, semestre: p.reg.semestre, sequence: novaSequence });
-
-                        eventosIcs.push('BEGIN:VEVENT', `UID:${uidVespers}`, `DTSTAMP:${dtstampStr}`, `SEQUENCE:${novaSequence}`, `DTSTART:${dtSextaStart}`, `DTEND:${dtSextaEnd}`, `SUMMARY:${summaryVespers}`, `DESCRIPTION:${descriptionVespers}`, 'URL:https://www.eadblitz.com.br', 'CATEGORIES:Provas', 'STATUS:CONFIRMED', 'TRANSP:TRANSPARENT', 'END:VEVENT');
-                    });
-                });
-            });
-
-            if (eventosIcs.length === 0) {
-                alert("Nenhuma data válida encontrada para exportação.");
-                return;
-            }
-
-            for (let att of atualizacoesSequenciais) {
-                await supabaseClient.from('planejamento_usuarios').update({ sequence: att.sequence }).eq('user_id', usuarioAtual.id).eq('disciplina_id', att.disciplina_id).eq('semestre', att.semestre);
-            }
-
-            const conteudoIcs = [
-                'BEGIN:VCALENDAR',
-                'VERSION:2.0',
-                'PRODID:-//BlitzEAD//Planejamento Academico//PT',
-                'CALSCALE:GREGORIAN',
-                'METHOD:PUBLISH',
-                'X-WR-CALNAME:Provas - ' + semestreNome,
-                ...eventosIcs,
-                'END:VCALENDAR'
-            ].join('\r\n');
-
-            const blob = new Blob([conteudoIcs], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `provas_${semestreNome.toLowerCase().replace(' ', '_')}.ics`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
 
         initPerfil();
     </script>
