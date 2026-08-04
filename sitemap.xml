@@ -77,18 +77,8 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.eadblitz.com.br/livro_14.html</loc>
-    <lastmod>2026-08-03</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.eadblitz.com.br/livro_25.html</loc>
     <lastmod>2026-08-04</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.eadblitz.com.br/livro_15.html</loc>
-    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
@@ -99,21 +89,6 @@
   <url>
     <loc>https://www.eadblitz.com.br/livro_23.html</loc>
     <lastmod>2026-08-04</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.eadblitz.com.br/livro_16.html</loc>
-    <lastmod>2026-08-03</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.eadblitz.com.br/livro_17.html</loc>
-    <lastmod>2026-08-03</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.eadblitz.com.br/livro_12.html</loc>
-    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
@@ -129,11 +104,6 @@
   <url>
     <loc>https://www.eadblitz.com.br/livro_20.html</loc>
     <lastmod>2026-08-04</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.eadblitz.com.br/livro_18.html</loc>
-    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 </urlset>
