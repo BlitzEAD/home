@@ -38,6 +38,7 @@
             <button onclick="mudarAbaAdmin('livros')" id="tab-btn-livros" class="text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap">📚 Gerenciar Livros</button>
             <button onclick="mudarAbaAdmin('jornal')" id="tab-btn-jornal" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap">📰 Gerenciar Jornal Blitz</button>
             <button onclick="mudarAbaAdmin('disciplinas')" id="tab-btn-disciplinas" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap">🏛️ Cursos e Disciplinas</button>
+            <button onclick="mudarAbaAdmin('usuarios')" id="tab-btn-usuarios" class="text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap">👥 Gestão de Usuários</button>
         </div>
     </header>
 
@@ -348,7 +349,115 @@
                 </div>
             </div>
         </div>
+
+        <!-- ABA GESTÃO DE USUÁRIOS E HISTÓRICO -->
+        <div id="secao-admin-usuarios" class="space-y-8 hidden">
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">👥 Gestão de Usuários e Permissões Granulares</h2>
+                    <p class="text-gray-500 text-xs">Gerencie os papéis dos colaboradores, aplique lacres de edição nos perfis dos alunos e audite todas as alterações do sistema.</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div class="w-full md:w-1/3 relative">
+                        <input type="text" id="input-busca-admin-usuarios" placeholder="Buscar por nome ou email..." oninput="filtrarTabelaUsuarios()" class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border rounded-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider">
+                                <th class="p-3 border-b">Usuário</th>
+                                <th class="p-3 border-b">Email</th>
+                                <th class="p-3 border-b">Curso</th>
+                                <th class="p-3 border-b">Cargo / Nível</th>
+                                <th class="p-3 border-b text-center">Lacres Ativos</th>
+                                <th class="p-3 border-b text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin-usuarios">
+                            <tr><td colspan="6" class="p-6 text-center text-gray-400">Carregando usuários...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEÇÃO DE HISTÓRICO DE MODIFICAÇÕES (LOGS) -->
+            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">📜 Histórico de Modificações (Logs de Auditoria)</h3>
+                        <p class="text-xs text-gray-500">Rastreabilidade completa de todas as ações executadas pelos administradores.</p>
+                    </div>
+                    <button type="button" onclick="carregarLogsAuditoria()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition">🔄 Atualizar Logs</button>
+                </div>
+
+                <div class="overflow-x-auto border rounded-xl max-h-80">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider sticky top-0">
+                                <th class="p-3 border-b">Data / Hora</th>
+                                <th class="p-3 border-b">Autor da Ação</th>
+                                <th class="p-3 border-b">Cargo</th>
+                                <th class="p-3 border-b">Descrição da Modificação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin-logs">
+                            <tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum registro de log encontrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <!-- MODAL DE EDIÇÃO DE USUÁRIO E LACRES -->
+    <div id="modal-edicao-usuario" class="hidden fixed inset-0 bg-black/50 z-[250] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative space-y-4">
+            <button onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 font-bold text-lg">✕</button>
+            <h3 class="text-lg font-bold text-gray-900">⚙️ Configurar Usuário e Lacres</h3>
+            
+            <input type="hidden" id="edit-user-id">
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Nome do Usuário</label>
+                    <input type="text" id="edit-user-nome" class="w-full px-3 py-2 border rounded-lg bg-gray-50" readonly>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Cargo / Nível de Acesso (RBAC)</label>
+                    <select id="edit-user-role" class="w-full px-3 py-2 border rounded-lg bg-white font-semibold text-blue-900">
+                        <option value="aluno">Aluno (Padrão)</option>
+                        <option value="admin_usuarios">Admin de Usuários</option>
+                        <option value="admin_jornal">Admin do Jornal</option>
+                        <option value="admin_livros">Admin de Livros</option>
+                        <option value="admin_disciplinas">Admin de Disciplinas</option>
+                        <option value="super_admin">Administrador Principal (Total)</option>
+                    </select>
+                </div>
+
+                <div class="border rounded-xl p-3 bg-amber-50 border-amber-200 space-y-2">
+                    <span class="font-bold text-amber-900 block">🔒 Lacres de Edição (Impedir alteração pelo aluno)</span>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="lacre-curso" class="w-4 h-4 text-blue-600 rounded">
+                        <span>Lacrar alteração de Curso</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="lacre-semestre" class="w-4 h-4 text-blue-600 rounded">
+                        <span>Lacrar alteração de Semestre em Curso</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-4 border-t">
+                <button type="button" onclick="document.getElementById('modal-edicao-usuario').classList.add('hidden')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs">Cancelar</button>
+                <button type="button" id="btn-salvar-usuario" onclick="salvarEdicaoUsuario()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg text-xs shadow-sm">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
@@ -362,6 +471,7 @@
         let disciplinasGlobalMap = {}; 
         let gradeDisciplinasPorCurso = {}; 
         let dadosCsvTemporarios = null;
+        let listaUsuariosGlobal = [];
 
         function setLoadingState(btnId, isLoading) {
             const btn = document.getElementById(btnId);
@@ -380,7 +490,7 @@
 
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session || session.user.user_metadata?.is_admin !== true) {
+            if (!session || (session.user.user_metadata?.is_admin !== true && !session.user.user_metadata?.role)) {
                 alert("Acesso negado."); window.location.href = 'index.html'; return;
             }
             usuarioAtual = session.user;
@@ -389,6 +499,8 @@
             await carregarCursosEGrades();
             await carregarAdminLivros();
             await carregarAdminPosts();
+            await carregarAdminUsuarios();
+            await carregarLogsAuditoria();
 
             document.getElementById('input-busca-admin-livros').addEventListener('input', renderizarTabelaLivrosFiltrados);
             
@@ -418,6 +530,51 @@
                     drop.classList.add('hidden');
                 }
             });
+        }
+
+        // --- SISTEMA DE LOGS DE AUDITORIA ---
+        async function registrarLogAuditoria(acao, detalhes) {
+            try {
+                const nomeAdmin = usuarioAtual.user_metadata?.nome || usuarioAtual.email;
+                const roleAdmin = usuarioAtual.user_metadata?.role || (usuarioAtual.user_metadata?.is_admin ? 'super_admin' : 'admin');
+                const textoLog = `${roleAdmin} - ${nomeAdmin} (${usuarioAtual.email}) - ${acao} - ${detalhes}`;
+
+                await supabaseClient.from('logs_admin').insert([{
+                    autor: textoLog,
+                    criado_em: new Date().toISOString()
+                }]);
+            } catch (err) {
+                console.error("Erro ao registrar log:", err);
+            }
+        }
+
+        async function carregarLogsAuditoria() {
+            const tbody = document.getElementById('tabela-admin-logs');
+            const { data, error } = await supabaseClient.from('logs_admin').select('*').order('criado_em', { ascending: false }).limit(50);
+            
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum registro de log encontrado.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(l => {
+                const partes = l.autor.split(' - ');
+                const cargo = partes[0] || 'admin';
+                const autor = partes[1] || 'Sistema';
+                const acaoDesc = partes.slice(2).join(' - ') || l.autor;
+                const dataF = new Date(l.criado_em).toLocaleString('pt-BR');
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 text-gray-500 whitespace-nowrap">${dataF}</td>
+                        <td class="p-3 font-semibold text-gray-800">${autor}</td>
+                        <td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">${cargo}</span></td>
+                        <td class="p-3 text-gray-700 font-mono text-[11px]">${acaoDesc}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         }
 
         async function carregarCursosEGrades() {
@@ -469,16 +626,20 @@
             const secLivros = document.getElementById('secao-admin-livros');
             const secJornal = document.getElementById('secao-admin-jornal');
             const secDisciplinas = document.getElementById('secao-admin-disciplinas');
+            const secUsuarios = document.getElementById('secao-admin-usuarios');
             const btnLivros = document.getElementById('tab-btn-livros');
             const btnJornal = document.getElementById('tab-btn-jornal');
             const btnDisciplinas = document.getElementById('tab-btn-disciplinas');
+            const btnUsuarios = document.getElementById('tab-btn-usuarios');
 
             secLivros.classList.add('hidden');
             secJornal.classList.add('hidden');
             secDisciplinas.classList.add('hidden');
+            secUsuarios.classList.add('hidden');
             btnLivros.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
             btnJornal.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
             btnDisciplinas.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
+            btnUsuarios.className = "text-xs font-bold px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-200 transition whitespace-nowrap";
 
             if (aba === 'livros') {
                 secLivros.classList.remove('hidden');
@@ -489,12 +650,108 @@
             } else if (aba === 'disciplinas') {
                 secDisciplinas.classList.remove('hidden');
                 btnDisciplinas.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap";
+            } else if (aba === 'usuarios') {
+                secUsuarios.classList.remove('hidden');
+                btnUsuarios.className = "text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white transition shadow-sm whitespace-nowrap";
+                carregarAdminUsuarios();
             }
         }
 
         function renderizarTopoUsuario() {
             const bloco = document.getElementById('bloco-usuario-topo');
             bloco.innerHTML = `<span class="text-xs font-medium text-gray-700">${(usuarioAtual.user_metadata?.nome || usuarioAtual.email).split(' ')[0]} (Admin)</span>`;
+        }
+
+        // --- GESTÃO DE USUÁRIOS E PERMISSÕES ---
+        async function carregarAdminUsuarios() {
+            const tbody = document.getElementById('tabela-admin-usuarios');
+            const { data, error } = await supabaseClient.from('planejamento_usuarios').select('*').limit(100);
+            
+            // Alternativa caso utilize tabela de perfis customizada ou auth admin api via RPC
+            // Buscando usuários da tabela de perfis ou metadados salvos
+            const { data: perfis } = await supabaseClient.from('perfis_usuarios').select('*');
+            
+            // Simulação robusta unindo dados salvos localmente ou tabela de usuários
+            listaUsuariosGlobal = perfis || data || [];
+            
+            renderizarTabelaUsuarios(listaUsuariosGlobal);
+        }
+
+        function renderizarTabelaUsuarios(usuarios) {
+            const tbody = document.getElementById('tabela-admin-usuarios');
+            if (!usuarios || usuarios.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum usuário encontrado.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            usuarios.forEach(u => {
+                const nome = u.nome || u.user_metadata?.nome || 'Usuário';
+                const email = u.email || 'email@naoinformado.com';
+                const curso = u.curso || 'Não definido';
+                const role = u.role || 'aluno';
+                const lacreCurso = u.lacre_curso ? '🔒 Curso' : '-';
+                const lacreSemestre = u.lacre_semestre ? '🔒 Semestre' : '-';
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-medium text-gray-800">${nome}</td>
+                        <td class="p-3 text-gray-600">${email}</td>
+                        <td class="p-3 text-gray-600">${curso}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${role}</span></td>
+                        <td class="p-3 text-center text-gray-500 font-semibold">${lacreCurso} | ${lacreSemestre}</td>
+                        <td class="p-3 text-center">
+                            <button onclick='abrirModalEdicaoUsuario(${JSON.stringify(u)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Configurar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function filtrarTabelaUsuarios() {
+            const busca = document.getElementById('input-busca-admin-usuarios').value.toLowerCase().trim();
+            const filtrados = listaUsuariosGlobal.filter(u => 
+                (u.nome && u.nome.toLowerCase().includes(busca)) || 
+                (u.email && u.email.toLowerCase().includes(busca))
+            );
+            renderizarTabelaUsuarios(filtrados);
+        }
+
+        function abrirModalEdicaoUsuario(u) {
+            document.getElementById('edit-user-id').value = u.id || u.user_id;
+            document.getElementById('edit-user-nome').value = u.nome || u.user_metadata?.nome || u.email;
+            document.getElementById('edit-user-role').value = u.role || 'aluno';
+            document.getElementById('lacre-curso').checked = !!u.lacre_curso;
+            document.getElementById('lacre-semestre').checked = !!u.lacre_semestre;
+            document.getElementById('modal-edicao-usuario').classList.remove('hidden');
+        }
+
+        async function salvarEdicaoUsuario() {
+            const userId = document.getElementById('edit-user-id').value;
+            const role = document.getElementById('edit-user-role').value;
+            const lacre_curso = document.getElementById('lacre-curso').checked;
+            const lacre_semestre = document.getElementById('lacre-semestre').checked;
+
+            setLoadingState('btn-salvar-usuario', true);
+            try {
+                // Atualiza perfil na base de dados
+                const { error } = await supabaseClient.from('perfis_usuarios').update({
+                    role, lacre_curso, lacre_semestre
+                }).eq('id', userId);
+
+                if (error) throw error;
+
+                await registrarLogAuditoria('editou as permissões do usuário', `ID: ${userId} - Novo Cargo: ${role} | Lacres: [Curso: ${lacre_curso}, Semestre: ${lacre_semestre}]`);
+                alert("Permissões e lacres salvos com sucesso!");
+                document.getElementById('modal-edicao-usuario').classList.add('hidden');
+                await carregarAdminUsuarios();
+                await carregarLogsAuditoria();
+            } catch (err) {
+                alert("Erro ao atualizar usuário: " + err.message);
+            } finally {
+                setLoadingState('btn-salvar-usuario', false);
+            }
         }
 
         async function redimensionarImagem(file, larguraMax = 400, qualidade = 0.8) {
@@ -732,6 +989,7 @@
                         const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
                         if (errIns) throw errIns;
                     }
+                    await registrarLogAuditoria('editou o livro', `Título: ${titulo}`);
                     alert("Livro atualizado com sucesso!");
                 } else {
                     const { data: novoLivro, error } = await supabaseClient.from('livros').insert([{ titulo, preco, link_destino: linkDestino, descricao, capa_url: capaUrl, curso_id: cursoId }]).select().single();
@@ -742,12 +1000,14 @@
                         const { error: errIns } = await supabaseClient.from('livro_disciplinas').insert(vinculos);
                         if (errIns) throw errIns;
                     }
+                    await registrarLogAuditoria('cadastrou o livro', `Título: ${titulo}`);
                     alert("Livro cadastrado com sucesso!");
                 }
 
                 await dispararBuildAutomatico();
                 cancelarEdicaoLivro(); 
                 await carregarAdminLivros();
+                await carregarLogsAuditoria();
             } catch (err) { 
                 alert("Erro ao salvar livro: " + err.message); 
             } finally {
@@ -801,8 +1061,10 @@
             if (!confirm("Excluir este livro?")) return;
             await supabaseClient.from('livro_disciplinas').delete().eq('livro_id', id);
             await supabaseClient.from('livros').delete().eq('id', id);
+            await registrarLogAuditoria('excluiu o livro ID', `${id}`);
             await dispararBuildAutomatico();
             await carregarAdminLivros();
+            await carregarLogsAuditoria();
         }
 
         async function carregarAdminPosts() {
@@ -904,16 +1166,19 @@
                 }
                 if (idEdicao) {
                     await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao);
+                    await registrarLogAuditoria('editou a matéria', `Título: ${titulo} (jornal.html?post=${slug})`);
                     alert("Atualizado com sucesso!");
                 } else {
                     const { error } = await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]);
                     if (error) throw error;
+                    await registrarLogAuditoria('publicou a matéria', `Título: ${titulo} (jornal.html?post=${slug})`);
                     alert("Publicado com sucesso!");
                 }
                 
                 await dispararBuildAutomatico();
                 cancelarEdicaoPost(); 
                 await carregarAdminPosts();
+                await carregarLogsAuditoria();
             } catch (err) { 
                 alert("Erro: " + err.message); 
             } finally {
@@ -947,8 +1212,10 @@
         async function deletarPost(id) {
             if (!confirm("Excluir publicação?")) return;
             await supabaseClient.from('jornal_posts').delete().eq('id', id);
+            await registrarLogAuditoria('excluiu a matéria ID', `${id}`);
             await dispararBuildAutomatico();
             await carregarAdminPosts();
+            await carregarLogsAuditoria();
         }
 
         // --- MÉTODOS PARA GERENCIAMENTO DE CURSOS E DISCIPLINAS ---
@@ -1023,7 +1290,9 @@
                     disciplinasGlobalMap[idDisc] = `${codigo ? codigo + ' - ' : ''}${nome}`;
                 }
 
+                await registrarLogAuditoria('atualizou a grade de disciplinas manualmente', `Curso ID: ${cursoIdStr}`);
                 alert("Alterações manuais salvas com sucesso!");
+                await carregarLogsAuditoria();
             } catch (err) {
                 alert("Erro ao salvar alterações: " + err.message);
             } finally {
@@ -1158,10 +1427,12 @@
                     if (errRel) throw errRel;
                 }
 
+                await registrarLogAuditoria('importou grade curricular via CSV/ODS', `Curso ID: ${cursoId} (${dadosCsvTemporarios.length} disciplinas)`);
                 alert("Grade importada com novas linhas criadas com sucesso para este curso!");
                 cancelarPreviewCsv();
                 await carregarCursosEGrades();
                 renderizarGradeGerenciamentoCurso(cursoId);
+                await carregarLogsAuditoria();
             } catch (err) {
                 alert("Erro ao importar arquivo: " + err.message);
             } finally {
