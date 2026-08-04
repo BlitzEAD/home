@@ -263,10 +263,10 @@
                 html += '<option value="CURSANDO">📚 Disciplinas que estou cursando</option>';
             }
             
-            html += '<option value="GERAL_PLATAFORMA">Livros sem Curso Definido</option>';
+            html += '<option value="GERAL_PLATAFORMA">Livros sem Curso Definido (Plataforma Geral)</option>';
             
             if (cursoSelecionadoId) {
-                html += `<option value="GERAL_CURSO">Livros do curso ${nomeCurso}</option>`;
+                html += `<option value="GERAL_CURSO">Apenas materiais gerais do curso ${nomeCurso}</option>`;
             }
             
             const idsPermitidos = gradeDisciplinasPorCurso[cursoSelecionadoId] || [];
@@ -287,18 +287,41 @@
             filtrarEnderizarLivros();
         }
 
+        // Função MÁGICA: Varre a grade da plataforma encontrando IDs de disciplinas diferentes, mas que compartilham o mesmo código EAD
+        function getIdsComMesmoCodigo(idsOriginais) {
+            if (!idsOriginais || idsOriginais.length === 0) return [];
+            let codigos = [];
+            
+            idsOriginais.forEach(id => {
+                const d = disciplinasGlobalMap[id];
+                if (d && d.codigo) codigos.push(d.codigo);
+            });
+            
+            let idsExpandidos = [...idsOriginais];
+            if (codigos.length > 0) {
+                Object.values(disciplinasGlobalMap).forEach(d => {
+                    if (d.codigo && codigos.includes(d.codigo) && !idsExpandidos.includes(d.id)) {
+                        idsExpandidos.push(d.id);
+                    }
+                });
+            }
+            return idsExpandidos;
+        }
+
         function ordenarLivrosIntercalados(livrosParaOrdernar) {
             let cursando = [];
             let doCurso = [];
             let geralPlataforma = [];
 
             const filtroCursoId = parseInt(document.getElementById('select-filtro-curso').value);
+            const idsCursandoExpandidos = getIdsComMesmoCodigo(disciplinasCursadasIds);
 
             livrosParaOrdernar.forEach(l => {
-                const isGeralPlataforma = !l.curso_id;
+                const isGeralPlataforma = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                
                 const isCursando = !isGeralPlataforma && 
                                    (filtroCursoId === cursoUsuarioIdOriginal) && 
-                                   (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                                   (l.livro_disciplinas || []).some(r => idsCursandoExpandidos.includes(r.id_disciplina));
 
                 if (isCursando) {
                     cursando.push(l);
@@ -311,7 +334,7 @@
 
             let resultado = [];
             
-            // Proporção 3:2:1
+            // Proporção de exibição: 3 cursando, 2 do curso, 1 da plataforma
             while (cursando.length > 0 || doCurso.length > 0 || geralPlataforma.length > 0) {
                 for (let i = 0; i < 3 && cursando.length > 0; i++) resultado.push(cursando.shift());
                 for (let i = 0; i < 2 && doCurso.length > 0; i++) resultado.push(doCurso.shift());
@@ -328,20 +351,29 @@
             
             let baseFiltrados = listaLivrosGlobal;
 
+            // 1. Filtragem Base: O que pertence a este curso na visão expandida?
             if (filtroCursoId) {
+                const idsGradeCurso = gradeDisciplinasPorCurso[filtroCursoId] || [];
+                const idsExpandidosDoCurso = getIdsComMesmoCodigo(idsGradeCurso);
+
                 baseFiltrados = baseFiltrados.filter(l => {
-                    const isGeralPlataforma = !l.curso_id;
-                    const isDoCursoSelecionado = l.curso_id === filtroCursoId;
-                    return isGeralPlataforma || isDoCursoSelecionado;
+                    const isGeralPlataforma = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    const isGeralDoCursoSelecionado = l.curso_id === filtroCursoId && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
+                    // Match inteligente: O livro tem alguma disciplina associada a um código de disciplina desse curso?
+                    const temDisciplinaDoCurso = (l.livro_disciplinas || []).some(r => idsExpandidosDoCurso.includes(r.id_disciplina));
+
+                    return isGeralPlataforma || isGeralDoCursoSelecionado || temDisciplinaDoCurso;
                 });
             }
 
+            // 2. Busca por texto
             if (texto !== "") {
                 baseFiltrados = baseFiltrados.filter(l => 
                     l.titulo.toLowerCase().includes(texto) || (l.descricao && l.descricao.toLowerCase().includes(texto))
                 );
             }
 
+            // 3. Filtro Específico do Dropdown de Disciplinas
             if (filtroDisc === "") {
                 const intercalados = ordenarLivrosIntercalados(baseFiltrados);
                 renderizarGrid(intercalados);
@@ -351,14 +383,19 @@
 
                 baseFiltrados.forEach(l => {
                     let matchDisc = false;
+                    
                     if (filtroDisc === "GERAL_PLATAFORMA") {
                         matchDisc = !l.curso_id && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     } else if (filtroDisc === "GERAL_CURSO") {
                         matchDisc = l.curso_id === filtroCursoId && (!l.livro_disciplinas || l.livro_disciplinas.length === 0);
                     } else if (filtroDisc === "CURSANDO") {
-                        matchDisc = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                        const idsCursandoExpandidos = getIdsComMesmoCodigo(disciplinasCursadasIds);
+                        matchDisc = (l.livro_disciplinas || []).some(r => idsCursandoExpandidos.includes(r.id_disciplina));
                     } else {
-                        matchDisc = (l.livro_disciplinas || []).some(r => r.id_disciplina === parseInt(filtroDisc));
+                        // Expande o ID selecionado no menu para cobrir outras versões do mesmo código
+                        const idSelecionado = parseInt(filtroDisc);
+                        const idsEspecificoExpandidos = getIdsComMesmoCodigo([idSelecionado]);
+                        matchDisc = (l.livro_disciplinas || []).some(r => idsEspecificoExpandidos.includes(r.id_disciplina));
                     }
 
                     if (matchDisc) matchesFiltro.push(l);
@@ -371,6 +408,7 @@
 
         function renderizarGrid(principais, secundarios = null) {
             const grid = document.getElementById('grid-livros');
+            const idsCursandoExpandidosGlobais = getIdsComMesmoCodigo(disciplinasCursadasIds); // Calculado uma vez para a badge
             
             if (principais.length === 0 && (!secundarios || secundarios.length === 0)) { 
                 grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhum material encontrado.</div>`; 
@@ -381,7 +419,7 @@
             if (principais.length === 0 && secundarios && secundarios.length > 0) {
                 html += `<div class="col-span-full text-center py-8 text-gray-500 font-medium">Nenhum material exato para este filtro. Veja outras opções abaixo:</div>`;
             } else {
-                principais.forEach(l => html += gerarHtmlCardLivro(l));
+                principais.forEach(l => html += gerarHtmlCardLivro(l, idsCursandoExpandidosGlobais));
             }
 
             if (secundarios && secundarios.length > 0) {
@@ -392,17 +430,17 @@
                         <div class="h-px bg-gray-200 flex-1"></div>
                     </div>
                 `;
-                secundarios.forEach(l => html += gerarHtmlCardLivro(l));
+                secundarios.forEach(l => html += gerarHtmlCardLivro(l, idsCursandoExpandidosGlobais));
             }
             
             grid.innerHTML = html;
         }
 
-        function gerarHtmlCardLivro(l) {
+        function gerarHtmlCardLivro(l, idsCursando) {
             const precoF = l.preco === 0 || l.preco === "0.00" ? '<span class="text-emerald-600 font-bold">Gratuito</span>' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
             
             const filtroCursoId = parseInt(document.getElementById('select-filtro-curso').value);
-            const isCursando = (filtroCursoId === cursoUsuarioIdOriginal) && (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+            const isCursando = (filtroCursoId === cursoUsuarioIdOriginal) && (l.livro_disciplinas || []).some(r => idsCursando.includes(r.id_disciplina));
             const badgeHtml = isCursando ? `<span class="absolute top-3 right-3 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
 
             const livroStr = JSON.stringify(l).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
