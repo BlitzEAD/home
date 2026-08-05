@@ -13,6 +13,24 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Adição do Editor de Texto Rico (Quill.js) -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+    <!-- Estilos personalizados para o Editor -->
+    <style>
+        /* Força os links dentro do editor Quill a terem destaque visual */
+        .ql-editor a {
+            color: #2563eb !important; /* Azul escuro do Tailwind */
+            text-decoration: underline !important;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .ql-editor a:hover {
+            color: #1d4ed8 !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24 hidden" id="body-admin">
 
@@ -197,9 +215,12 @@
                         <textarea id="post-resumo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Breve resumo..."></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Conteúdo Completo da Matéria</label>
-                        <textarea id="post-conteudo" rows="8" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Texto completo..."></textarea>
+                    <!-- EDITOR DE TEXTO RICO (QUILL.JS) -->
+                    <div class="flex flex-col">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Conteúdo Completo da Matéria <span class="text-red-500">*</span></label>
+                        <div class="border border-gray-300 rounded-lg overflow-hidden flex flex-col bg-white">
+                            <div id="quill-editor" style="min-height: 350px; font-size: 14px;"></div>
+                        </div>
                     </div>
 
                     <div class="flex items-center space-x-3 pt-2">
@@ -266,6 +287,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let usuarioAtual = null;
+        let quillEditor;
 
         // Variáveis Globais (Livros)
         let listaLivrosAdminGlobal = [];
@@ -323,6 +345,36 @@
                 window.location.href = 'index.html'; 
                 return;
             }
+
+            // Força o Quill.js a colocar https:// em links caso o usuário esqueça
+            const Link = Quill.import('formats/link');
+            class CustomLink extends Link {
+                static create(value) {
+                    let url = value;
+                    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
+                        url = 'https://' + url;
+                    }
+                    return super.create(url);
+                }
+            }
+            Quill.register(CustomLink, true);
+
+            // Inicializando o Quill.js
+            quillEditor = new Quill('#quill-editor', {
+                theme: 'snow',
+                placeholder: 'Escreva o conteúdo completo e formatado da matéria aqui...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, 4, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link', 'image', 'video'],
+                        ['clean']
+                    ]
+                }
+            });
 
             document.getElementById('body-admin').classList.remove('hidden');
             usuarioAtual = session.user;
@@ -534,7 +586,8 @@
             let html = '';
             filtrados.forEach(l => {
                 const precoFormatado = l.preco === 0 || l.preco === "0.00" ? 'Gratuito' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
-                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td><td class="p-3 font-medium text-gray-800">${l.titulo}</td><td class="p-3 font-bold text-blue-600">${precoFormatado}</td><td class="p-3 text-center space-x-2"><button onclick='editarLivro(${JSON.stringify(l)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
+                
+                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td><td class="p-3 font-medium text-gray-800">${l.titulo}</td><td class="p-3 font-bold text-blue-600">${precoFormatado}</td><td class="p-3 text-center space-x-2"><button onclick="editarLivro(${l.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
@@ -550,7 +603,7 @@
 
             try {
                 if (arquivoPdf) { const nomePdf = `pdf_${Date.now()}.pdf`; await supabaseClient.storage.from('biblioteca').upload(nomePdf, arquivoPdf); const { data: pubPdf } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf); linkDestino = pubPdf.publicUrl; }
-                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75); const nomeArq = `capa_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pubCapa.publicUrl; }
+                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 800, 0.95); const nomeArq = `capa_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pubCapa.publicUrl; }
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked')); const idsValidos = checkboxes.map(cb => parseInt(cb.value));
 
                 if (idEdicao) {
@@ -569,7 +622,10 @@
             } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-livro', false); }
         });
 
-        async function editarLivro(livro) {
+        async function editarLivro(idLivro) {
+            const livro = listaLivrosAdminGlobal.find(l => l.id === idLivro);
+            if (!livro) return;
+
             document.getElementById('livro-id-edicao').value = livro.id; document.getElementById('livro-titulo').value = livro.titulo;
             document.getElementById('livro-preco').value = livro.preco; document.getElementById('livro-link').value = livro.link_destino;
             document.getElementById('livro-descricao').value = livro.descricao || ''; document.getElementById('livro-capa-url').value = livro.capa_url || '';
@@ -628,48 +684,117 @@
             let html = '';
             filtrados.forEach(p => {
                 const dataFormatada = p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '-';
-                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 font-medium text-gray-800">${p.titulo}</td><td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td><td class="p-3 text-gray-500 text-xs">${dataFormatada}</td><td class="p-3 text-center space-x-2"><button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
+                
+                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 font-medium text-gray-800">${p.titulo}</td><td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td><td class="p-3 text-gray-500 text-xs">${dataFormatada}</td><td class="p-3 text-center space-x-2"><button onclick="editarPost(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
 
         document.getElementById('form-post').addEventListener('submit', async (e) => {
-            e.preventDefault(); setLoadingState('btn-salvar-post', true);
+            e.preventDefault(); 
+            setLoadingState('btn-salvar-post', true);
+            
             const idEdicao = document.getElementById('post-id-edicao').value;
-            const titulo = document.getElementById('post-titulo').value; const categoria = document.getElementById('post-categoria').value;
+            const titulo = document.getElementById('post-titulo').value; 
+            
+            // Verificação de Título Duplicado
+            const tituloDuplicado = listaPostsAdminGlobal.find(p => 
+                p.titulo.trim().toLowerCase() === titulo.trim().toLowerCase() && 
+                p.id !== parseInt(idEdicao || 0)
+            );
+            
+            if (tituloDuplicado) {
+                alert("⚠️ Atenção: Já existe uma publicação com este exato título! Por favor, modifique o título antes de salvar.");
+                setLoadingState('btn-salvar-post', false);
+                return;
+            }
+
+            const categoria = document.getElementById('post-categoria').value;
             const autor = document.getElementById('post-autor').value.trim() !== "" ? document.getElementById('post-autor').value.trim() : "BlitzEAD";
-            const resumo = document.getElementById('post-resumo').value; const conteudo = document.getElementById('post-conteudo').value;
+            const resumo = document.getElementById('post-resumo').value; 
+            
+            const conteudo = quillEditor.root.innerHTML === '<p><br></p>' ? '' : quillEditor.root.innerHTML;
+            
+            if (!conteudo || conteudo.trim() === '') {
+                alert("O conteúdo completo da matéria é obrigatório.");
+                setLoadingState('btn-salvar-post', false);
+                return;
+            }
+
             const tags = document.getElementById('post-tags').value ? document.getElementById('post-tags').value.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
-            let capaUrl = document.getElementById('post-capa-url').value.trim(); const arquivoCapa = document.getElementById('post-arquivo-capa').files[0];
+            let capaUrl = document.getElementById('post-capa-url').value.trim(); 
+            const arquivoCapa = document.getElementById('post-arquivo-capa').files[0];
             const slug = titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 
             try {
-                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 600, 0.8); const nomeArq = `jornal_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pub.publicUrl; }
-                if (idEdicao) { await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao); await registrarLogAuditoria('editou a matéria', `Título: ${titulo}`); alert("Atualizado!"); } 
-                else { await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]); await registrarLogAuditoria('publicou a matéria', `Título: ${titulo}`); alert("Publicado!"); }
-                await dispararBuildAutomatico(); cancelarEdicaoPost(); await carregarAdminPosts();
-            } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-post', false); }
+                if (arquivoCapa) { 
+                    const otimizada = await redimensionarImagem(arquivoCapa, 1200, 0.95); 
+                    const nomeArq = `jornal_${Date.now()}.jpg`; 
+                    await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); 
+                    const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); 
+                    capaUrl = pub.publicUrl; 
+                }
+
+                if (idEdicao) { 
+                    await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao); 
+                    await registrarLogAuditoria('editou a matéria', `Título: ${titulo}`); 
+                    alert("Atualizado com sucesso!"); 
+                } else { 
+                    await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]); 
+                    await registrarLogAuditoria('publicou a matéria', `Título: ${titulo}`); 
+                    alert("Publicado com sucesso!"); 
+                }
+                
+                await dispararBuildAutomatico(); 
+                cancelarEdicaoPost(); 
+                await carregarAdminPosts();
+            } catch (err) { 
+                alert("Erro: " + err.message); 
+            } finally { 
+                setLoadingState('btn-salvar-post', false); 
+            }
         });
 
-        function editarPost(post) {
-            document.getElementById('post-id-edicao').value = post.id; document.getElementById('post-titulo').value = post.titulo;
-            document.getElementById('post-categoria').value = post.categoria; document.getElementById('post-autor').value = post.autor === 'BlitzEAD' ? '' : (post.autor || '');
-            document.getElementById('post-resumo').value = post.resumo || ''; document.getElementById('post-conteudo').value = post.conteudo || '';
-            document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : ''; document.getElementById('post-capa-url').value = post.capa_url || '';
-            document.getElementById('titulo-form-post').textContent = "Editar Publicação"; document.getElementById('btn-salvar-post').textContent = "Atualizar Publicação";
-            document.getElementById('btn-cancelar-edicao-post').classList.remove('hidden'); mudarAbaAdmin('jornal'); window.scrollTo({ top: 0, behavior: 'smooth' });
+        function editarPost(idPost) {
+            const post = listaPostsAdminGlobal.find(p => p.id === idPost);
+            if (!post) return;
+
+            document.getElementById('post-id-edicao').value = post.id; 
+            document.getElementById('post-titulo').value = post.titulo;
+            document.getElementById('post-categoria').value = post.categoria; 
+            document.getElementById('post-autor').value = post.autor === 'BlitzEAD' ? '' : (post.autor || '');
+            document.getElementById('post-resumo').value = post.resumo || ''; 
+            
+            quillEditor.root.innerHTML = post.conteudo || '';
+            
+            document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : ''; 
+            document.getElementById('post-capa-url').value = post.capa_url || '';
+            
+            document.getElementById('titulo-form-post').textContent = "Editar Publicação"; 
+            document.getElementById('btn-salvar-post').textContent = "Atualizar Publicação";
+            document.getElementById('btn-cancelar-edicao-post').classList.remove('hidden'); 
+            
+            mudarAbaAdmin('jornal'); 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicaoPost() {
-            document.getElementById('form-post').reset(); document.getElementById('post-id-edicao').value = '';
-            document.getElementById('titulo-form-post').textContent = "Criar Nova Publicação (Jornal Blitz)"; document.getElementById('btn-salvar-post').textContent = "Publicar Notícia";
+            document.getElementById('form-post').reset(); 
+            document.getElementById('post-id-edicao').value = '';
+            
+            quillEditor.root.innerHTML = ''; 
+            
+            document.getElementById('titulo-form-post').textContent = "Criar Nova Publicação (Jornal Blitz)"; 
+            document.getElementById('btn-salvar-post').textContent = "Publicar Notícia";
             document.getElementById('btn-cancelar-edicao-post').classList.add('hidden');
         }
 
         async function deletarPost(id) {
-            if (!confirm("Excluir publicação?")) return;
-            await supabaseClient.from('jornal_posts').delete().eq('id', id); await registrarLogAuditoria('excluiu a matéria ID', `${id}`);
-            await dispararBuildAutomatico(); await carregarAdminPosts();
+            if (!confirm("Tem certeza que deseja excluir esta publicação?")) return;
+            await supabaseClient.from('jornal_posts').delete().eq('id', id); 
+            await registrarLogAuditoria('excluiu a matéria ID', `${id}`);
+            await dispararBuildAutomatico(); 
+            await carregarAdminPosts();
         }
 
         initAdmin();
