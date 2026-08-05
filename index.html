@@ -1490,6 +1490,7 @@
                         <li>Clique em <strong>Fazer Download (.ics)</strong> abaixo.</li>
                         <li>Abra o arquivo baixado. O sistema Android sugerirá adicionar os eventos ao seu Google Agenda automaticamente.</li>
                         <li>Caso o arquivo não abra, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a> no navegador, vá em <em>Configurações > Importar e exportar</em> e selecione o arquivo.</li>
+                        <li class="text-amber-600 font-semibold mt-1">Atenção: O Google Agenda costuma forçar os alertas para 30 minutos antes e pode ignorar o alarme personalizado da sexta-feira. Verifique no app após importar.</li>
                     </ol>
                 `;
             } else if (device === 'ios') {
@@ -1518,6 +1519,7 @@
                         <li>Se você usa o <strong>Google Agenda</strong>, acesse <a href="https://calendar.google.com" target="_blank" class="text-blue-600 underline">calendar.google.com</a>.</li>
                         <li>No canto superior direito, clique na engrenagem de <em>Configurações > Importar e exportar</em>. Selecione o arquivo no seu computador e clique em <strong>Importar</strong>.</li>
                         <li>Se usa Outlook ou Calendário do Windows, basta dar um duplo clique no arquivo baixado.</li>
+                        <li class="text-amber-600 font-semibold mt-1">Atenção (Usuários Google Agenda): Verifique os horários dos alarmes na agenda, pois o Google pode não aceitar alertas com dias de antecedência (aplicando o padrão de 30 minutos).</li>
                     </ol>
                 `;
             }
@@ -1615,6 +1617,7 @@
                     const uidAlerta = `ALERTA-${tipoAP}-FDS${fdsIndex+1}-${codigoSemestreFormatado}@eadblitz.com.br`;
                     const dtstampStr = formatarDataHoraAtualZ();
 
+                    // EVENTO DE ALERTA ANTECIPADO (Mantido perfeitamente igual)
                     eventosIcs.push(
                         'BEGIN:VEVENT',
                         `UID:${uidAlerta}`,
@@ -1630,9 +1633,12 @@
                         'END:VEVENT'
                     );
 
+                    // EVENTOS DAS PROVAS OFICIAIS COM VALARM
                     fdsProvas.forEach(p => {
                         const provaDate = p.parsed.dateObj;
                         const diaSemanaProva = provaDate.getUTCDay();
+                        
+                        // Define os dias de antecedência para o alarme (Sábado = 1 dia, Domingo = 2 dias, etc)
                         let diasASubtrair = 0;
                         if (diaSemanaProva === 6) {
                             diasASubtrair = 1;
@@ -1641,22 +1647,20 @@
                         } else {
                             diasASubtrair = (diaSemanaProva + 2) % 7; 
                         }
+                        
+                        // Configuração do gatilho do alarme (ex: -P1D = 1 dia antes)
+                        let triggerStr = diasASubtrair > 0 ? `-P${diasASubtrair}D` : `-PT30M`;
 
-                        const sextaVespers = new Date(provaDate);
-                        sextaVespers.setUTCDate(sextaVespers.getUTCDate() - diasASubtrair);
-
-                        const yyyyS = sextaVespers.getUTCFullYear();
-                        const mmS = String(sextaVespers.getUTCMonth() + 1).padStart(2, '0');
-                        const ddS = String(sextaVespers.getUTCDate()).padStart(2, '0');
-                        const dtSextaStart = `${yyyyS}${mmS}${ddS}T180000Z`;
-                        const dtSextaEnd = `${yyyyS}${mmS}${ddS}T190000Z`;
+                        // Agora usamos a data e o horário EXATOS da prova
+                        const dtProvaStart = p.parsed.dtstart;
+                        const dtProvaEnd = p.parsed.dtend;
 
                         const diaSemanaProvaNome = provaDate.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' });
-                        const summaryVespers = `Prova de ${p.disc.nome} no ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, dia ${p.parsed.diaStr}/${p.parsed.mesStr}, de ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}`;
-                        const descriptionVespers = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome} - Horário: ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto} - Data: ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}`;
+                        const summaryProva = `Prova de ${p.disc.nome}`;
+                        const descriptionProva = `Avaliação Presencial (${tipoAP}) da disciplina ${p.disc.nome}\\nData: ${diaSemanaProvaNome.charAt(0).toUpperCase() + diaSemanaProvaNome.slice(1)}, ${p.parsed.diaStr}/${p.parsed.mesStr}/${p.parsed.anoStr}\\nHorário: ${p.parsed.horarioInicioCompleto} às ${p.parsed.horarioFimCompleto}`;
 
                         const codigoDisc = p.disc.codigo || 'GERAL';
-                        const uidVespers = `${codigoDisc}-${p.disc.id}-${tipoAP}-VESP-${codigoSemestreFormatado}@eadblitz.com.br`;
+                        const uidProva = `${codigoDisc}-${p.disc.id}-${tipoAP}-PROVA-${codigoSemestreFormatado}@eadblitz.com.br`;
 
                         const novaSequence = (p.reg.sequence || 0) + 1;
                         atualizacoesSequenciais.push({
@@ -1667,17 +1671,22 @@
 
                         eventosIcs.push(
                             'BEGIN:VEVENT',
-                            `UID:${uidVespers}`,
+                            `UID:${uidProva}`,
                             `DTSTAMP:${dtstampStr}`,
                             `SEQUENCE:${novaSequence}`,
-                            `DTSTART:${dtSextaStart}`,
-                            `DTEND:${dtSextaEnd}`,
-                            `SUMMARY:${summaryVespers}`,
-                            `DESCRIPTION:${descriptionVespers}`,
+                            `DTSTART:${dtProvaStart}`,
+                            `DTEND:${dtProvaEnd}`,
+                            `SUMMARY:${summaryProva}`,
+                            `DESCRIPTION:${descriptionProva}`,
                             'URL:https://www.eadblitz.com.br',
                             'CATEGORIES:Provas',
                             'STATUS:CONFIRMED',
-                            'TRANSP:TRANSPARENT',
+                            'TRANSP:OPAQUE',
+                            'BEGIN:VALARM',
+                            `TRIGGER:${triggerStr}`,
+                            'ACTION:DISPLAY',
+                            `DESCRIPTION:Lembrete de Estudo para ${summaryProva}`,
+                            'END:VALARM',
                             'END:VEVENT'
                         );
                     });
