@@ -600,6 +600,13 @@
         }
 
         async function carregarDadosBanco() {
+            // Verifica no cache o estado do recolhimento de lista para manter de forma confortável
+            if (usuarioAtual) {
+                catalogoRecolhido = usuarioAtual.user_metadata?.catalogo_recolhido === true;
+            } else {
+                catalogoRecolhido = localStorage.getItem('catalogo_recolhido') === 'true';
+            }
+
             definirCursoAtivo();
 
             // Puxa disciplinas filtradas pelo relacionamento N:N
@@ -701,11 +708,11 @@
                     </div>
                     <p class="text-gray-600 text-sm mb-4">Marque as disciplinas desejadas. As que possuírem choque de horário nas APs ficarão destacadas em amarelo.</p>
                     
-                    <div id="wrapper-catalogo" class="bg-white shadow-md rounded-xl overflow-x-auto border border-gray-100 transition-all duration-300" style="display: ${catalogoRecolhido ? 'none' : 'block'};">
+                    <div id="wrapper-catalogo" class="bg-white shadow-md rounded-xl border border-gray-100 transition-all duration-300" style="display: ${catalogoRecolhido ? 'none' : 'block'};">
                         
                         <!-- BARRA DE CONTROLES: SELECIONAR SEMESTRE E CADASTRAR DISCIPLINAS -->
-                        <div class="flex items-center gap-3 p-4 border-b border-gray-100 justify-start bg-gray-50">
-                            <select id="select-semestre-destino" class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 transition-colors duration-300">
+                        <div id="barra-controles-cadastro" class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-b border-gray-200 justify-start bg-gray-50 transition-all duration-300 z-40">
+                            <select id="select-semestre-destino" class="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500 transition-colors duration-300">
                                 <option value="">Escolha o Semestre</option>
                                 <option value="1º Semestre">1º Semestre</option>
                                 <option value="2º Semestre">2º Semestre</option>
@@ -718,28 +725,30 @@
                                 <option value="9º Semestre">9º Semestre</option>
                                 <option value="10º Semestre">10º Semestre</option>
                             </select>
-                            <button id="btn-cadastrar-semestre" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm whitespace-nowrap transition-colors duration-300">
+                            <button id="btn-cadastrar-semestre" class="bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-700 shadow-sm whitespace-nowrap transition-colors duration-300">
                                 Cadastrar Disciplinas
                             </button>
                         </div>
 
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
-                                    <th class="p-3 border-b text-center w-12">Selec.</th>
-                                    <th class="p-3 border-b">Código</th>
-                                    <th class="p-3 border-b">Disciplina</th>
-                                    <th class="p-3 border-b text-center">Data AP1</th>
-                                    <th class="p-3 border-b text-center">Data AP2</th>
-                                    <th class="p-3 border-b text-center">Data AP3</th>
-                                    <th class="p-3 border-b text-center">Período</th>
-                                    <th class="p-3 border-b text-center">Status Salvo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-disciplinas">
-                                <tr><td colspan="8" class="p-6 text-center text-gray-500">Carregando dados...</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                                        <th class="p-3 border-b text-center w-12">Selec.</th>
+                                        <th class="p-3 border-b">Código</th>
+                                        <th class="p-3 border-b">Disciplina</th>
+                                        <th class="p-3 border-b text-center">Data AP1</th>
+                                        <th class="p-3 border-b text-center">Data AP2</th>
+                                        <th class="p-3 border-b text-center">Data AP3</th>
+                                        <th class="p-3 border-b text-center">Período</th>
+                                        <th class="p-3 border-b text-center">Status Salvo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-disciplinas">
+                                    <tr><td colspan="8" class="p-6 text-center text-gray-500">Carregando dados...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -748,7 +757,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <div class="flex items-center space-x-2">
                             <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Biblioteca</span>
-                            <h3 class="text-sm font-bold text-gray-800">Seja Aprovado</h3>
+                            <h3 class="text-sm font-bold text-gray-800">Últimas publicações</h3>
                         </div>
                         <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Acervo completo →</a>
                     </div>
@@ -798,7 +807,7 @@
             const btnToggle = document.getElementById('btn-toggle-catalogo');
             const wrapperCatalogo = document.getElementById('wrapper-catalogo');
 
-            btnToggle.addEventListener('click', () => {
+            btnToggle.addEventListener('click', async () => {
                 catalogoRecolhido = !catalogoRecolhido;
                 if (!catalogoRecolhido) {
                     wrapperCatalogo.style.display = 'block';
@@ -806,6 +815,17 @@
                 } else {
                     wrapperCatalogo.style.display = 'none';
                     btnToggle.textContent = '▼ Expandir Lista';
+                }
+
+                // Salva a condição na memória para navegação confortável
+                if (usuarioAtual) {
+                    const metadataAtual = usuarioAtual.user_metadata || {};
+                    metadataAtual.catalogo_recolhido = catalogoRecolhido;
+                    await supabaseClient.auth.updateUser({
+                        data: metadataAtual
+                    });
+                } else {
+                    localStorage.setItem('catalogo_recolhido', catalogoRecolhido);
                 }
             });
 
@@ -945,6 +965,18 @@
                     renderizarTabelaCatalogo();
                 });
             });
+
+            // ATIVA/DESATIVA O STICKY (ALWAYS ON TOP) DOS BOTÕES BASEADO NA SELEÇÃO
+            const barraControles = document.getElementById('barra-controles-cadastro');
+            if (barraControles) {
+                if (checkboxesMarcados.length > 0) {
+                    barraControles.classList.add('sticky', 'top-[96px]', 'md:top-[106px]', 'shadow-md', 'bg-white/95', 'backdrop-blur-md');
+                    barraControles.classList.remove('bg-gray-50');
+                } else {
+                    barraControles.classList.remove('sticky', 'top-[96px]', 'md:top-[106px]', 'shadow-md', 'bg-white/95', 'backdrop-blur-md');
+                    barraControles.classList.add('bg-gray-50');
+                }
+            }
         }
 
         function mostrarMensagemSucesso() {
