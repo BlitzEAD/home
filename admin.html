@@ -18,6 +18,20 @@
     <!-- Adição do Editor de Texto Rico (Quill.js) -->
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+    <!-- Estilos personalizados para o Editor -->
+    <style>
+        /* Força os links dentro do editor Quill a terem destaque visual */
+        .ql-editor a {
+            color: #2563eb !important; /* Azul escuro do Tailwind */
+            text-decoration: underline !important;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .ql-editor a:hover {
+            color: #1d4ed8 !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24 hidden" id="body-admin">
 
@@ -546,7 +560,6 @@
                 return;
             }
 
-            // CORREÇÃO: Força o Quill.js a colocar https:// em links caso o usuário esqueça
             const Link = Quill.import('formats/link');
             class CustomLink extends Link {
                 static create(value) {
@@ -559,7 +572,6 @@
             }
             Quill.register(CustomLink, true);
 
-            // Inicializando o Quill.js
             quillEditor = new Quill('#quill-editor', {
                 theme: 'snow',
                 placeholder: 'Escreva o conteúdo completo e formatado da matéria aqui...',
@@ -796,7 +808,6 @@
                 if (u.lacre_semestre) lacresStr.push('Semestre');
                 const lacresExibicao = lacresStr.length > 0 ? `🔒 ${lacresStr.join(', ')}` : '-';
 
-                // CORREÇÃO: Passando apenas o ID (como string) para não quebrar o HTML da tabela
                 html += `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-3 font-medium text-gray-800">${nome}</td>
@@ -822,7 +833,6 @@
             renderizarTabelaUsuarios(filtrados);
         }
 
-        // CORREÇÃO: Função agora recebe apenas o ID e busca o objeto na lista global
         function abrirModalEdicaoUsuario(idUser) {
             const u = listaUsuariosGlobal.find(user => user.id === idUser);
             if (!u) return;
@@ -915,7 +925,7 @@
         }
 
         // --- GESTÃO DE LIVROS ---
-        async function redimensionarImagem(file, larguraMax = 400, qualidade = 0.8) {
+        async function redimensionarImagem(file, larguraMax = 800, qualidade = 0.95) {
             return new Promise((resolve) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = (event) => {
@@ -1034,7 +1044,6 @@
             filtrados.forEach(l => {
                 const precoFormatado = l.preco === 0 || l.preco === "0.00" ? 'Gratuito' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
                 
-                // CORREÇÃO: Passando apenas o ID do Livro
                 html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td><td class="p-3 font-medium text-gray-800">${l.titulo}</td><td class="p-3 font-bold text-blue-600">${precoFormatado}</td><td class="p-3 text-center space-x-2"><button onclick="editarLivro(${l.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
@@ -1055,7 +1064,7 @@
 
             try {
                 if (arquivoPdf) { const nomePdf = `pdf_${Date.now()}.pdf`; await supabaseClient.storage.from('biblioteca').upload(nomePdf, arquivoPdf); const { data: pubPdf } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomePdf); linkDestino = pubPdf.publicUrl; }
-                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 300, 0.75); const nomeArq = `capa_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pubCapa.publicUrl; }
+                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 800, 0.95); const nomeArq = `capa_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pubCapa } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pubCapa.publicUrl; }
                 const checkboxes = Array.from(document.querySelectorAll('.check-disc-livro:checked'));
                 const idsValidos = checkboxes.map(cb => parseInt(cb.value));
 
@@ -1075,7 +1084,6 @@
             } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-livro', false); }
         });
 
-        // CORREÇÃO: Função agora recebe apenas o ID do Livro
         async function editarLivro(idLivro) {
             const livro = listaLivrosAdminGlobal.find(l => l.id === idLivro);
             if (!livro) return;
@@ -1140,16 +1148,30 @@
             filtrados.forEach(p => {
                 const dataFormatada = p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '-';
                 
-                // CORREÇÃO: Passando apenas o ID para a função editarPost
                 html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 font-medium text-gray-800">${p.titulo}</td><td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td><td class="p-3 text-gray-500 text-xs">${dataFormatada}</td><td class="p-3 text-center space-x-2"><button onclick="editarPost(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
 
         document.getElementById('form-post').addEventListener('submit', async (e) => {
-            e.preventDefault(); setLoadingState('btn-salvar-post', true);
+            e.preventDefault(); 
+            setLoadingState('btn-salvar-post', true);
+            
             const idEdicao = document.getElementById('post-id-edicao').value;
             const titulo = document.getElementById('post-titulo').value; 
+            
+            // Verificação de Título Duplicado
+            const tituloDuplicado = listaPostsAdminGlobal.find(p => 
+                p.titulo.trim().toLowerCase() === titulo.trim().toLowerCase() && 
+                p.id !== parseInt(idEdicao || 0)
+            );
+            
+            if (tituloDuplicado) {
+                alert("⚠️ Atenção: Já existe uma publicação com este exato título! Por favor, modifique o título antes de salvar.");
+                setLoadingState('btn-salvar-post', false);
+                return;
+            }
+
             const categoria = document.getElementById('post-categoria').value;
             const autor = document.getElementById('post-autor').value.trim() !== "" ? document.getElementById('post-autor').value.trim() : "BlitzEAD";
             const resumo = document.getElementById('post-resumo').value; 
@@ -1167,14 +1189,13 @@
             const slug = titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 
             try {
-                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 600, 0.8); const nomeArq = `jornal_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pub.publicUrl; }
+                if (arquivoCapa) { const otimizada = await redimensionarImagem(arquivoCapa, 1200, 0.95); const nomeArq = `jornal_${Date.now()}.jpg`; await supabaseClient.storage.from('biblioteca').upload(nomeArq, otimizada); const { data: pub } = supabaseClient.storage.from('biblioteca').getPublicUrl(nomeArq); capaUrl = pub.publicUrl; }
                 if (idEdicao) { await supabaseClient.from('jornal_posts').update({ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }).eq('id', idEdicao); await registrarLogAuditoria('editou a matéria', `Título: ${titulo}`); alert("Atualizado!"); } 
                 else { await supabaseClient.from('jornal_posts').insert([{ titulo, slug, categoria, autor, resumo, conteudo, tags, capa_url: capaUrl }]); await registrarLogAuditoria('publicou a matéria', `Título: ${titulo}`); alert("Publicado!"); }
                 await dispararBuildAutomatico(); cancelarEdicaoPost(); await carregarAdminPosts(); await carregarLogsAuditoria();
             } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-post', false); }
         });
 
-        // CORREÇÃO: Função agora recebe apenas o ID e busca o objeto na lista
         async function editarPost(idPost) {
             const post = listaPostsAdminGlobal.find(p => p.id === idPost);
             if (!post) return;
