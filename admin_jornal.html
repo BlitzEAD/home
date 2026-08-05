@@ -170,8 +170,8 @@
         }
 
         async function initAdmin() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            const role = session?.user?.user_metadata?.role || 'aluno';
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
+            const role = user?.user_metadata?.role || 'aluno';
             
             // Trava de Segurança
             const cargosPermitidos = ['dono', 'super_admin', 'editor_geral', 'editor_jornal'];
