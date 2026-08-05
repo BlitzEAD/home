@@ -20,6 +20,7 @@
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col pt-24 hidden" id="body-admin">
+    <!-- Body começa oculto para evitar o "piscar" da tela para alunos não autorizados -->
 
     <!-- MENU SUPERIOR FIXO -->
     <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
@@ -508,7 +509,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let usuarioAtual = null;
-        let quillEditor; 
+        let quillEditor; // Variável global do editor de texto
 
         let listaLivrosAdminGlobal = [];
         let listaPostsAdminGlobal = [];
@@ -536,6 +537,7 @@
         async function initAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             
+            // Trava de segurança: Alunos ou deslogados não podem sequer visualizar a página renderizada
             const role = session?.user?.user_metadata?.role || 'aluno';
             const isDono = role === 'dono';
             const isSuperAdmin = role === 'super_admin';
@@ -545,19 +547,6 @@
                 window.location.href = 'index.html'; 
                 return;
             }
-
-            // CORREÇÃO: Força o Quill.js a colocar https:// em links caso o usuário esqueça
-            const Link = Quill.import('formats/link');
-            class CustomLink extends Link {
-                static create(value) {
-                    let url = value;
-                    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
-                        url = 'https://' + url;
-                    }
-                    return super.create(url);
-                }
-            }
-            Quill.register(CustomLink, true);
 
             // Inicializando o Quill.js
             quillEditor = new Quill('#quill-editor', {
@@ -576,6 +565,7 @@
                 }
             });
 
+            // Exibe a tela após confirmar permissão e carregar dependências
             document.getElementById('body-admin').classList.remove('hidden');
 
             usuarioAtual = session.user;
@@ -702,7 +692,7 @@
             if (selectTabela) selectTabela.innerHTML = optionsTabela;
             if (selectGerenciamento) selectGerenciamento.innerHTML = optionsGerenciamento;
             
-            popularSelectsModalUsuario(); 
+            popularSelectsModalUsuario(); // Popula os Selects do Modal
         }
 
         function popularSelectsModalUsuario() {
@@ -796,7 +786,6 @@
                 if (u.lacre_semestre) lacresStr.push('Semestre');
                 const lacresExibicao = lacresStr.length > 0 ? `🔒 ${lacresStr.join(', ')}` : '-';
 
-                // CORREÇÃO: Passando apenas o ID (como string) para não quebrar o HTML da tabela
                 html += `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-3 font-medium text-gray-800">${nome}</td>
@@ -805,7 +794,7 @@
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${role}</span></td>
                         <td class="p-3 text-center text-gray-500 font-semibold">${lacresExibicao}</td>
                         <td class="p-3 text-center">
-                            <button onclick="abrirModalEdicaoUsuario('${u.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar Tudo</button>
+                            <button onclick='abrirModalEdicaoUsuario(${JSON.stringify(u)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar Tudo</button>
                         </td>
                     </tr>
                 `;
@@ -822,11 +811,7 @@
             renderizarTabelaUsuarios(filtrados);
         }
 
-        // CORREÇÃO: Função agora recebe apenas o ID e busca o objeto na lista global
-        function abrirModalEdicaoUsuario(idUser) {
-            const u = listaUsuariosGlobal.find(user => user.id === idUser);
-            if (!u) return;
-
+        function abrirModalEdicaoUsuario(u) {
             document.getElementById('edit-user-id').value = u.id;
             document.getElementById('edit-user-nome').value = u.nome || '';
             document.getElementById('edit-user-email').value = u.email || '';
@@ -839,6 +824,7 @@
             document.getElementById('lacre-curso').checked = !!u.lacre_curso;
             document.getElementById('lacre-semestre').checked = !!u.lacre_semestre;
             
+            // Trava de Cargo: Apenas o 'dono' pode mudar a combo-box de Role
             const isDono = (usuarioAtual.user_metadata?.role === 'dono');
             const selectRole = document.getElementById('edit-user-role');
             const badgeLock = document.getElementById('badge-lock-role');
@@ -1033,9 +1019,7 @@
             let html = '';
             filtrados.forEach(l => {
                 const precoFormatado = l.preco === 0 || l.preco === "0.00" ? 'Gratuito' : `R$ ${parseFloat(l.preco).toFixed(2).replace('.', ',')}`;
-                
-                // CORREÇÃO: Passando apenas o ID do Livro
-                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td><td class="p-3 font-medium text-gray-800">${l.titulo}</td><td class="p-3 font-bold text-blue-600">${precoFormatado}</td><td class="p-3 text-center space-x-2"><button onclick="editarLivro(${l.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
+                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 text-center"><div class="w-10 h-10 bg-gray-100 rounded overflow-hidden mx-auto"><img src="${l.capa_url}" class="w-full h-full object-contain"></div></td><td class="p-3 font-medium text-gray-800">${l.titulo}</td><td class="p-3 font-bold text-blue-600">${precoFormatado}</td><td class="p-3 text-center space-x-2"><button onclick='editarLivro(${JSON.stringify(l)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarLivro(${l.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
@@ -1075,11 +1059,7 @@
             } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-livro', false); }
         });
 
-        // CORREÇÃO: Função agora recebe apenas o ID do Livro
-        async function editarLivro(idLivro) {
-            const livro = listaLivrosAdminGlobal.find(l => l.id === idLivro);
-            if (!livro) return;
-
+        async function editarLivro(livro) {
             document.getElementById('livro-id-edicao').value = livro.id; document.getElementById('livro-titulo').value = livro.titulo;
             document.getElementById('livro-preco').value = livro.preco; document.getElementById('livro-link').value = livro.link_destino;
             document.getElementById('livro-descricao').value = livro.descricao || ''; document.getElementById('livro-capa-url').value = livro.capa_url || '';
@@ -1139,9 +1119,7 @@
             let html = '';
             filtrados.forEach(p => {
                 const dataFormatada = p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '-';
-                
-                // CORREÇÃO: Passando apenas o ID para a função editarPost
-                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 font-medium text-gray-800">${p.titulo}</td><td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td><td class="p-3 text-gray-500 text-xs">${dataFormatada}</td><td class="p-3 text-center space-x-2"><button onclick="editarPost(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
+                html += `<tr class="border-b hover:bg-gray-50 text-sm"><td class="p-3 font-medium text-gray-800">${p.titulo}</td><td class="p-3 text-gray-600 text-xs">${p.autor || 'BlitzEAD'}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">${p.categoria}</span></td><td class="p-3 text-gray-500 text-xs">${dataFormatada}</td><td class="p-3 text-center space-x-2"><button onclick='editarPost(${JSON.stringify(p)})' class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-semibold">Editar</button><button onclick="deletarPost(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Excluir</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
@@ -1154,6 +1132,7 @@
             const autor = document.getElementById('post-autor').value.trim() !== "" ? document.getElementById('post-autor').value.trim() : "BlitzEAD";
             const resumo = document.getElementById('post-resumo').value; 
             
+            // Coletando HTML direto do editor Quill
             const conteudo = quillEditor.root.innerHTML === '<p><br></p>' ? '' : quillEditor.root.innerHTML;
             
             if (!conteudo || conteudo.trim() === '') {
@@ -1174,17 +1153,14 @@
             } catch (err) { alert("Erro: " + err.message); } finally { setLoadingState('btn-salvar-post', false); }
         });
 
-        // CORREÇÃO: Função agora recebe apenas o ID e busca o objeto na lista
-        async function editarPost(idPost) {
-            const post = listaPostsAdminGlobal.find(p => p.id === idPost);
-            if (!post) return;
-
+        async function editarPost(post) {
             document.getElementById('post-id-edicao').value = post.id; 
             document.getElementById('post-titulo').value = post.titulo;
             document.getElementById('post-categoria').value = post.categoria; 
             document.getElementById('post-autor').value = post.autor === 'BlitzEAD' ? '' : (post.autor || '');
             document.getElementById('post-resumo').value = post.resumo || ''; 
             
+            // Injetando HTML salvo diretamente no editor Quill
             quillEditor.root.innerHTML = post.conteudo || '';
             
             document.getElementById('post-tags').value = post.tags ? post.tags.join(', ') : ''; 
@@ -1200,7 +1176,7 @@
         function cancelarEdicaoPost() {
             document.getElementById('form-post').reset(); 
             document.getElementById('post-id-edicao').value = '';
-            quillEditor.root.innerHTML = ''; 
+            quillEditor.root.innerHTML = ''; // Limpando o editor
             document.getElementById('titulo-form-post').textContent = "Criar Nova Publicação (Jornal Blitz)"; 
             document.getElementById('btn-salvar-post').textContent = "Publicar Notícia";
             document.getElementById('btn-cancelar-edicao-post').classList.add('hidden');
