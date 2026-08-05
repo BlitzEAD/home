@@ -645,6 +645,14 @@
                 renderizarEstruturaPrincipal();
                 estruturaInicializada = true;
             } else {
+                // Atualiza visualmente o estado da lista caso venha do banco (ao logar/deslogar)
+                const wrapperCatalogo = document.getElementById('wrapper-catalogo');
+                const btnToggle = document.getElementById('btn-toggle-catalogo');
+                if (wrapperCatalogo && btnToggle) {
+                    wrapperCatalogo.style.display = catalogoRecolhido ? 'none' : 'block';
+                    btnToggle.textContent = catalogoRecolhido ? '▼ Expandir Lista' : '▲ Recolher Lista';
+                }
+
                 renderizarSeletorCurso();
                 renderizarTabelaCatalogo();
                 renderizarSemestresAlocados();
@@ -728,6 +736,14 @@
                             <button id="btn-cadastrar-semestre" class="bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-700 shadow-sm whitespace-nowrap transition-colors duration-300">
                                 Cadastrar Disciplinas
                             </button>
+                            <!-- BOTÃO DE LIMPAR/BORRACHA -->
+                            <button id="btn-limpar-selecao" class="bg-gray-200 text-gray-700 p-2 sm:px-3 sm:py-2 rounded-lg hover:bg-gray-300 transition-colors duration-300 shadow-sm flex items-center justify-center ml-auto md:ml-0" title="Desmarcar todas as disciplinas">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+                                    <path d="M22 21H7"/>
+                                    <path d="m5 11 9 9"/>
+                                </svg>
+                            </button>
                         </div>
 
                         <div class="overflow-x-auto">
@@ -798,6 +814,17 @@
             `;
 
             document.getElementById('btn-cadastrar-semestre').addEventListener('click', cadastrarSelecionadasNoSemestre);
+            
+            // Evento do botão Limpar (Borrachinha)
+            document.getElementById('btn-limpar-selecao').addEventListener('click', () => {
+                const marcadas = document.querySelectorAll('.check-disciplina:checked');
+                if (marcadas.length > 0) {
+                    if (confirm("Desmarcar todas as disciplinas?")) {
+                        marcadas.forEach(cb => cb.checked = false);
+                        renderizarTabelaCatalogo();
+                    }
+                }
+            });
 
             const selectSemestreCurso = document.getElementById('select-semestre-curso');
             selectSemestreCurso.addEventListener('change', async (e) => {
