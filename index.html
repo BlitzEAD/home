@@ -627,6 +627,7 @@
                 supabaseClient.from('disciplinas')
                     .select('*, curso_disciplinas!inner(curso_id)')
                     .eq('curso_disciplinas.curso_id', cursoAtivoId)
+                    .order('id', { ascending: true })
             ];
 
             if (usuarioAtual) {
