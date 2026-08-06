@@ -171,6 +171,111 @@
         </div>
     </main>
 
+    <!-- RODAPÉ COMPLETO -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
+            <div class="max-w-2xl text-center md:text-left space-y-3">
+                <p class="text-sm font-bold text-gray-800">© 2026 Blitz EAD Planejamento Acadêmico. Todos os direitos reservados.</p>
+                <p class="text-xs text-gray-500 leading-relaxed">
+                    Este portal é uma plataforma independente de gestão e planejamento acadêmico. As informações aqui geradas servem exclusivamente como apoio educacional e organizacional, e não substituem os registros ou comunicações oficiais da sua instituição de ensino.
+                </p>
+                <p class="text-xs text-gray-500 font-medium">
+                    Precisa falar com o administrador? Envie um e-mail para: <a href="mailto:contato@blitzead.com.br" class="text-blue-600 hover:underline">contato@blitzead.com.br</a>
+                </p>
+            </div>
+            <div class="flex flex-wrap justify-center md:justify-end gap-3 text-xs font-semibold text-gray-600">
+                <button onclick="abrirModalRodape('modal-termos')" class="hover:text-blue-600 transition">Termos de Uso</button>
+                <span class="text-gray-300">|</span>
+                <button onclick="abrirModalRodape('modal-privacidade')" class="hover:text-blue-600 transition">Política de Privacidade</button>
+                <span class="text-gray-300">|</span>
+                <button onclick="abrirModalRodape('modal-contato')" class="hover:text-blue-600 transition">Contato</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAIS DO RODAPÉ -->
+
+    <!-- Modal Termos de Uso -->
+    <div id="modal-termos" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4 modal-fechar-fora">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="fecharModalRodape('modal-termos')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg p-2">✕</button>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Termos de Uso</h2>
+            <div class="text-sm text-gray-600 space-y-4">
+                <p>Bem-vindo ao portal Blitz EAD Planejamento Acadêmico. Ao acessar e utilizar este sistema, você concorda com os termos aqui descritos.</p>
+                <h3 class="font-bold text-gray-800 text-base mt-4">1. Natureza da Plataforma</h3>
+                <p>Este sistema é uma ferramenta independente, criada para auxiliar estudantes na organização de suas grades curriculares e no planejamento de estudos. <strong>Não possuímos vínculo oficial</strong> com as instituições de ensino, e as informações aqui contidas (como datas de APs, disciplinas e semestres) são alimentadas de forma colaborativa ou importadas de fontes externas públicas.</p>
+                <h3 class="font-bold text-gray-800 text-base mt-4">2. Isenção de Responsabilidade</h3>
+                <p>O usuário é o único responsável por conferir e validar os dados gerados pela plataforma (como dias e horários de provas, status de disciplinas e requisitos curriculares) diretamente no portal oficial da sua instituição.</p>
+                <p>A administração do portal Blitz EAD <strong>não se responsabiliza</strong> por:</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>Perda de prazos acadêmicos, reprovações ou problemas de matrícula derivados do uso exclusivo deste sistema;</li>
+                    <li>Erros, omissões ou desatualizações na grade curricular disponibilizada;</li>
+                    <li>Indisponibilidade temporária ou permanente dos servidores e perda de dados não salvos.</li>
+                </ul>
+                <h3 class="font-bold text-gray-800 text-base mt-4">3. Conduta do Usuário</h3>
+                <p>É vedado o uso do sistema para finalidades ilícitas ou que interfiram no bom funcionamento da infraestrutura. Reservamo-nos o direito de suspender ou cancelar o acesso de usuários que violem estas diretrizes.</p>
+            </div>
+            <div class="mt-6 border-t pt-4 text-right">
+                <button onclick="fecharModalRodape('modal-termos')" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm transition">Entendi e concordo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Política de Privacidade -->
+    <div id="modal-privacidade" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4 modal-fechar-fora">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="fecharModalRodape('modal-privacidade')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg p-2">✕</button>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Política de Privacidade</h2>
+            <div class="text-sm text-gray-600 space-y-4">
+                <p>A sua privacidade é importante para nós. Esta política explica como coletamos, usamos e protegemos os seus dados ao utilizar o Blitz EAD.</p>
+                <h3 class="font-bold text-gray-800 text-base mt-4">1. Dados Coletados</h3>
+                <p>Ao criar uma conta, coletamos informações básicas como Nome, E-mail, Curso escolhido e seu Planejamento Acadêmico (disciplinas selecionadas e status). Não solicitamos dados sensíveis como documentos pessoais, dados bancários ou senhas de portais acadêmicos oficiais.</p>
+                <h3 class="font-bold text-gray-800 text-base mt-4">2. Uso e Armazenamento dos Dados</h3>
+                <p>Os dados coletados são utilizados exclusivamente para o funcionamento do sistema, permitindo que você acesse seu planejamento de qualquer dispositivo. Utilizamos a infraestrutura segura do <strong>Supabase</strong> para armazenar as informações.</p>
+                <p>Não vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros para fins publicitários ou comerciais.</p>
+                <h3 class="font-bold text-gray-800 text-base mt-4">3. Seus Direitos</h3>
+                <p>Você tem o direito de solicitar a exclusão completa da sua conta e de todos os dados associados a ela a qualquer momento. Para isso, basta acessar as configurações do seu perfil (quando disponível) ou entrar em contato através do nosso canal de suporte.</p>
+                <h3 class="font-bold text-gray-800 text-base mt-4">4. Cookies e Armazenamento Local</h3>
+                <p>Utilizamos tecnologias de armazenamento local (Local Storage e Session Storage) do seu navegador para manter a sua sessão ativa e salvar preferências de visualização, garantindo uma navegação mais fluida.</p>
+            </div>
+            <div class="mt-6 border-t pt-4 text-right">
+                <button onclick="fecharModalRodape('modal-privacidade')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">Ciente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Contato -->
+    <div id="modal-contato" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 relative">
+            <!-- Apenas o botão "X" fecha este modal para evitar perda de dados digitados -->
+            <button onclick="fecharModalRodape('modal-contato')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg p-2">✕</button>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Fale Conosco</h2>
+            <p class="text-xs text-gray-500 mb-6">Preencha o formulário abaixo ou envie um e-mail direto para <a href="mailto:contato@blitzead.com.br" class="text-blue-600 font-semibold hover:underline">contato@blitzead.com.br</a>.</p>
+            
+            <form id="form-contato-rodape" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nome Completo</label>
+                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label>
+                    <input type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Assunto</label>
+                    <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Mensagem</label>
+                    <textarea required rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Enviar Mensagem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
@@ -1816,6 +1921,36 @@
             doc.save("grade_completa_disciplinas.pdf");
             window.scrollTo({ top: scrollSalvo });
         }
+
+        /* ----------------------------------------------------- */
+        /* --- SCRIPTS PARA CONTROLE DOS MODAIS DO RODAPÉ --- */
+        /* ----------------------------------------------------- */
+
+        function abrirModalRodape(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function fecharModalRodape(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Fechar modal ao clicar fora (apenas os que têm a classe 'modal-fechar-fora')
+        window.addEventListener('click', (e) => {
+            const modaisRodape = document.querySelectorAll('.modal-fechar-fora');
+            modaisRodape.forEach(modal => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+
+        // Simular o envio do formulário de contato
+        document.getElementById('form-contato-rodape').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+            fecharModalRodape('modal-contato');
+            e.target.reset(); // Limpa os campos do formulário
+        });
 
         init();
     </script>
