@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundação Bradesco oferece curso grátis de Microsoft Power BI - Jornal Blitz</title>
+    
+    <!-- Open Graph (OG) Meta Tags PREENCHIDAS PELO ROBÔ -->
+    <meta property="og:title" content="Fundação Bradesco oferece curso grátis de Microsoft Power BI - Jornal Blitz">
+    <meta property="og:description" content="Curso gratuito para começar a usar a ferramenta que precisa estar no seu curriculum">
+    <meta property="og:image" content="https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1786048100298.jpg">
+    <meta property="og:type" content="article">
+
+    <!-- Otimização de Performance: Antecipa conexões -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://wjrpwjrhnpqqtizkekgq.supabase.co">
+
+    <!-- Schema Markup para SEO Estruturado PREENCHIDO PELO ROBÔ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Fundação Bradesco oferece curso grátis de Microsoft Power BI",
+      "image": "https://wjrpwjrhnpqqtizkekgq.supabase.co/storage/v1/object/public/biblioteca/jornal_1786048100298.jpg",
+      "datePublished": "2026-08-06T20:28:22.066Z",
+      "url": "https://www.eadblitz.com.br/materia_19.html",
+      "description": "Curso gratuito para começar a usar a ferramenta que precisa estar no seu curriculum",
+      "author": {
+        "@type": "Organization",
+        "name": "Jornal Blitz"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Planejamento Acadêmico",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.eadblitz.com.br/logo.png"
+        }
+      }
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pt-32">
+
+    <!-- MENU SUPERIOR FIXO -->
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="w-full px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="flex items-center">
+    <img src="logo.png" alt="Blitz EAD Planejamento Acadêmico" class="h-8 md:h-10 w-auto object-contain">
+</a>
+                <div id="container-btn-admin"></div>
+            </div>
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <div id="bloco-usuario-topo" class="flex items-center space-x-2 pl-2 relative"></div>
+            </div>
+        </div>
+        <div class="w-full bg-gray-50 px-4 md:px-6 py-2">
+            <nav class="flex items-center space-x-6 text-xs md:text-sm font-medium text-gray-600 overflow-x-auto">
+                <a href="index.html" class="hover:text-blue-600 transition whitespace-nowrap">Disciplinas</a>
+                <a href="index.html#secao-grade-disciplinar" class="hover:text-blue-600 transition whitespace-nowrap">Semestres</a>
+                <a href="jornal.html" class="text-blue-600 font-semibold hover:text-blue-700 transition whitespace-nowrap">Jornal Blitz</a>
+                <a href="biblioteca.html" class="hover:text-blue-600 transition whitespace-nowrap">Biblioteca</a>
+                <a href="#" onclick="alert('Funcionalidade em desenvolvimento'); return false;" class="hover:text-blue-600 transition whitespace-nowrap">LOJA</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl mx-auto px-6 py-8 flex-1 space-y-12">
+        <div>
+            <a href="jornal.html" class="text-xs font-bold text-gray-600 hover:text-blue-600 transition">← Voltar para o Jornal Blitz</a>
+        </div>
+
+        <article id="artigo-materia" class="bg-white rounded-2xl shadow-md p-6 md:p-10 border border-gray-200">
+            <div class="text-center py-16 text-gray-400">Carregando dados da publicação...</div>
+        </article>
+
+        <!-- TEASER DA BIBLIOTECA INTELIGENTE (Prioriza disciplinas cursadas) -->
+        <section id="teaser-biblioteca-section" class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Biblioteca</span>
+                    <h3 class="text-sm font-bold text-gray-800">Materiais Recomendados para seus Estudos</h3>
+                </div>
+                <a href="biblioteca.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver acervo completo →</a>
+            </div>
+            <div id="teaser-biblioteca-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none"></div>
+        </section>
+
+        <section id="teaser-jornal-section" class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-200 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-100 text-blue-800 text-[11px] font-extrabold px-2 py-0.5 rounded uppercase">Jornal Blitz</span>
+                    <h3 class="text-sm font-bold text-gray-800">Outras Publicações</h3>
+                </div>
+                <a href="jornal.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Ver todas →</a>
+            </div>
+            <div id="teaser-jornal-grid" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none"></div>
+        </section>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://wjrpwjrhnpqqtizkekgq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcnB3anJobnBxcXRpemtla2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzUxOTQsImV4cCI6MjEwMDU1MTE5NH0.UriDrr4Kk8mTmw36xbSrdzZE9ZtOWaaZ0jDUtGmTlo4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let usuarioAtual = null;
+        let semestreEmCursoAtual = "";
+        let nomeCursoPadraoUsuario = "Administração";
+        let cursoUsuarioIdOriginal = null;
+
+        // O ROBÔ INJETA O ID AQUI DURANTE A CRIAÇÃO DO ARQUIVO
+        const POST_ID = 19;
+
+        async function initMateria() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) usuarioAtual = session.user;
+            
+            // Carrega dados do usuário / visitante
+            if (usuarioAtual) {
+                semestreEmCursoAtual = usuarioAtual.user_metadata?.semestre_em_curso || "";
+                nomeCursoPadraoUsuario = usuarioAtual.user_metadata?.curso || localStorage.getItem('curso_selecionado') || "Administração";
+            } else {
+                semestreEmCursoAtual = localStorage.getItem('semestre_em_curso_visitante') || "";
+                nomeCursoPadraoUsuario = localStorage.getItem('curso_selecionado') || "Administração";
+            }
+
+            const { data: cursoData } = await supabaseClient.from('cursos').select('id').eq('nome', nomeCursoPadraoUsuario).single();
+            if (cursoData) {
+                cursoUsuarioIdOriginal = cursoData.id;
+            }
+
+            renderizarTopoUsuario();
+
+            const art = document.getElementById('artigo-materia');
+            const { data, error } = await supabaseClient.from('jornal_posts').select('*').eq('id', POST_ID);
+
+            if (error || !data || data.length === 0) {
+                art.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Publicação não encontrada.</div>`;
+                return;
+            }
+
+            const post = data[0];
+            const dataF = post.criado_em ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+            const autor = post.autor || 'BlitzEAD';
+            const urlAtual = window.location.href;
+
+            let tagsHtml = '';
+            if (post.tags && post.tags.length > 0) {
+                tagsHtml = `<div class="flex flex-wrap gap-2 mt-6 pt-6 border-t">`;
+                post.tags.forEach(t => tagsHtml += `<span class="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">#${t.trim()}</span>`);
+                tagsHtml += `</div>`;
+            }
+
+            art.innerHTML = `
+                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
+                    <div>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">${post.categoria || 'Notícia'}</span>
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2 mb-1 leading-tight">${post.titulo}</h1>
+                        <div class="flex items-center space-x-2 text-xs text-gray-400 font-medium"><span>Por <strong class="text-gray-700">${autor}</strong></span><span>•</span><span>${dataF}</span></div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-semibold text-gray-500 whitespace-nowrap">Compartilhar:</span>
+                        <div class="flex items-center space-x-1.5">
+                            <button onclick="compartilharRede('whatsapp', '${urlAtual}')" title="Compartilhar no WhatsApp" class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition shadow-xs">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                                </svg>
+                            </button>
+                            <button onclick="compartilharRede('facebook', '${urlAtual}')" title="Compartilhar no Facebook" class="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-xs transition shadow-xs">f</button>
+                            <button onclick="compartilharRede('twitter', '${urlAtual}', '${encodeURIComponent(post.titulo)}')" title="Compartilhar no X / Twitter" class="w-8 h-8 rounded-lg bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center text-xs transition shadow-xs">𝕏</button>
+                            <button onclick="copiarLink('${urlAtual}')" title="Copiar Link" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-xs transition border border-gray-300 shadow-xs">🔗</button>
+                        </div>
+                    </div>
+                </div>
+
+                ${post.capa_url ? `<div class="w-full h-72 md:h-96 bg-gray-100 rounded-xl overflow-hidden mb-8 border"><img src="${post.capa_url}" alt="Fundação Bradesco oferece curso grátis de Microsoft Power BI" class="w-full h-full object-cover"></div>` : ''}
+
+                <div class="prose max-w-none text-gray-700 leading-relaxed space-y-4 whitespace-pre-line text-base">${post.conteudo || ''}</div>
+                ${tagsHtml}
+            `;
+
+            carregarTeasersFimMateria(POST_ID);
+        }
+
+        function renderizarTopoUsuario() {
+            const bloco = document.getElementById('bloco-usuario-topo');
+            const containerBtnAdmin = document.getElementById('container-btn-admin');
+            
+            if (containerBtnAdmin) {
+                const isAdmin = usuarioAtual && usuarioAtual.user_metadata?.is_admin === true;
+                if (isAdmin) containerBtnAdmin.innerHTML = `<a href="admin.html" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">⚙️ Admin</a>`;
+                else containerBtnAdmin.innerHTML = '';
+            }
+
+            if (!bloco) return;
+            if (!usuarioAtual) {
+                bloco.innerHTML = `<button onclick="window.location.href='index.html?abrir_login=1'" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Entrar / Cadastrar</button>`;
+                return;
+            }
+            const nome = usuarioAtual.user_metadata?.nome || usuarioAtual.email || "U";
+            bloco.innerHTML = `
+                <span class="hidden sm:inline text-xs font-medium text-gray-700">${nome.split(' ')[0]}</span>
+                <div class="relative">
+                    <button id="btn-avatar-menu" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden">${usuarioAtual.user_metadata?.foto_url ? `<img src="${usuarioAtual.user_metadata.foto_url}" class="w-full h-full object-cover">` : nome.charAt(0).toUpperCase()}</button>
+                    <div id="dropdown-perfil" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 text-sm">
+                        <a href="perfil.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Perfil</a>
+                        <a href="#" id="btn-sair" class="block px-4 py-2 text-red-600 hover:bg-red-50">Sair</a>
+                    </div>
+                </div>
+            `;
+            document.getElementById('btn-avatar-menu').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('dropdown-perfil').classList.toggle('hidden'); });
+            window.addEventListener('click', () => { const d = document.getElementById('dropdown-perfil'); if (d && !d.classList.contains('hidden')) d.classList.add('hidden'); });
+            document.getElementById('btn-sair').addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
+        }
+
+        function compartilharRede(rede, url, tituloTwitter = '') {
+            let linkShare = "";
+            if (rede === 'whatsapp') {
+                const texto = `Olha isso aqui:\n${url}`;
+                linkShare = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+            } else if (rede === 'facebook') {
+                linkShare = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            } else if (rede === 'twitter') {
+                linkShare = `https://twitter.com/intent/tweet?text=${tituloTwitter}&url=${encodeURIComponent(url)}`;
+            }
+            if (linkShare) window.open(linkShare, '_blank', 'noopener,noreferrer');
+        }
+
+        async function copiarLink(url) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(url);
+                    alert("Link copiado para a área de transferência!");
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = url;
+                    textArea.style.position = "absolute";
+                    textArea.style.left = "-999999px";
+                    document.body.prepend(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    textArea.remove();
+                    alert("Link copiado para a área de transferência!");
+                }
+            } catch (err) {
+                console.error("Erro ao copiar o link:", err);
+                alert("Não foi possível copiar o link automaticamente.");
+            }
+        }
+
+        async function carregarTeasersFimMateria(postIdAtual) {
+            try {
+                // --- TEASER DA BIBLIOTECA COM ORDENAÇÃO PROPORCIONAL 3:2:1 ---
+                const { data: livros } = await supabaseClient.from('livros').select(`*, livro_disciplinas ( id_disciplina )`).order('criado_em', { ascending: false });
+                const sectionBib = document.getElementById('teaser-biblioteca-section');
+                const gridBib = document.getElementById('teaser-biblioteca-grid');
+
+                if (livros && livros.length > 0) {
+                    let disciplinasCursadasIds = [];
+                    if (semestreEmCursoAtual) {
+                        if (usuarioAtual) {
+                            const { data: planData } = await supabaseClient.from('planejamento_usuarios').select('disciplina_id, semestre').eq('user_id', usuarioAtual.id);
+                            const plan = planData || [];
+                            disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+                        } else {
+                            const plan = JSON.parse(localStorage.getItem('planejamento_visitante') || '[]');
+                            disciplinasCursadasIds = plan.filter(p => p.semestre === semestreEmCursoAtual).map(p => p.disciplina_id);
+                        }
+                    }
+
+                    // Filtro acadêmico inicial por curso
+                    let baseLivros = livros;
+                    if (cursoUsuarioIdOriginal) {
+                        baseLivros = baseLivros.filter(l => {
+                            const isGeralPlataforma = !l.curso_id;
+                            const isDoCurso = l.curso_id === cursoUsuarioIdOriginal;
+                            return isGeralPlataforma || isDoCurso;
+                        });
+                    }
+
+                    let cursando = [];
+                    let doCurso = [];
+                    let geralPlataforma = [];
+
+                    baseLivros.forEach(l => {
+                        const isGeralPlataforma = !l.curso_id;
+                        const isCursando = !isGeralPlataforma && 
+                                           (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+
+                        if (isCursando) {
+                            cursando.push(l);
+                        } else if (isGeralPlataforma) {
+                            geralPlataforma.push(l);
+                        } else {
+                            doCurso.push(l);
+                        }
+                    });
+
+                    let intercalados = [];
+                    while (cursando.length > 0 || doCurso.length > 0 || geralPlataforma.length > 0) {
+                        for (let i = 0; i < 3 && cursando.length > 0; i++) intercalados.push(cursando.shift());
+                        for (let i = 0; i < 2 && doCurso.length > 0; i++) intercalados.push(doCurso.shift());
+                        for (let i = 0; i < 1 && geralPlataforma.length > 0; i++) intercalados.push(geralPlataforma.shift());
+                    }
+
+                    const livrosTeaser = intercalados.slice(0, 4);
+
+                    if (livrosTeaser.length > 0) {
+                        sectionBib.classList.remove('hidden');
+                        let htmlBib = '';
+                        livrosTeaser.forEach(l => {
+                            const isCursandoBadge = (l.livro_disciplinas || []).some(r => disciplinasCursadasIds.includes(r.id_disciplina));
+                            const badgeHtml = isCursandoBadge ? `<span class="absolute top-2 right-2 bg-amber-400 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wide z-10">Cursando</span>` : '';
+                            const tituloLivroSeguro = l.titulo ? l.titulo.replace(/"/g, '&quot;') : 'Capa do material';
+                            
+                            htmlBib += `
+                                <a href="biblioteca.html?livro_id=${l.id}" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[140px] sm:min-w-[160px] flex-1 max-w-[180px] relative">
+                                    ${badgeHtml}
+                                    <div>
+                                        <div class="w-full h-36 sm:h-40 bg-gray-100 overflow-hidden relative flex items-center justify-center p-2 border-b"><img src="${l.capa_url}" alt="${tituloLivroSeguro}" class="h-full w-full object-contain group-hover:scale-105 transition duration-300"></div>
+                                        <div class="p-2.5"><h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${l.titulo}</h4></div>
+                                    </div>
+                                    <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ver material →</span></div>
+                                </a>
+                            `;
+                        });
+                        gridBib.innerHTML = htmlBib;
+                    }
+                }
+
+                // --- TEASER DO JORNAL ---
+                const { data: posts } = await supabaseClient.from('jornal_posts').select('*').neq('id', postIdAtual).order('criado_em', { ascending: false }).limit(4);
+                const sectionJornal = document.getElementById('teaser-jornal-section');
+                const gridJornal = document.getElementById('teaser-jornal-grid');
+
+                if (posts && posts.length > 0) {
+                    sectionJornal.classList.remove('hidden');
+                    let htmlJornal = '';
+                    posts.forEach(post => {
+                        let dataF = post.criado_em ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+                        const tituloPostSeguro = post.titulo ? post.titulo.replace(/"/g, '&quot;') : 'Capa da notícia';
+                        htmlJornal += `
+                            <a href="materia_${post.id}.html" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group min-w-[175px] sm:min-w-[220px] flex-1 max-w-[280px]">
+                                <div>
+                                    <div class="w-full h-24 bg-gray-100 overflow-hidden relative">
+                                        ${post.capa_url ? `<img src="${post.capa_url}" alt="${tituloPostSeguro}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Jornal Blitz</div>'}
+                                        <span class="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">${post.categoria || 'Notícia'}</span>
+                                    </div>
+                                    <div class="p-2.5">
+                                        <span class="text-[10px] text-gray-400">${dataF}</span>
+                                        <h4 class="font-bold text-gray-800 text-xs mt-0.5 group-hover:text-blue-600 transition line-clamp-2">${post.titulo}</h4>
+                                    </div>
+                                </div>
+                                <div class="px-2.5 pb-2.5 pt-0"><span class="text-[10px] font-semibold text-blue-600">Ler notícia →</span></div>
+                            </a>
+                        `;
+                    });
+                    gridJornal.innerHTML = htmlJornal;
+                }
+            } catch (err) {
+                console.error("Erro ao carregar teasers:", err);
+            }
+        }
+
+        initMateria();
+    </script>
+</body>
+</html>
